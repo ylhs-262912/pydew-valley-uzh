@@ -4,15 +4,13 @@ from src.level import Level
 from src.main_menu import main_menu
 
 class Game:
-    def __init__(self, menu):
-        self.character_frames = None
-        self.level_frames = None
-        self.tmx_maps = None
-        self.main_menu = menu
-        self.overlay_frames = None
-        self.font = None
-        self.settings_menu = False
-        self.sounds = None
+    def __init__(self):
+        self.character_frames: dict[str, AniFrames] | None = None
+        self.level_frames: dict | None = None
+        self.tmx_maps: MapDict | None = None
+        self.overlay_frames: dict[str, pygame.Surface] | None = None
+        self.font: pygame.font.Font | None = None
+        self.sounds: SoundDict | None = None
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption('PyDew')
