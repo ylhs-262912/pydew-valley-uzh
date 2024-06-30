@@ -95,7 +95,6 @@ class Level:
             for tree in self.tree_sprites:
                 if tree.rect.collidepoint(pos):
                     tree.hit(entity)
-                    # self.create_particle(tree)
                     self.sounds['axe'].play()
 
         if tool == 'hoe':

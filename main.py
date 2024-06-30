@@ -3,8 +3,10 @@ from src.support import *
 from src.level import Level
 from src.main_menu import main_menu
 
+
 class Game:
-    def __init__(self):
+    def __init__(self, mm):
+        self.main_menu = mm
         self.character_frames: dict[str, AniFrames] | None = None
         self.level_frames: dict | None = None
         self.tmx_maps: MapDict | None = None
@@ -15,10 +17,12 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption('PyDew')
         self.clock = pygame.time.Clock()
+        self.settings_menu = False
         self.running = True
         self.load_assets()
         self.running = True
-        self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font, self.sounds)
+        self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font,
+                           self.sounds)
 
     def load_assets(self):
         self.tmx_maps = tmx_importer('data/maps')
@@ -68,16 +72,17 @@ class Game:
                     self.settings_menu.go_back = False
                     self.settings_menu = False
                     pause_menu.pressed_settings = False
-                if self.settings_menu == False:
+                if not self.settings_menu:
                     pause_menu.update()
                 if self.settings_menu:
                     self.settings_menu.update()
-            if self.settings_menu != False:
+            if self.settings_menu:
                 if keys[pygame.K_ESCAPE]:
                     self.settings_menu = False
                     pause_menu.pressed_settings = False
 
             pygame.display.update()
+
 
 class MainMenu:
     def __init__(self):
@@ -92,6 +97,7 @@ class MainMenu:
         self.background = pygame.image.load("images/menu_background/bg.png")
         self.background = pygame.transform.scale(self.background, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.game = Game(self)
+
     def run(self):
         while self.menu:
             dt = self.clock.tick() / 1000
@@ -114,6 +120,7 @@ class MainMenu:
             self.main_menu.update()
             pygame.display.update()
 
+
 if __name__ == '__main__':
-    game = MainMenu()
-    game.run()
+    main_menu = MainMenu()
+    main_menu.run()
