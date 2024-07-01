@@ -31,7 +31,7 @@ class TextBox(pygame.sprite.Sprite):
         cname = self.font.render(self.cname, True, color=pygame.Color("black"))
         cname_rect = cname.get_rect(center=self._CNAME_SURF_RECT.center)
         text_surf = self.font.render(self.text, True, color=pygame.Color("black"))
-        text_rect = text_surf.get_rect(center=(TB_SIZE[0] // 2, (TB_SIZE[1] - 64) // 2))
+        text_rect = text_surf.get_rect(topleft=(15, 78))
         txt_part_top = 64
         blit_list = [
             (start, pygame.Rect(0, txt_part_top, *start.size)),
