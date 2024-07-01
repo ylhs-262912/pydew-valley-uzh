@@ -13,6 +13,22 @@ class TextBox(pygame.sprite.Sprite):
     _TXT_SURF_REGULAR_AREA: pygame.Rect = pygame.Rect(14, 0, 1, 202)
     _CNAME_SURF_RECT: pygame.Rect = pygame.Rect(8, 0, 212, 67)
     _TXT_SURF_RECT: pygame.Rect = pygame.Rect(0, 64, TB_SIZE[0], TB_SIZE[1]-64)
+    _TB_IMAGE: pygame.Surface | None = None
+
+    @classmethod
+    def prepare_base_tb_image(cls, cname_surf: pygame.Surface, txt_surf: pygame.Surface):
+        cls._TB_IMAGE = pygame.Surface(TB_SIZE, flags=pygame.SRCALPHA)
+        start = txt_surf.subsurface(cls._TXT_SURF_EXTREMITIES[0])
+        regular = txt_surf.subsurface(cls._TXT_SURF_REGULAR_AREA)
+        end = txt_surf.subsurface(cls._TXT_SURF_EXTREMITIES[1])
+        txt_part_top = 64
+        blit_list = [
+            (start, pygame.Rect(0, txt_part_top, *start.size)),
+            (end, pygame.Rect(373, txt_part_top, *end.size)),
+            *((regular, pygame.Rect(x, txt_part_top, *regular.size)) for x in range(start.width, 373)),
+            (cname_surf, cls._CNAME_SURF_RECT)
+        ]
+        cls._TB_IMAGE.fblits(blit_list)
 
     def __init__(self, character_name: str, text: str, cname_surf: pygame.Surface, txt_surf: pygame.Surface, font: pygame.Font):
         super().__init__()
