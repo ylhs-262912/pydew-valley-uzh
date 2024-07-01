@@ -58,5 +58,5 @@ APPLE_POS = {
     'default': [(30, 24), (60, 65), (50, 50), (16, 40), (45, 50), (42, 70)]
 }
 
-CHARS_PER_LINE = 40
+CHARS_PER_LINE = 45
 TB_SIZE = (493, 264)

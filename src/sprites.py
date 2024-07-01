@@ -199,6 +199,7 @@ class Player(CollideableSprite):
         self.sounds = sounds
 
     def input(self):
+        keys = pygame.key.get_pressed()
         recent_keys = pygame.key.get_just_pressed()
         if recent_keys[pygame.K_SPACE] and self.game.dm.showing_dialogue:
             print("Advancing")
@@ -222,8 +223,8 @@ class Player(CollideableSprite):
                 return
 
         if not self.tool_active and not self.blocked and not self.paused:
-            self.direction.x = int(recent_keys[pygame.K_RIGHT]) - int(recent_keys[pygame.K_LEFT])
-            self.direction.y = int(recent_keys[pygame.K_DOWN]) - int(recent_keys[pygame.K_UP])
+            self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
+            self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
             self.direction = self.direction.normalize() if self.direction else self.direction
 
             # tool switch 
