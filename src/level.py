@@ -138,7 +138,8 @@ class Level:
             self.soil_layer.water_all()
 
         # apples on the trees
-        for tree in self.tree_sprites: # No need to iterate using explicit sprites() call. Iterating over a sprite group normally will do the same thing
+        # No need to iterate using explicit sprites() call. Iterating over a sprite group normally will do the same thing
+        for tree in self.tree_sprites:
             for apple in tree.apple_sprites:
                 apple.kill()
             tree.create_fruit()

@@ -2,7 +2,7 @@ from src.settings import *
 from src.support import *
 from src.level import Level
 from src.main_menu import MainMenuInternal
-from src.dialog import DialogueManager
+from src.dialog import DialogueManager, prepare_tb_image
 
 
 class Game:
@@ -46,6 +46,7 @@ class Game:
         self._tb_base = pygame.image.load(resource_path("images/textbox.png")).convert_alpha()
         self.tb_cname_base_surf = self._tb_base.subsurface(pygame.Rect(0, 0, 212, 67))
         self.tb_main_text_base_surf = self._tb_base.subsurface(pygame.Rect(0, 74, 391, 202))
+        prepare_tb_image(self.tb_cname_base_surf, self.tb_main_text_base_surf)
 
         # sounds
         self.sounds = sound_importer('audio', default_volume=0.25)

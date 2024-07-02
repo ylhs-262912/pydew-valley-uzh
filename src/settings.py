@@ -20,6 +20,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
+TB_LAYER = 11
 
 LAYERS = {
     'water': 0,
@@ -33,7 +34,7 @@ LAYERS = {
     'fruit': 8,
     'rain drops': 9,
     'particles': 10,
-    "TextBox": 11
+    "TextBox": TB_LAYER
 }
 
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
