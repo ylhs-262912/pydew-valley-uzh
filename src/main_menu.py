@@ -2,7 +2,7 @@ import pygame
 from .settings import *
 
 
-class main_menu:
+class MainMenuInternal:
     def __init__(self, font, music):
 
         # general setup

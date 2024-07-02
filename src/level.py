@@ -87,27 +87,41 @@ class Level:
                                              collision_sprites=self.collision_sprites,
                                              apply_tool=self.apply_tool,
                                              interact=self.interact,
-                                             sounds=self.sounds, 
+                                             sounds=self.sounds,
                                              font=self.font)
 
-    def apply_tool(self, tool, pos, entity):
-        if tool == 'axe':
-            for tree in self.tree_sprites:
-                if tree.rect.collidepoint(pos):
-                    tree.hit(entity)
-                    # self.create_particle(tree)
-                    self.sounds['axe'].play()
+    def apply_tool(self, tool: FarmingTool, pos, entity):
+        match tool:
+            case FarmingTool.AXE:
+                for tree in self.tree_sprites:
+                    if tree.rect.collidepoint(pos):
+                        tree.hit(entity)
+                        self.sounds['axe'].play()
+            case FarmingTool.HOE:
+                self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+            case FarmingTool.WATERING_CAN:
+                self.soil_layer.water(pos)
+                self.sounds['water'].play()
+            case _:  # All seeds
+                self.soil_layer.plant_seed(pos, entity.available_seeds[tool - FarmingTool.get_first_seed_id()],
+                                           entity.inventory, plant_sounds=[self.sounds['plant'], self.sounds['cant_plant']])
 
-        if tool == 'hoe':
-            self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+        # if tool == 'axe':
+        #     for tree in self.tree_sprites:
+        #         if tree.rect.collidepoint(pos):
+        #             tree.hit(entity)
+        #             self.sounds['axe'].play()
 
-        if tool == 'water':
-            self.soil_layer.water(pos)
-            self.sounds['water'].play()
+        # if tool == 'hoe':
+        #     self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
 
-        if tool in ('corn', 'tomato'):
-            self.soil_layer.plant_seed(pos, tool, entity.inventory,
-                                       plant_sounds=[self.sounds['plant'], self.sounds['cant_plant']])
+        # if tool == 'water':
+        #     self.soil_layer.water(pos)
+        #     self.sounds['water'].play()
+        #
+        # if tool in ('corn', 'tomato'):
+        #     self.soil_layer.plant_seed(pos, tool, entity.inventory,
+        #                                plant_sounds=[self.sounds['plant'], self.sounds['cant_plant']])
 
     def create_particle(self, sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
@@ -137,7 +151,7 @@ class Level:
             self.soil_layer.water_all()
 
         # apples on the trees
-        for tree in self.tree_sprites: # No need to iterate using explicit sprites() call. Iterating over a sprite group normally will do the same thing
+        for tree in self.tree_sprites:  # No need to iterate using explicit sprites() call. Iterating over a sprite group normally will do the same thing
             for apple in tree.apple_sprites:
                 apple.kill()
             tree.create_fruit()

@@ -2,8 +2,8 @@ from .settings import *
 from .timer import Timer
 from .support import generate_particle_surf
 from random import randint, choice
-from .pause_menu import pause_menu
-from .settings_menu import settings_menu
+from .pause_menu import PauseMenu
+from .settings_menu import SettingsMenu
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, pos: tuple[int | float, int | float], surf: pygame.Surface, groups: tuple[pygame.sprite.Group], z: int = LAYERS['main'], name: str | None = None):
         super().__init__(groups)
@@ -151,10 +151,12 @@ class Entity(Sprite):
 
 
 class Player(CollideableSprite):
-    def __init__(self, pos: Coordinate, frames, groups, collision_sprites: pygame.sprite.Group, apply_tool: Function, interact: Function, sounds: SoundDict):
+    def __init__(self, pos: Coordinate, frames, groups, collision_sprites: pygame.sprite.Group, apply_tool: Function, interact: Function, sounds: SoundDict, font: pygame.Font):
         self.frames, self.frame_index, self.state, self.facing_direction = frames, 0, 'idle', 'down'
         super().__init__(pos, self.frames[self.state][self.facing_direction][self.frame_index], groups,
                          (44 * SCALE_FACTOR, 40 * SCALE_FACTOR))
+
+        self.font = font
 
         # movement
         self.direction = pygame.Vector2()
@@ -170,16 +172,18 @@ class Player(CollideableSprite):
         # tools
         self.available_tools = ['axe', 'hoe', 'water']
         self.tool_index = 0
-        self.current_tool = self.available_tools[self.tool_index]
+        self.current_tool = FarmingTool.get_first_tool_id()
+        # self.current_tool = self.available_tools[self.tool_index]
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
-        self.pause_menu = pause_menu(self.font)
-        self.settings_menu = settings_menu(self.font, self.sounds)
+        self.pause_menu = PauseMenu(self.font)
+        self.settings_menu = SettingsMenu(self.font, self.sounds)
         # seeds 
         self.available_seeds = ['corn', 'tomato']
         self.seed_index = 0
-        self.current_seed = self.available_seeds[self.seed_index]
+        self.current_seed = FarmingTool.get_first_seed_id()
+        # self.current_seed = self.available_seeds[self.seed_index]
 
         # inventory 
         self.inventory = {
@@ -213,25 +217,25 @@ class Player(CollideableSprite):
             recent_keys = pygame.key.get_just_pressed()
             # tool switch 
             if recent_keys[pygame.K_q]:
-                self.tool_index = (self.tool_index + 1) % len(self.available_tools)
-                self.current_tool = self.available_tools[self.tool_index]
+                self.tool_index = (self.tool_index + 1) % FarmingTool.get_tool_count()
+                self.current_tool = FarmingTool(self.tool_index + FarmingTool.get_first_tool_id())
 
             # tool use
             if recent_keys[pygame.K_SPACE]:
                 self.tool_active = True
                 self.frame_index = 0
                 self.direction = pygame.Vector2()
-                if self.current_tool in {'hoe', 'axe'}:
+                if self.current_tool.is_swinging_tool():
                     self.sounds['swing'].play()
 
             # seed switch 
             if recent_keys[pygame.K_e]:
-                self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
-                self.current_seed = self.available_seeds[self.seed_index]
+                self.seed_index = (self.seed_index + 1) % FarmingTool.get_seed_count()
+                self.current_seed = FarmingTool(self.seed_index + FarmingTool.get_first_seed_id())
 
             # seed used 
             if recent_keys[pygame.K_LCTRL]:
-                self.use_tool('seed')
+                self.use_tool(ItemToUse.SEED)
 
                 # interact
             if recent_keys[pygame.K_RETURN]:
@@ -273,6 +277,12 @@ class Player(CollideableSprite):
                     if self.direction.y > 0:
                         self.hitbox_rect.bottom = sprite.rect.top
 
+    def get_current_tool_string(self):
+        return self.available_tools[self.tool_index]
+
+    def get_current_seed_string(self):
+        return self.available_seeds[self.seed_index]
+
     def animate(self, dt):
         current_animation = self.frames[self.state][self.facing_direction]
         self.frame_index += 4 * dt
@@ -284,15 +294,14 @@ class Player(CollideableSprite):
                 self.image = tool_animation[min((round(self.frame_index), len(tool_animation) - 1))]
                 if round(self.frame_index) == len(tool_animation) - 1 and not self.just_used_tool:
                     self.just_used_tool = True
-                    self.use_tool('tool')
+                    self.use_tool(ItemToUse.REGULAR_TOOL)
             else:
-                # self.use_tool('tool')
                 self.state = 'idle'
                 self.tool_active = False
                 self.just_used_tool = False
 
-    def use_tool(self, option):
-        self.apply_tool(self.current_tool if option == 'tool' else self.current_seed, self.get_target_pos(), self)
+    def use_tool(self, option: ItemToUse):
+        self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)
 
     def add_resource(self, resource, amount=1):
         self.inventory[resource] += amount
