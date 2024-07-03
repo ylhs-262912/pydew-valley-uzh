@@ -2,7 +2,6 @@ from src.settings import *
 from src.support import *
 from src.level import Level
 from src.main_menu import MainMenu, PauseMenu, SettingsMenu
-from src.settings_menu import settings_menu
 
 
 class Game:
@@ -30,12 +29,11 @@ class Game:
         # screens
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        # self.settings_menu = settings_menu(self.font, self.sounds)
-        self.settings_menu = SettingsMenu(self.switch_state)
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds)
         self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font, self.sounds, self.switch_state)
 
         self.screens = {'menu': self.main_menu, 'level': self.level, 'pause': self.pause_menu, 'settings': self.settings_menu}
-        self.current_state = 'menu'
+        self.current_state = 'settings'
     
     def switch_state(self, state):
         self.current_state = state
@@ -67,47 +65,10 @@ class Game:
 
             screen = self.screens[self.current_state]
             screen.update(dt)
-            # self.menu_update()
 
             pygame.display.update()
 
-        
-    def menu_update(self):
-        keys = pygame.key.get_just_pressed()
-        
-        if self.level.entities["Player"].paused:
-            pause_menu = self.level.entities["Player"].pause_menu
-            self.settings_menu = False
-
-            if pause_menu.pressed_play:
-                self.level.entities["Player"].paused = not self.level.entities["Player"].paused
-                pause_menu.pressed_play = False
-
-            elif pause_menu.pressed_quit:
-                pause_menu.pressed_quit = False
-                self.running = False
-                self.main_menu.menu = True
-                self.level.entities["Player"].paused = False
-                self.main_menu.run()
-
-            elif pause_menu.pressed_settings:
-                self.settings_menu = self.level.entities["Player"].settings_menu
-
-            if self.settings_menu and self.settings_menu.go_back:
-                self.settings_menu.go_back = False
-                self.settings_menu = False
-                pause_menu.pressed_settings = False
-
-            if not self.settings_menu:
-                pause_menu.update()
-
-            if self.settings_menu:
-                self.settings_menu.update()
-
-        if self.settings_menu:
-            if keys[pygame.K_ESCAPE]:
-                self.settings_menu = False
-                pause_menu.pressed_settings = False
+ 
 
 
 

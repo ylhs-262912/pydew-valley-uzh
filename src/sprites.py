@@ -1,8 +1,7 @@
 from .settings import *
 from .timer import Timer
 from random import randint, choice
-from .pause_menu import pause_menu
-from .settings_menu import settings_menu
+
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups, z=LAYERS['main'], name=None):
         super().__init__(groups)
@@ -156,8 +155,6 @@ class Player(CollideableSprite):
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
-        self.pause_menu = pause_menu(self.font)
-        self.settings_menu = settings_menu(self.font, self.sounds)
         # seeds 
         self.available_seeds = ['corn', 'tomato']
         self.seed_index = 0
