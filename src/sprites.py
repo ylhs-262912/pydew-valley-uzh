@@ -2,6 +2,7 @@ from .settings import *
 from .timer import Timer
 from random import randint, choice
 
+
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups, z=LAYERS['main'], name=None):
         super().__init__(groups)

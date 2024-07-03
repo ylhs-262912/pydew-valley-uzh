@@ -3,6 +3,7 @@ from src.support import *
 from src.level import Level
 from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu
 
+from src.support import save_data
 
 class Game:
     def __init__(self):
@@ -32,6 +33,7 @@ class Game:
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds)
         self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font, self.sounds, self.switch_state)
 
+
         self.screens = {'menu': self.main_menu, 'level': self.level, 'pause': self.pause_menu, 'settings': self.settings_menu}
         self.current_state = 'settings'
     
@@ -55,7 +57,8 @@ class Game:
         self.overlay_frames = import_folder_dict('images/overlay')
         self.character_frames = character_importer('images/characters')
 
-        self.sounds = sound_importer('audio', default_volume=0.25)
+        self.sounds = sound_importer('audio', default_volume=0)
+          
 
         self.font = import_font(30, 'font/LycheeSoda.ttf')
 
@@ -69,8 +72,6 @@ class Game:
             pygame.display.update()
 
  
-
-
 
 
 if __name__ == '__main__':

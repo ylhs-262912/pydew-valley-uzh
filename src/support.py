@@ -1,3 +1,4 @@
+import json
 from .settings import *
 
 
@@ -102,3 +103,12 @@ def sound_importer(*path, default_volume=0.5):
         value.set_volume(default_volume)
         sounds_dict[key] = value
     return sounds_dict
+
+
+def save_data(data, file_name):
+    with open(resource_path('data/settings/' + file_name), 'w') as file:
+        json.dump(data, file, indent=4)
+    
+def load_data(file_name):
+    with open(resource_path('data/settings/' + file_name), 'r') as file:
+        return json.load(file)

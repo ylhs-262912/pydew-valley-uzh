@@ -5,6 +5,9 @@ from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
 from pygame.mouse import get_pressed as mouse_buttons
 
+from .support import save_data, load_data
+
+
 class GeneralMenu:
     def __init__(self, title, options, switch_screen, size, background=None):
         # general setup
@@ -154,13 +157,16 @@ class SettingsMenu(GeneralMenu):
         self.description_slider_surface = None
         self.adjust_rect()
 
-        # slider
+        # volume
         topleft = self.description_rect.topleft + vector(50, 50)
         slider_rect = pygame.Rect(topleft, (200, 10))
         self.slider = Slider(slider_rect, 0, 100, 50, sounds)
+
+        # keybinds
+        self.key_setup = None
+        
+        
         self.import_data()
-
-
         self.keys_group = []
         self.create_keybinds()
 
@@ -173,24 +179,31 @@ class SettingsMenu(GeneralMenu):
         if text == 'Volume':
             self.description = self.draw_slider
         if text == 'Back':
+            self.save_data()
             self.switch_screen('pause')
 
+    def save_data(self):
+        data = {}
+        for key in self.keys_group:
+            data[key.key_name] = key.key_value
+        save_data(data, 'keybinds.json')
+
     def import_data(self):
-        self.options_data = { 
-            0: {
-                "Up": "images/keys/up.svg",
-                "Down": "images/keys/down.svg",
-                "Left": "images/keys/left.png",
-                "Right": "images/keys/right.svg",
-                "Use": "images/keys/space.svg",
-                "Cycle Tools": "images/keys/generic.svg",
-                "Cycle Seeds": "images/keys/generic.svg",
-                "Plant Current Seed": "images/keys/lctrl.png",
-            },
-            1: {
-             "slider": self.slider,
-            },
+        self.keybinds = {
+            "Up": pygame.K_UP,
+            "Down": pygame.K_DOWN,
+            "Left": pygame.K_LEFT,
+            "Right": pygame.K_RIGHT,
+            "Use": pygame.K_SPACE,
+            "Cycle Tools": pygame.K_TAB,
+            "Cycle Seeds": pygame.K_LSHIFT,
+            "Plant Current Seed": pygame.K_RETURN,
         }
+
+        try:
+            self.keybinds = load_data('keybinds.json')
+        except FileNotFoundError:
+            pass
         
     def adjust_rect(self):
         # main rect
@@ -210,6 +223,22 @@ class SettingsMenu(GeneralMenu):
         self.description_slider_rect = self.description_surface.get_rect()
         self.description_slider_surface.set_colorkey('green')
 
+    def create_keybinds(self):
+        index = 0
+        for key_name, value in self.keybinds.items():
+            key_value = value
+            symbol = self.value_to_unicode(key_value)
+
+            path = self.get_path(key_value)
+            image = pygame.image.load(path)
+            image = pygame.transform.scale(image, (40, 40))
+
+            pos = (10, 10 + 60 * index)
+            key_setup = KeySetup(key_name, key_value, pos, image)
+            key_setup.key_symbol = symbol
+            self.keys_group.append(key_setup)
+            index += 1
+    
 
     # events
     def event_loop(self):
@@ -221,6 +250,8 @@ class SettingsMenu(GeneralMenu):
             self.click(event)
             self.mouse_wheel(event)
             self.slider.handle_event(event)
+            self.select_keySetup(event)
+            self.set_key(event)
     
     def mouse_wheel(self, event):
         if event.type == pygame.MOUSEWHEEL:
@@ -229,17 +260,65 @@ class SettingsMenu(GeneralMenu):
             self.description_slider_rect.y = min(0, self.description_slider_rect.y)
             self.description_slider_rect.y = max(self.description_surface.height - self.description_slider_surface.height, self.description_slider_rect.y)
 
-    def create_keybinds(self):
-        index = 0
-        for key, value in self.options_data[0].items():
-            symbol_image = pygame.image.load(value)
-            pos = (10, 10 + 60 * index)
-            key_setup = KeySetup(key, pos, symbol_image)
-            self.keys_group.append(key_setup)
-            index += 1
-    
+
+    # keybinds
+    def select_keySetup(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
+            for key in self.keys_group:
+                offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+                if key.hover(offset):
+                    self.key_setup = key
+                    return
+            self.key_setup = None
+
+    def set_key(self, event):
+        if self.key_setup:
+            if event.type == pygame.KEYDOWN:
+                symbol = event.unicode.upper()
+                path = self.get_path(event.key)
+                image = pygame.image.load(path)
+                image = pygame.transform.scale(image, (40, 40))
+
+                self.key_setup.key_symbol = symbol if self.is_generic(symbol) else None
+                self.key_setup.symbol_image = image
+                self.key_setup.key_value = event.key
+                self.key_setup = None
+        
+    def is_generic(self, symbol):
+        return symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?"
+
+    def get_path(self, keydown):
+        if keydown == None:
+            return "images/keys/generic.svg"
+
+        special_keys = {
+            pygame.K_SPACE: "images/keys/space.svg",
+            pygame.K_LCTRL: "images/keys/lctrl.png",
+            pygame.K_LEFT: "images/keys/left.png",
+            pygame.K_UP: "images/keys/up.svg",
+            pygame.K_DOWN: "images/keys/down.svg",
+            pygame.K_RIGHT: "images/keys/right.svg"
+        }
+
+        if keydown in special_keys:
+            return special_keys[keydown]
+        
+        return "images/keys/generic.svg"
+
+    def value_to_unicode(self, value):
+        if value == None:
+            return None
+        if value in range(48, 58):
+            return str(value - 48)
+        if value in range(97, 123):
+            return chr(value - 32)
+        return None
+
 
     # draw
+    def draw_selected_key_indicator(self):
+        if self.key_setup:
+            pygame.draw.rect(self.description_slider_surface, 'red', self.key_setup.rect, 4, 4)
 
     def draw_slider_bar(self):
         height1 = self.description_slider_surface.get_height()
@@ -255,13 +334,14 @@ class SettingsMenu(GeneralMenu):
 
         pygame.draw.rect(self.display_surface, 'grey', slide_bar_rect, 0, 4)
 
-
     def draw_keybinds(self):
         self.description_surface.fill('green')
         self.description_slider_surface.fill('green')
 
         for key in self.keys_group:
             key.draw(self.description_slider_surface)
+
+        self.draw_selected_key_indicator()
         self.description_surface.blit(self.description_slider_surface, self.description_slider_rect)
         self.display_surface.blit(self.description_surface, self.description_rect.topleft)
         self.draw_slider_bar()
@@ -272,12 +352,13 @@ class SettingsMenu(GeneralMenu):
     def draw_description(self):
         pygame.draw.rect(self.display_surface, 'White', self.description_rect, 0, 4)
         self.description()
-
+    
     def draw(self):
         self.draw_background()
         self.draw_title()
         self.draw_buttons()
         self.draw_description()
+
 
 
 class ShopMenu(GeneralMenu):
@@ -294,10 +375,12 @@ class ShopMenu(GeneralMenu):
 # ------- Components ------- #
 
 class KeySetup:
-    def __init__(self, key_name, pos, symbol_image):
+    def __init__(self, key_name, key_value, pos, symbol_image):
         self.key_name = key_name
-        self.key = pygame.K_UP
+        self.key_symbol = None
+        self.key_value = key_value
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.offset = vector()
 
         # rect
         self.pos = pos
@@ -311,6 +394,11 @@ class KeySetup:
     def setup(self):
         pass
 
+    def hover(self, offset):
+        self.offset = vector(offset)
+        return self.rect.collidepoint(mouse_pos() - self.offset)
+
+
     # draw
     def draw_key_name(self, surface):
         text_surf = self.font.render(self.key_name, False, 'Black')
@@ -319,8 +407,11 @@ class KeySetup:
         surface.blit(text_surf, text_rect)
     
     def draw_symbol(self, surface):
-        if self.symbol_image:
-            surface.blit(self.symbol_image, self.symbol_image_rect)
+        text_surf = self.font.render(self.key_symbol, False, 'White')
+        text_rect = text_surf.get_frect(center=self.symbol_image_rect.center)   
+        surface.blit(self.symbol_image, self.symbol_image_rect)
+        surface.blit(text_surf, text_rect)
+    
 
     def draw(self, surface):
         pygame.draw.rect(surface, 'grey', self.rect, 0, 4)

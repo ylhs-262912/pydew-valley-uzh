@@ -7,6 +7,7 @@ from random import randint
 from .sky import Sky, Rain
 from .overlay import Overlay
 from .shop import Menu
+from .support import load_data
 
 
 class Level:
@@ -46,9 +47,11 @@ class Level:
         # switch
         self.switch_screen = switch
 
+
+
     def setup(self, tmx_maps, character_frames, level_frames):
         self.sounds["music"].set_volume(0.1)
-        self.sounds["music"].play(-1)
+        # self.sounds["music"].play(-1)
         # environment
         for layer in ['Lower ground', 'Upper ground']:
             for x, y, surf in tmx_maps['main'].get_layer_by_name(layer).tiles():
