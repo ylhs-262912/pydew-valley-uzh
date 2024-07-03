@@ -42,7 +42,7 @@ class Level:
         # overlays
         self.overlay = Overlay(self.entities['Player'], overlay_frames)
         self.menu = Menu(self.entities['Player'], self.toggle_shop, font)
-        self.shop_active = True
+        self.shop_active = False
 
         # switch
         self.switch_screen = switch

@@ -35,7 +35,7 @@ class Game:
 
 
         self.screens = {'menu': self.main_menu, 'level': self.level, 'pause': self.pause_menu, 'settings': self.settings_menu}
-        self.current_state = 'settings'
+        self.current_state = 'menu'
     
     def switch_state(self, state):
         self.current_state = state
