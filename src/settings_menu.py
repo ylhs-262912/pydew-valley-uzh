@@ -106,7 +106,7 @@ class settings_menu:
         pygame.draw.rect(self.display_surface, 'White', text_rect.inflate(10, 10), 0, 4)
         self.display_surface.blit(text_surf, text_rect)
 
-    def update(self):
+    def update(self, dt):
         self.input()
         self.main_menu_title()
         

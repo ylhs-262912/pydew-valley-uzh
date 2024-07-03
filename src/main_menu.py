@@ -2,78 +2,227 @@ import pygame
 from .settings import *
 
 
-class main_menu:
-    def __init__(self, font, music):
+from .pause_menu import Button
+from pygame.mouse import get_pos as mouse_pos
+from pygame.mouse import get_pressed as mouse_buttons
 
+class GeneralMenu:
+    def __init__(self, title, options, switch_screen, size, background=None):
         # general setup
         self.display_surface = pygame.display.get_surface()
-        self.font = font
-        self.index = 0
-        self.music = music
-        # options
-        self.width = 400
-        self.space = 10
-        self.padding = 8
-        self.pressed_play = False
-        self.pressed_quit = False
-        # entries
-        self.options = ("Play", "Quit")
-        self.setup()
+        self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT)) if background else None
+        self.title = title
 
-    def setup(self):
-        self.music.play()
-        # create the text surfaces
-        self.text_surfs = []
-        self.total_height = 0
+        # rect
+        self.size = size
+        self.rect = None
+        self.rect_setup()
 
+        # buttons
+        self.options = options
+        self.buttons = []
+        self.button_setup()
+
+        # switch
+        self.switch_screen = switch_screen
+    
+    def rect_setup(self):
+        self.rect = pygame.Rect((0, 0), self.size)
+        self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+
+    def button_setup(self):
+        button_width = 400
+        button_height = 50
+        space = 10
+        generic_button_rect = pygame.Rect(self.rect.topleft, (button_width, button_height))
         for item in self.options:
-            text_surf = self.font.render(item, False, 'Black')
-            self.text_surfs.append(text_surf)
-            self.total_height += text_surf.get_height() + (self.padding * 2)
+            button = Button(item, self.font, generic_button_rect)
+            self.buttons.append(button)
+            generic_button_rect = generic_button_rect.move(0, button_height + space)
 
-        self.total_height += (len(self.text_surfs) - 1) * self.space
-        self.menu_top = SCREEN_HEIGHT / 2 - self.total_height / 2
-        self.main_rect = pygame.Rect(SCREEN_WIDTH / 2 - self.width / 2, self.menu_top, self.width, self.total_height)
+    def event_loop(self):
+        self.mouse_hover()
 
-        # buy / sell text surface
-    def input(self):
-        keys = pygame.key.get_just_pressed()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            self.click(event)
+            
+    def click(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            for button in self.buttons:
+                if button.hover_active:
+                    self.button_action(button.text)
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-        self.index = (self.index + int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])) % len(self.options)
+    
+    def mouse_hover(self):
+        for button in self.buttons:
+            if button.hover_active:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+                return
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                
 
-        if keys[pygame.K_SPACE]:
-            current_item = self.options[self.index]
-            if 'Play' in current_item:
-                if not self.pressed_quit:
-                    self.pressed_play = True
-            elif 'Quit' in current_item:
-                if not self.pressed_play:
-                    self.pressed_quit = True
+    def button_action(self, text):
+        if text == 'Play':
+            self.switch_screen('level')
+        if text == 'Quit':
+            self.quit_game()
+    
+    def quit_game(self):
+        pygame.quit()
+        sys.exit()
 
-    def show_entry(self, text_surf, top, index, text_index):
-
-        # background
-        bg_rect = pygame.Rect(self.main_rect.left, top, self.width, text_surf.get_height() + (self.padding * 2))
-        pygame.draw.rect(self.display_surface, 'White', bg_rect, 0, 4)
-
-        # text
-        text_rect = text_surf.get_frect(midleft=(self.main_rect.left + (self.main_rect.width/2)-text_surf.get_width()/2, bg_rect.centery))
-        self.display_surface.blit(text_surf, text_rect)
-
-        # selected
-        if index == text_index:
-            pygame.draw.rect(self.display_surface, 'black', bg_rect, 4, 4)
-
-    def main_menu_title(self):
-        text_surf = self.font.render('Main Menu', False, 'Black')
+    
+    def draw_title(self):
+        text_surf = self.font.render(self.title, False, 'Black')
         text_rect = text_surf.get_frect(midtop=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 20))
 
-        pygame.draw.rect(self.display_surface, 'White', text_rect.inflate(10, 10), 0, 4)
+        bg_rect = pygame.Rect((0, 0), (200, 50))
+        bg_rect.center = text_rect.center
+
+        pygame.draw.rect(self.display_surface, 'White', bg_rect, 0, 4)
         self.display_surface.blit(text_surf, text_rect)
-    def update(self):
-        self.input()
-        self.main_menu_title()
+
+    def draw_background(self):
+        if self.background:
+            self.display_surface.blit(self.background, (0, 0))
+    
+    def draw_buttons(self):
+        for button in self.buttons:
+            button.draw()
+    
+    def draw(self):
+        self.draw_background()
+        self.draw_title()
+        self.draw_buttons()
+    
+    def update(self, dt):
+        self.event_loop()
+        self.draw()
+
+
+
+class MainMenu(GeneralMenu):
+    def __init__(self, switch_screen):
+        options = ['Play', 'Quit']
+        background = pygame.image.load('images/menu_background/bg.png')
+        title = 'Main Menu'
+        size = (400, 400)
+        super().__init__(title, options, switch_screen, size, background)
+    
+    def button_action(self, text):
+        if text == 'Play':
+            self.switch_screen('level')
+        if text == 'Quit':
+            self.quit_game()
+
+
+class PauseMenu(GeneralMenu):
+    def __init__(self, switch_screen):
+        options = ['Resume', 'Options', 'Quit']
+        title = 'Pause Menu'
+        size = (400, 400)
+        super().__init__(title, options, switch_screen, size)
         
-        for text_index, text_surf in enumerate(self.text_surfs):
-            top = self.main_rect.top + text_index * (text_surf.get_height() + (self.padding * 2) + self.space)
-            self.show_entry(text_surf, top, self.index, text_index)
+    def button_action(self, text):
+        if text == 'Resume':
+            self.switch_screen('level')
+        if text == 'Options':
+            self.switch_screen('settings')
+        if text == 'Quit':
+            self.switch_screen('menu')
+        
+
+class SettingsMenu(GeneralMenu):
+    def __init__(self, switch_screen):
+        options = ['Keybinds', 'Volume', 'Back']
+        background = pygame.image.load('images/menu_background/bg.png')
+        title = 'Settings'
+        size = (900, 400)
+        super().__init__(title, options, switch_screen, size, background)
+
+        self.slider = None
+        self.import_data()
+        self.adjust_rect()
+
+        self.current_item = 0
+
+
+    def button_action(self, text):
+        if text == 'Keybinds':
+            self.current_item = 0
+        if text == 'Volume':
+            self.current_item = 1
+        if text == 'Back':
+            self.switch_screen('menu')
+
+    def import_data(self):
+        self.options_data = { 
+            0: {
+                "Up": "UP ARROW",
+                "Down": "DOWN ARROW",
+                "Left": "LEFT ARROW",
+                "Right": "RIGHT ARROW",
+                "Use": "SPACE",
+                "Cycle Tools": "Q",
+                "Cycle Seeds": "E",
+                "Plant Current Seed": "LCTRL",
+            },
+            1: {
+             "slider": self.slider,
+            },
+        }
+
+
+        
+    def adjust_rect(self):
+        width = 400 + 20 + 800
+        height = 400
+        self.rect = pygame.Rect(0, 0, width, height)
+        self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+
+        self.description_rect = pygame.Rect(0, 0, 600, 400)
+        self.description_rect.topright = self.rect.topright
+    
+    def draw(self):
+        self.draw_background()
+        self.draw_title()
+        self.draw_buttons()
+        self.draw_description()
+    
+    def draw_keybinds(self):
+        keys = ['Up', 'Down', 'Left', 'Right', 'Use', 'Cycle Tools', 'Cycle Seeds', 'Plant Current Seed']
+
+    
+    def draw_description(self):
+        pygame.draw.rect(self.display_surface, 'White', self.description_rect, 0, 4)
+        text = self.options_data[self.current_item]
+        index = 0
+        for key, value in text.items():
+            text_surf = self.font.render(f'{key}: {value}', False, 'Black')
+            text_rect = text_surf.get_frect(midtop=(self.description_rect.centerx, self.description_rect.top + 50 * index))
+            self.display_surface.blit(text_surf, text_rect)
+            index += 1
+
+    
+
+class KeySetup:
+    def __init__(self):
+        self.key_name = 'Up'
+        self.key = pygame.K_UP
+        self.symbol_image = None
+
+        # rect
+        self.rect = pygame.Rect(0, 0, 200, 50)
+    
+    def setup(self):
+        pass
+
+    def draw(self):
+        pass
+    
+
