@@ -109,3 +109,11 @@ def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
     ret = px_mask.to_surface()
     ret.set_colorkey("black")
     return ret
+
+
+def flip_items(d: dict) -> dict:
+    """Returns a copy of d with key-value pairs flipped (i.e. keys become values and vice-versa)."""
+    ret = {}
+    for key, val in d.items():
+        ret[val] = key
+    return ret

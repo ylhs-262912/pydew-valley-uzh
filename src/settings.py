@@ -102,4 +102,22 @@ class FarmingTool(IntEnum):
 
 class InventoryResource(IntEnum):
     """All stored items in the inventory."""
-    pass
+    WOOD = 0
+    APPLE = 1
+    CORN = 2
+    TOMATO = 3
+    CORN_SEED = 4
+    TOMATO_SEED = 5
+
+    def as_serialised_string(self):
+        return _IR_SERIALISED_STRINGS[self]
+
+
+_IR_SERIALISED_STRINGS = (
+    "wood",
+    "apple",
+    "corn",
+    "tomato",
+    "corn seed",
+    "tomato seed"
+)
