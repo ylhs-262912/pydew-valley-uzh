@@ -206,7 +206,7 @@ class SettingsMenu(GeneralMenu):
         self.description_surface.set_colorkey('green')
 
         # slider
-        self.description_slider_surface = pygame.Surface((600, 800))
+        self.description_slider_surface = pygame.Surface((600, 500))
         self.description_slider_rect = self.description_surface.get_rect()
         self.description_slider_surface.set_colorkey('green')
 
@@ -227,6 +227,7 @@ class SettingsMenu(GeneralMenu):
             speed = 10
             self.description_slider_rect.y += event.y * speed
             self.description_slider_rect.y = min(0, self.description_slider_rect.y)
+            self.description_slider_rect.y = max(self.description_surface.height - self.description_slider_surface.height, self.description_slider_rect.y)
 
     def create_keybinds(self):
         index = 0
@@ -239,6 +240,22 @@ class SettingsMenu(GeneralMenu):
     
 
     # draw
+
+    def draw_slider_bar(self):
+        height1 = self.description_slider_surface.get_height()
+        height2 = self.description_surface.get_height()
+        Y1 = self.description_slider_rect.top
+
+        coeff = height2 / height1
+        slider_height = coeff * height2
+        
+        slide_bar_rect = pygame.Rect(0, 0, 10, slider_height)
+        slide_bar_rect.right = self.description_rect.right - 2
+        slide_bar_rect.top = self.description_rect.top - Y1 * coeff
+
+        pygame.draw.rect(self.display_surface, 'grey', slide_bar_rect, 0, 4)
+
+
     def draw_keybinds(self):
         self.description_surface.fill('green')
         self.description_slider_surface.fill('green')
@@ -247,6 +264,7 @@ class SettingsMenu(GeneralMenu):
             key.draw(self.description_slider_surface)
         self.description_surface.blit(self.description_slider_surface, self.description_slider_rect)
         self.display_surface.blit(self.description_surface, self.description_rect.topleft)
+        self.draw_slider_bar()
     
     def draw_slider(self):
         self.slider.draw(self.display_surface)
@@ -261,6 +279,17 @@ class SettingsMenu(GeneralMenu):
         self.draw_buttons()
         self.draw_description()
 
+
+class ShopMenu(GeneralMenu):
+    def __init__(self, player, switch_screen):
+        options = ['wood', 'apple', 'hoe', 'water', 'corn', 'tomato', 'seed']
+        background = pygame.image.load('images/menu_background/bg.png')
+        title = 'Shop'
+        size = (400, 400)
+        super().__init__(title, options, switch_screen, size, background)
+    
+    def button_action(self, text):
+        self.switch_screen('level')
 
 # ------- Components ------- #
 
@@ -384,4 +413,6 @@ class Slider:
         knob_x = self.rect.left + (self.rect.width - 10) * (self.value - self.min_value) / (self.max_value - self.min_value)
         pygame.draw.circle(surface, (232, 207, 166), (int(knob_x), self.rect.centery), self.knob_radius)
         self.draw_value(surface)
+
+
 

@@ -6,7 +6,7 @@ from .transition import Transition
 from random import randint
 from .sky import Sky, Rain
 from .overlay import Overlay
-from .menu import Menu
+from .shop import Menu
 
 
 class Level:
@@ -41,7 +41,7 @@ class Level:
         # overlays
         self.overlay = Overlay(self.entities['Player'], overlay_frames)
         self.menu = Menu(self.entities['Player'], self.toggle_shop, font)
-        self.shop_active = False
+        self.shop_active = True
 
         # switch
         self.switch_screen = switch

@@ -1,7 +1,7 @@
 from src.settings import *
 from src.support import *
 from src.level import Level
-from src.main_menu import MainMenu, PauseMenu, SettingsMenu
+from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu
 
 
 class Game:
@@ -33,7 +33,7 @@ class Game:
         self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font, self.sounds, self.switch_state)
 
         self.screens = {'menu': self.main_menu, 'level': self.level, 'pause': self.pause_menu, 'settings': self.settings_menu}
-        self.current_state = 'menu'
+        self.current_state = 'settings'
     
     def switch_state(self, state):
         self.current_state = state
