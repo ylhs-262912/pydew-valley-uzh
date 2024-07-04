@@ -1,4 +1,5 @@
-from .settings import *
+from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, LAYERS
+import pygame
 
 
 class AllSprites(pygame.sprite.Group):

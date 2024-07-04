@@ -1,5 +1,5 @@
 import pygame
-from .settings import *
+from .settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos

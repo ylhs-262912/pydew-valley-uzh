@@ -1,4 +1,5 @@
-from .settings import *
+from .settings import LAYERS, GROW_SPEED, APPLE_POS, SCALE_FACTOR
+import pygame
 from .timer import Timer
 from random import randint, choice
 

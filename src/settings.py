@@ -1,9 +1,7 @@
-import pygame, sys
+import pygame
 if not getattr(pygame, "IS_CE", False):
     raise ImportError("The game requires Pygame CE to function. (hint: type pip uninstall pygame and then pip install pygame-ce)")
-from os.path import join
-from os import walk, path, sep, listdir
-from pytmx.util_pygame import load_pygame
+
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16

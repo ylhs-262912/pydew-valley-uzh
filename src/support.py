@@ -1,5 +1,8 @@
-import json
-from .settings import *
+import json, pygame, sys
+from os import path, sep, walk, listdir
+from os.path import join           
+from pytmx.util_pygame import load_pygame          
+from .settings import TILE_SIZE, CHAR_TILE_SIZE, SCALE_FACTOR
 
 
 def resource_path(relative_path: str):

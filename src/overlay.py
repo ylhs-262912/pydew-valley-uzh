@@ -1,4 +1,5 @@
-from .settings import *
+from .settings import OVERLAY_POSITIONS
+import pygame
 
 class Overlay:
 	def __init__(self,entity, overlay_frames):

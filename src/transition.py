@@ -1,4 +1,4 @@
-from .settings import *
+from .settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class Transition:

@@ -1,5 +1,6 @@
-from .settings import *
-from .sprites import *
+from .settings import TILE_SIZE, SCALE_FACTOR, LAYERS
+import pygame
+from .sprites import Sprite, Plant
 from .groups import AllSprites
 from .soil import SoilLayer
 from .transition import Transition

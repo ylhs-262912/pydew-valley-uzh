@@ -1,9 +1,8 @@
-from src.settings import *
-from src.support import *
 from src.level import Level
 from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu
-
-from src.support import save_data
+import pygame
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.support import tmx_importer, animation_importer, import_folder_dict, import_folder, character_importer, sound_importer, import_font
 
 class Game:
     def __init__(self):
