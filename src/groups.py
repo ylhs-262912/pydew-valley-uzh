@@ -1,17 +1,18 @@
 from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, LAYERS
 import pygame
+from pygame import Vector2 as vector
 
 
 class AllSprites(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
-        self.offset = pygame.Vector2()
-        self.cam_surf = pygame.Surface(self.display_surface.get_size())
+        self.offset = vector()
+        self.cam_surf = self.display_surface.copy()
 
     def draw(self, target_pos):
-        self.offset.x = -(target_pos[0] - SCREEN_WIDTH / 2)
-        self.offset.y = -(target_pos[1] - SCREEN_HEIGHT / 2)
+        self.offset.x = - (target_pos[0] - SCREEN_WIDTH//2)
+        self.offset.y = - (target_pos[1] - SCREEN_HEIGHT//2)
 
         for layer in LAYERS.values():
 

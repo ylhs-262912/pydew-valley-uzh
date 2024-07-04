@@ -80,7 +80,7 @@ class Level:
         Sprite(pos, image, self.all_sprites, LAYERS['lower ground'])
     
     def setup_water(self, pos, surf):
-        image = self.frames['animations']['water']
+        image = self.frames['level']['animations']['water']
         AnimatedSprite(pos, image, self.all_sprites, LAYERS['water'])
     
     def setup_layer_objects(self, layer, setup_func):
@@ -92,8 +92,8 @@ class Level:
 
     def setup_objects(self, pos, obj):
         if obj.name == 'Tree':
-            apple_frames = self.frames['objects']['apple']
-            stump_frames = self.frames['objects']['stump']
+            apple_frames = self.frames['level']['objects']['apple']
+            stump_frames = self.frames['level']['objects']['stump']
             image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
 
             Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
