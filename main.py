@@ -1,8 +1,9 @@
 from src.level import Level
 from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
 from src.support import tmx_importer, animation_importer, import_folder_dict, import_folder, character_importer, sound_importer, import_font
+
 
 class Game:
     def __init__(self):
@@ -33,8 +34,15 @@ class Game:
         self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font, self.sounds, self.switch_state)
 
 
-        self.screens = {'menu': self.main_menu, 'level': self.level, 'pause': self.pause_menu, 'settings': self.settings_menu}
-        self.current_state = 'menu'
+        self.screens = { 
+            GameState.MAIN_MENU: self.main_menu,
+            GameState.PAUSE: self.pause_menu,
+            GameState.SETTINGS: self.settings_menu,
+            GameState.LEVEL: self.level
+        }
+
+
+        self.current_state = GameState.MAIN_MENU
     
     def switch_state(self, state):
         self.current_state = state
