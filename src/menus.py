@@ -1,4 +1,4 @@
-import pygame
+import pygame, sys
 from .settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 from pygame import Vector2 as vector

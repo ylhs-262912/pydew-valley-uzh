@@ -1,4 +1,5 @@
 from .settings import SCREEN_WIDTH, SCREEN_HEIGHT
+import pygame
 
 
 class Transition:

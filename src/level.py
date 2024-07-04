@@ -1,6 +1,6 @@
 from .settings import TILE_SIZE, SCALE_FACTOR, LAYERS
-import pygame
-from .sprites import Sprite, Plant
+import pygame, sys
+from .sprites import Sprite, Player, Tree, ParticleSprite, AnimatedSprite
 from .groups import AllSprites
 from .soil import SoilLayer
 from .transition import Transition
@@ -8,7 +8,6 @@ from random import randint
 from .sky import Sky, Rain
 from .overlay import Overlay
 from .shop import Menu
-from .support import load_data
 
 
 class Level:
