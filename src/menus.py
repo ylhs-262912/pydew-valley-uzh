@@ -1,5 +1,5 @@
 import pygame, sys
-from .settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
 
 from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
@@ -71,7 +71,7 @@ class GeneralMenu:
 
     def button_action(self, text):
         if text == 'Play':
-            self.switch_screen('level')
+            self.switch_screen(GameState.LEVEL)
         if text == 'Quit':
             self.quit_game()
     
@@ -123,7 +123,7 @@ class MainMenu(GeneralMenu):
     
     def button_action(self, text):
         if text == 'Play':
-            self.switch_screen('level')
+            self.switch_screen(GameState.LEVEL)
         if text == 'Quit':
             self.quit_game()
 
@@ -137,9 +137,9 @@ class PauseMenu(GeneralMenu):
 
     def button_action(self, text):
         if text == 'Resume':
-            self.switch_screen('level')
+            self.switch_screen(GameState.LEVEL)
         if text == 'Options':
-            self.switch_screen('settings')
+            self.switch_screen(GameState.SETTINGS)
         if text == 'Quit':
             self.quit_game()
         
@@ -180,7 +180,7 @@ class SettingsMenu(GeneralMenu):
             self.description = self.draw_slider
         if text == 'Back':
             self.save_data()
-            self.switch_screen('pause')
+            self.switch_screen(GameState.PAUSE)
 
     def save_data(self):
         data = {}
@@ -370,7 +370,7 @@ class ShopMenu(GeneralMenu):
         super().__init__(title, options, switch_screen, size, background)
     
     def button_action(self, text):
-        self.switch_screen('level')
+        self.switch_screen(GameState.PAUSE)
 
 # ------- Components ------- #
 

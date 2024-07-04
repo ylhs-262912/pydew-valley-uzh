@@ -1,4 +1,4 @@
-from .settings import TILE_SIZE, SCALE_FACTOR, LAYERS
+from .settings import TILE_SIZE, SCALE_FACTOR, LAYERS, GameState
 import pygame, sys
 from .sprites import Sprite, Player, Tree, ParticleSprite, AnimatedSprite
 from .groups import AllSprites
@@ -104,7 +104,7 @@ class Level:
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    self.switch_screen('pause')
+                    self.switch_screen(GameState.PAUSE)
 
     def apply_tool(self, tool, pos, entity):
         if tool == 'axe':
