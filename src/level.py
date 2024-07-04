@@ -1,5 +1,10 @@
+import math
+
 import pygame
 import random
+
+from pathfinding.core.grid import Grid as PF_Grid
+from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 from src.groups import AllSprites
 from src.soil import SoilLayer
@@ -13,6 +18,7 @@ from src.sprites import (
     Tree,
     Sprite,
     Player,
+    NPC,
 )
 from src.settings import (
     TILE_SIZE,
@@ -35,11 +41,18 @@ class Level:
 
         # sprite groups
         self.entities = {}
+        self.npcs = {}
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
         self.font = font
+
+        # pathfinding
+        self.pf_matrix = []
+        self.pf_grid: PF_Grid
+        self.pf_finder = PF_AStarFinder()
+
         # soil
         self.soil_layer = SoilLayer(
             self.all_sprites,
@@ -77,6 +90,10 @@ class Level:
     def setup(self, tmx_maps: MapDict, character_frames, level_frames):
         self.sounds["music"].set_volume(0.1)
         self.sounds["music"].play(-1)
+
+        matrix_width = tmx_maps['main'].width
+        matrix_height = tmx_maps['main'].height
+
         # environment
         for layer in ['Lower ground', 'Upper ground']:
             for x, y, surf in tmx_maps['main'].get_layer_by_name(
@@ -87,6 +104,8 @@ class Level:
                                                  SCALE_FACTOR),
                        self.all_sprites,
                        LAYERS['lower ground'])
+
+        self.pf_matrix = [[1 for _ in range(matrix_width)] for _ in range(matrix_height)]
 
         # water
         for x, y, surf in tmx_maps['main'].get_layer_by_name('Water').tiles():
@@ -117,6 +136,15 @@ class Level:
                        (self.all_sprites,
                         self.collision_sprites))
 
+            tile_x = int(obj.x / 16)
+            tile_y = int(obj.y / 16)
+            tile_w = math.ceil((obj.x + obj.width) / 16) - tile_x
+            tile_h = math.ceil((obj.y + obj.height) / 16) - tile_y
+
+            for w in range(tile_w):
+                for h in range(tile_h):
+                    self.pf_matrix[tile_y + h][tile_x + w] = 0
+
         # collisions
         for obj in tmx_maps['main'].get_layer_by_name('Collisions'):
             Sprite(
@@ -127,6 +155,18 @@ class Level:
                 )),
                 (self.collision_sprites,),
             )
+
+            tile_x = int(obj.x / 16)
+            tile_y = int(obj.y / 16)
+            tile_w = math.ceil((obj.x + obj.width) / 16) - tile_x
+            tile_h = math.ceil((obj.y + obj.height) / 16) - tile_y
+
+            for w in range(tile_w):
+                for h in range(tile_h):
+                    self.pf_matrix[tile_y + h][tile_x + w] = 0
+
+        self.pf_grid = PF_Grid(matrix=self.pf_matrix)
+        self.pf_finder = PF_AStarFinder()
 
         # interactions
         for obj in tmx_maps['main'].get_layer_by_name('Interactions'):
@@ -141,12 +181,26 @@ class Level:
             self.entities[obj.name] = Player(
                 pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
                 frames=character_frames['rabbit'],
-                groups=self.all_sprites,
+                groups=(self.all_sprites,),
                 collision_sprites=self.collision_sprites,
                 apply_tool=self.apply_tool,
                 interact=self.interact,
                 sounds=self.sounds,
                 font=self.font,
+            )
+
+        # non-playable entities
+        self.npcs = {}
+        for obj in tmx_maps['main'].get_layer_by_name('NPCs'):
+            self.npcs[obj.name] = NPC(
+                pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
+                frames=character_frames['rabbit'],
+                groups=(self.all_sprites,),
+                collision_sprites=self.collision_sprites,
+                apply_tool=self.apply_tool,
+                pf_matrix=self.pf_matrix,
+                pf_grid=self.pf_grid,
+                pf_finder=self.pf_finder,
             )
 
     def apply_tool(self, tool, pos, entity):
@@ -170,7 +224,7 @@ class Level:
                     self.sounds['plant'], self.sounds['cant_plant']])
 
     def create_particle(self, sprite):
-        ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
+        ParticleSprite(sprite.rect.topleft, sprite.image, (self.all_sprites,))
 
     def interact(self, pos):
         collided_interaction_sprite = pygame.sprite.spritecollide(
