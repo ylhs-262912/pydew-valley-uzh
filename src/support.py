@@ -115,3 +115,6 @@ def save_data(data, file_name):
 def load_data(file_name):
     with open(resource_path('data/settings/' + file_name), 'r') as file:
         return json.load(file)
+    
+def map_coords_to_tile(pos):
+    return (pos[0] // (TILE_SIZE * SCALE_FACTOR), pos[1] // (TILE_SIZE * SCALE_FACTOR))

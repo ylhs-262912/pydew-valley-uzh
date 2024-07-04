@@ -22,6 +22,11 @@ class Game:
         self.sounds = None
         self.font = None
         self.load_assets()
+        self.frames = {
+            'character': self.character_frames,
+            'level': self.level_frames,
+            'overlay': self.overlay_frames
+        }
         
         # game setup
         self.running = True
@@ -31,7 +36,7 @@ class Game:
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds)
-        self.level = Level(self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font, self.sounds, self.switch_state)
+        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
 
 
         self.screens = { 
