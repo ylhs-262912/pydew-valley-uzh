@@ -1,4 +1,8 @@
-from .settings import *
+import pygame
+from src.settings import (
+    OVERLAY_POSITIONS,
+)
+
 
 
 class Overlay:
