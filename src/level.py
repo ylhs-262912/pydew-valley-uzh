@@ -14,6 +14,8 @@ from src.sprites import (
     Sprite,
     Player,
 )
+from src.enums import FarmingTool, ItemToUse, InventoryResource
+from src import savefile
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -40,7 +42,7 @@ class Level:
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
         self.font = font
-        self.save = load_savefile()
+        self.save = savefile.load_savefile()
         # soil 
         self.soil_layer = SoilLayer(
             self.all_sprites,

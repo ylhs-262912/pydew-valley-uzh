@@ -9,6 +9,8 @@ from src.settings import (
 )
 from types import FunctionType as Function
 
+from src.enums import InventoryResource, FarmingTool, ItemToUse
+
 from src import support
 from src import timer
 from src.pause_menu import PauseMenu
