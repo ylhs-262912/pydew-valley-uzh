@@ -6,6 +6,7 @@ from src.main_menu import MainMenuInternal
 
 class Game:
     def __init__(self, mm):
+        self.main_menu = mm
         self.settings_menu = False
         self.character_frames: dict[str, AniFrames] | None = None
         self.level_frames: dict | None = None
@@ -13,7 +14,6 @@ class Game:
         self.overlay_frames: dict[str, pygame.Surface] | None = None
         self.font: pygame.font.Font | None = None
         self.sounds: SoundDict | None = None
-        self.main_menu = mm
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption('PyDew')
@@ -72,7 +72,7 @@ class Game:
                     self.settings_menu.go_back = False
                     self.settings_menu = False
                     pause_menu.pressed_settings = False
-                if self.settings_menu == False:
+                if not self.settings_menu:
                     pause_menu.update()
                 if self.settings_menu:
                     self.settings_menu.update()

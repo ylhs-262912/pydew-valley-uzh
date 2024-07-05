@@ -1,9 +1,20 @@
-from .settings import *
+import pygame
+from .settings import (LAYERS,
+                       SCALE_FACTOR,
+                       GROW_SPEED,
+                       APPLE_POS,
+                       Function,
+                       SoundDict,
+                       Coordinate
+                       )
+from .enums import FarmingTool, InventoryResource, ItemToUse, PlayerState
 from .timer import Timer
 from .support import generate_particle_surf
 from random import randint, choice
 from .pause_menu import PauseMenu
 from .settings_menu import SettingsMenu
+
+
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, pos: tuple[int | float, int | float], surf: pygame.Surface, groups: tuple[pygame.sprite.Group], z: int = LAYERS['main'], name: str | None = None):
         super().__init__(groups)

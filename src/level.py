@@ -7,6 +7,7 @@ from random import randint
 from .sky import Sky, Rain
 from .overlay import Overlay
 from .menu import Menu
+from .savefile import load_savefile
 
 
 class Level:
@@ -20,6 +21,7 @@ class Level:
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
         self.font = font
+        self.save = load_savefile()
         # soil 
         self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites, tmx_maps['main'], level_frames)
         self.raining = False

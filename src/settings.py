@@ -9,7 +9,6 @@ from os.path import join
 from os import walk, path, sep, listdir
 from pytmx.util_pygame import load_pygame
 import pytmx
-from enum import IntEnum, StrEnum
 from types import FunctionType as Function
 
 type Coordinate = tuple[int | float, int | float]
@@ -57,67 +56,3 @@ APPLE_POS = {
     'small': [(18, 17), (30, 37), (12, 50), (30, 45), (20, 30), (30, 10)],
     'default': [(30, 24), (60, 65), (50, 50), (16, 40), (45, 50), (42, 70)]
 }
-
-
-class ItemToUse(IntEnum):
-    """Both available options for Player.use_tool. If any more have to be added, put them as members of this enum."""
-    REGULAR_TOOL = 0
-    SEED = 1
-
-
-class FarmingTool(IntEnum):
-    """Notably used to distinguish the different farming tools (including seeds) in-code."""
-    NONE = 0  # Possible placeholder value if needed somewhere
-    AXE = 1
-    HOE = 2
-    WATERING_CAN = 3
-    CORN_SEED = 4
-    TOMATO_SEED = 5
-
-    @property
-    def _swinging_tools(self):
-        return {self.HOE, self.AXE}
-
-    def is_swinging_tool(self):
-        return self in self._swinging_tools
-
-    @classmethod
-    def get_first_tool_id(cls):
-        """Return the first tool ID. This might change in the course of development."""
-        return cls.AXE
-
-    @classmethod
-    def get_tool_count(cls):
-        return cls.get_first_seed_id() - cls.get_first_tool_id()
-
-    @classmethod
-    def get_seed_count(cls):
-        return len(cls) - cls.get_first_seed_id()
-
-    @classmethod
-    def get_first_seed_id(cls):
-        """Same as get_first_tool_id, but for the seeds. Duh."""
-        return cls.CORN_SEED
-
-
-class InventoryResource(IntEnum):
-    """All stored items in the inventory."""
-    WOOD = 0
-    APPLE = 1
-    CORN = 2
-    TOMATO = 3
-    CORN_SEED = 4
-    TOMATO_SEED = 5
-
-    def as_serialised_string(self):
-        return _IR_SERIALISED_STRINGS[self]
-
-
-_IR_SERIALISED_STRINGS = (
-    "wood",
-    "apple",
-    "corn",
-    "tomato",
-    "corn seed",
-    "tomato seed"
-)

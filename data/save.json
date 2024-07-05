@@ -1,0 +1,6 @@
+{
+  "__FarmingTool__": ["current_tool"],
+  "current_tool": "axe",
+  "__InventoryResource__": ["wood"],
+  "wood": 20
+}
