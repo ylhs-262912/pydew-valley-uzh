@@ -91,10 +91,11 @@ class Level:
             setup_func(pos, obj)
 
     def setup_objects(self, pos, obj):
+        image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
+        
         if obj.name == 'Tree':
             apple_frames = self.frames['level']['objects']['apple']
             stump_frames = self.frames['level']['objects']['stump']
-            image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
 
             Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
         else:
