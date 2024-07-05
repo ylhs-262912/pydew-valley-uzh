@@ -123,7 +123,7 @@
  </layer>
  <objectgroup id="8" name="Collisions">
   <object id="6" x="80.7734" y="112.137" width="46.4017" height="47.4758"/>
-  <object id="7" x="337.272" y="111.923" width="45.9721" height="47.9055"/>
+  <object id="7" x="337.272" y="112.1" width="45.9721" height="47.8"/>
   <object id="8" x="432.653" y="207.089" width="47.0462" height="48.5499"/>
   <object id="30" x="64.3333" y="336.667" width="351.333" height="62.6667"/>
   <object id="31" x="48" y="368.364" width="16" height="31.4545"/>

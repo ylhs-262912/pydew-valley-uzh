@@ -98,8 +98,7 @@ class SoilLayer:
                     self.grid[y][x].append('P')
                     Plant(seed,
                           [self.all_sprites,
-                           self.plant_sprites,
-                           self.collision_sprites],
+                           self.plant_sprites],
                           soil_sprite,
                           self.level_frames[seed],
                           self.check_watered)
