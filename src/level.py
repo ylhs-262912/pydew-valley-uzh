@@ -18,7 +18,7 @@ from src.sprites import (
     Tree,
     Sprite,
     Player,
-    NPC,
+    NPC, NPCBehaviourMethods,
 )
 from src.settings import (
     TILE_SIZE,
@@ -181,7 +181,7 @@ class Level:
             self.entities[obj.name] = Player(
                 pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
                 frames=character_frames['rabbit'],
-                groups=(self.all_sprites,),
+                groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
                 apply_tool=self.apply_tool,
                 interact=self.interact,
@@ -190,14 +190,16 @@ class Level:
             )
 
         # non-playable entities
+        NPCBehaviourMethods.init()
         self.npcs = {}
         for obj in tmx_maps['main'].get_layer_by_name('NPCs'):
             self.npcs[obj.name] = NPC(
                 pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
                 frames=character_frames['rabbit'],
-                groups=(self.all_sprites,),
+                groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
                 apply_tool=self.apply_tool,
+                soil_layer=self.soil_layer,
                 pf_matrix=self.pf_matrix,
                 pf_grid=self.pf_grid,
                 pf_finder=self.pf_finder,
