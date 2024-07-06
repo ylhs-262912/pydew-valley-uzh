@@ -381,6 +381,7 @@ class KeySetup(Component):
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
         self.offset = vector()
         self.hover_active = False
+        self.bg_color = 'grey'
 
         # rect
         self.pos = pos
@@ -415,7 +416,7 @@ class KeySetup(Component):
     
     def draw(self, surface):
         self.surface = surface
-        pygame.draw.rect(self.surface, 'grey', self.rect, 0, 4)
+        pygame.draw.rect(self.surface, self.bg_color, self.rect, 0, 4)
         self.draw_key_name()
         self.draw_symbol()
 
@@ -559,6 +560,7 @@ class KeybindsDescription(Description):
         self.keybinds = {}
         self.keys_group = []
         self.selection_key = None
+        self.pressed_key = None
 
         # setup
         self.import_data()
@@ -612,41 +614,44 @@ class KeybindsDescription(Description):
     # events
     def handle_events(self, event):
         super().handle_events(event)
-        self.select_keySetup(event)
         self.set_key(event)
+        self.select_keySetup(event)
 
                 
 
     # keybinds
+
+    def get_hovered_key(self):
+        offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+        for key in self.keys_group:
+            if key.hover(offset):
+                return key
+        return None
+
     def select_keySetup(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            for key in self.keys_group:
-                offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
-                if key.hover(offset):
-                    key.start_press_animation()
-                    return
+            self.remove_selection()
+            hovered_key = self.get_hovered_key()
+            if hovered_key:
+                self.pressed_key = hovered_key
+                self.pressed_key.start_press_animation()
 
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            for key in self.keys_group:
-                offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
-                if key.hover(offset):
-                    key.start_release_animation()
-                    self.selection_key = key
-                    return
-                else:
-                    if key.animation_active:
-                        key.reset_animation()
-            self.selection_key = None
+            offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+            if self.pressed_key and self.pressed_key.hover(offset):
+                self.selection_key = self.pressed_key
+                self.selection_key.start_release_animation()
+                self.selection_key.bg_color = 'red'
+
+            else:
+                self.remove_selection()
+            
 
     def set_key(self, event):
         if self.selection_key:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button not in [1, 3]:
-                    return
-                if event.button == 1:
-                    path = 'images/keys/lclick.png'
-                if event.button == 3:
-                    path = 'images/keys/rclick.png'
+            offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1, 3] and self.selection_key.hover(offset):
+                path = 'images/keys/lclick.png' if event.button == 1 else 'images/keys/rclick.png'
                 symbol = 'LMB' if event.button == 1 else 'RMB'
                 key = None
                 self.update_key_value(symbol, key, path)
@@ -664,7 +669,14 @@ class KeybindsDescription(Description):
         self.selection_key.key_symbol = symbol if self.is_generic(symbol) else None
         self.selection_key.symbol_image = image
         self.selection_key.key_value = key
+
+    def remove_selection(self):
         self.selection_key = None
+
+        if self.pressed_key:
+            self.pressed_key.bg_color = 'grey'
+            self.pressed_key.reset_animation()
+            self.pressed_key = None
     
     def reset_keybinds(self):
         for key in self.keys_group:
@@ -717,15 +729,10 @@ class KeybindsDescription(Description):
 
 
     # draw
-    def draw_selected_key_indicator(self):
-        if self.selection_key:
-            pygame.draw.rect(self.description_slider_surface, 'red', self.selection_key.rect, 4, 4)
-
     def draw_keybinds(self):
         for key in self.keys_group:
             key.draw(self.description_slider_surface)
 
-        self.draw_selected_key_indicator()
         self.description_surface.blit(self.description_slider_surface, self.description_slider_rect)
         self.display_surface.blit(self.description_surface, self.description_rect.topleft)
     

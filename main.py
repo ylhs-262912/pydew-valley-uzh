@@ -47,7 +47,7 @@ class Game:
         }
 
 
-        self.current_state = GameState.MAIN_MENU
+        self.current_state = GameState.SETTINGS
     
     def switch_state(self, state):
         self.current_state = state

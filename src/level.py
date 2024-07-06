@@ -4,7 +4,7 @@ from random import randint
 
 from .settings import TILE_SIZE, SCALE_FACTOR, LAYERS, GameState
 from .sprites import Sprite, Player, Tree, ParticleSprite, AnimatedSprite
-from .support import map_coords_to_tile
+from .support import map_coords_to_tile, load_data
 from .transition import Transition
 from .groups import AllSprites
 from .overlay import Overlay
@@ -127,7 +127,8 @@ class Level:
         return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
 
     def activate_music(self):
-        self.sounds["music"].set_volume(0.1)
+        volume = load_data('volume.json') / 1000
+        self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
 
         
