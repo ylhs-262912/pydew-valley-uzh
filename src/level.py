@@ -1,4 +1,4 @@
-import pygame
+import pygame  # noqa
 import random
 
 from src.groups import AllSprites
@@ -14,7 +14,7 @@ from src.sprites import (
     Sprite,
     Player,
 )
-from src.enums import FarmingTool, ItemToUse, InventoryResource
+from src.enums import FarmingTool
 from src import savefile
 from src.settings import (
     TILE_SIZE,
@@ -142,6 +142,7 @@ class Level:
         self.entities = {}
         for obj in tmx_maps['main'].get_layer_by_name('Entities'):
             self.entities[obj.name] = Player(pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
+                                             save_data=self.save,
                                              frames=character_frames['rabbit'],
                                              groups=self.all_sprites,
                                              collision_sprites=self.collision_sprites,
@@ -164,7 +165,8 @@ class Level:
                 self.sounds['water'].play()
             case _:  # All seeds
                 self.soil_layer.plant_seed(pos, entity.available_seeds[tool - FarmingTool.get_first_seed_id()],
-                                           entity.inventory, plant_sounds=[self.sounds['plant'], self.sounds['cant_plant']])
+                                           entity.inventory, plant_sounds=[self.sounds['plant'],
+                                                                           self.sounds['cant_plant']])
 
     def create_particle(self, sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)

@@ -14,6 +14,7 @@ import random
 class SoilLayer:
     def __init__(self, all_sprites, collision_sprites, tmx_map, level_frames):
         # sprite groups
+        self.grid = []
         self.all_sprites = all_sprites
         self.collision_sprites = collision_sprites
         self.soil_sprites = pygame.sprite.Group()

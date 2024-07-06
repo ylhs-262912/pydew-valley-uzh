@@ -1,4 +1,4 @@
-import pygame
+import pygame  # noqa
 from src.settings import (
     LAYERS,
     SCREEN_HEIGHT,
@@ -24,7 +24,7 @@ class AllSprites(pygame.sprite.Group):
 
             for sprite in sorted(
                     self.sprites(),
-                    key=lambda sprite: sprite.rect.centery):
+                    key=lambda spr: spr.rect.centery):
                 if sprite.z == layer:
                     self.display_surface.blit(
                         sprite.image, sprite.rect.topleft + self.offset)

@@ -1,5 +1,5 @@
 import sys
-import pygame
+import pygame  # noqa
 
 from src import settings
 from src import support
@@ -8,7 +8,8 @@ from src import main_menu
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, mm):
+        self.main_menu = mm
         self.character_frames: dict[str, settings.AniFrames] | None = None
         self.level_frames: dict | None = None
         self.tmx_maps: settings.MapDict | None = None
@@ -20,6 +21,7 @@ class Game:
             settings.SCREEN_WIDTH,
             settings.SCREEN_HEIGHT,
         ))
+        self.settings_menu = None
         pygame.display.set_caption('PyDew')
         self.clock = pygame.time.Clock()
         self.running = True
@@ -106,7 +108,7 @@ class MainMenu:
         pygame.display.set_caption('PyDew')
         self.clock = pygame.time.Clock()
         self.sounds = support.sound_importer('audio', default_volume=0.25)
-        self.main_menu = main_menu.main_menu(self.font, self.sounds["music"])
+        self.main_menu = main_menu.MainMenuInternal(self.font, self.sounds["music"])
         self.background = pygame.image.load("images/menu_background/bg.png")
         self.background = pygame.transform.scale(
             self.background, (settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))

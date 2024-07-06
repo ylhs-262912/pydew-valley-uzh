@@ -4,7 +4,6 @@ from src.settings import (
 )
 
 
-
 class Overlay:
     def __init__(self, entity, overlay_frames):
 

@@ -9,6 +9,9 @@ class SettingsMenu:
     def __init__(self, font, sounds):
 
         # general setup
+        self.text_surfs = []
+        self.total_height = 0
+        self.menu_top = 0
         self.display_surface = pygame.display.get_surface()
         self.font = font
         self.index = 0
@@ -43,8 +46,6 @@ class SettingsMenu:
 
     def setup(self):
         # create the text surfaces
-        self.text_surfs = []
-        self.total_height = 0
 
         for item in self.options:
             text_surf = self.font.render(item, False, 'Black')
@@ -58,7 +59,6 @@ class SettingsMenu:
             self.width,
             self.total_height)
 
-        # buy / sell text surface
     def input(self):
         if self.slider:
             for event in pygame.event.get():

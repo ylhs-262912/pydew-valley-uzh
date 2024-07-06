@@ -1,4 +1,4 @@
-import pygame
+import pygame  # noqa
 from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -9,6 +9,11 @@ class MainMenuInternal:
     def __init__(self, font, music):
 
         # general setup
+        self.text_surfs = []
+        self.total_height = 0
+        self.menu_top = 0
+        self.main_rect = None
+        self.menu_top = 0
         self.display_surface = pygame.display.get_surface()
         self.font = font
         self.index = 0
@@ -26,8 +31,6 @@ class MainMenuInternal:
     def setup(self):
         self.music.play()
         # create the text surfaces
-        self.text_surfs = []
-        self.total_height = 0
 
         for item in self.options:
             text_surf = self.font.render(item, False, 'Black')
@@ -35,6 +38,7 @@ class MainMenuInternal:
             self.total_height += text_surf.get_height() + (self.padding * 2)
 
         self.total_height += (len(self.text_surfs) - 1) * self.space
+
         self.menu_top = SCREEN_HEIGHT / 2 - self.total_height / 2
         self.main_rect = pygame.Rect(
             SCREEN_WIDTH / 2 - self.width / 2,

@@ -9,6 +9,8 @@ class PauseMenu:
     def __init__(self, font):
 
         # general setup
+        self.text_surfs = []
+        self.total_height = 0
         self.display_surface = pygame.display.get_surface()
         self.font = font
         self.index = 0
@@ -25,8 +27,6 @@ class PauseMenu:
 
     def setup(self):
         # create the text surfaces
-        self.text_surfs = []
-        self.total_height = 0
 
         for item in self.options:
             text_surf = self.font.render(item, False, 'Black')
@@ -34,6 +34,7 @@ class PauseMenu:
             self.total_height += text_surf.get_height() + (self.padding * 2)
 
         self.total_height += (len(self.text_surfs) - 1) * self.space
+
         self.menu_top = SCREEN_HEIGHT / 2 - self.total_height / 2
         self.main_rect = pygame.Rect(
             SCREEN_WIDTH / 2 - self.width / 2,
@@ -41,7 +42,6 @@ class PauseMenu:
             self.width,
             self.total_height)
 
-        # buy / sell text surface
     def input(self):
         keys = pygame.key.get_just_pressed()
 

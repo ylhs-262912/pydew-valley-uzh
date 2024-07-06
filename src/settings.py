@@ -49,16 +49,17 @@ OVERLAY_POSITIONS = {
     'tool': (40, SCREEN_HEIGHT - 15),
     'seed': (70, SCREEN_HEIGHT - 5)}
 
-SALE_PRICES = {
-    'wood': 4,
-    'apple': 2,
-    'corn': 10,
-    'tomato': 20
-}
-PURCHASE_PRICES = {
-    'corn seed': 4,
-    'tomato seed': 5
-}
+# SALE_PRICES = {
+#     'wood': 4,
+#     'apple': 2,
+#     'corn': 10,
+#     'tomato': 20
+# }
+
+# PURCHASE_PRICES = {
+#     'corn seed': 4,
+#     'tomato seed': 5
+# }
 
 APPLE_POS = {
     'small': [(18, 17), (30, 37), (12, 50), (30, 45), (20, 30), (30, 10)],

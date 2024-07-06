@@ -1,21 +1,27 @@
-import pygame
+import pygame  # noqa
 from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
-    PURCHASE_PRICES,
-    SALE_PRICES,
 )
+from src.enums import InventoryResource
 
 
 class Menu:
     def __init__(self, player, toggle_menu, font):
 
         # general setup
+
+        self.buy_text = font.render('buy', False, 'Black')
+        self.sell_text = font.render('sell', False, 'Black')
+        self.main_rect = None
+        self.menu_top = None
         self.player = player
         self.toggle_menu = toggle_menu
         self.display_surface = pygame.display.get_surface()
         self.font = font
         self.index = 0
+        self.text_surfs = []
+        self.total_height = 0
 
         # options
         self.width = 400
@@ -23,7 +29,7 @@ class Menu:
         self.padding = 8
 
         # entries
-        self.options = list(self.player.inventory.keys())
+        self.options = list(self.player.inventory)
         self.setup()
 
     def display_money(self):
@@ -38,15 +44,14 @@ class Menu:
     def setup(self):
 
         # create the text surfaces
-        self.text_surfs = []
-        self.total_height = 0
 
         for item in self.options:
-            text_surf = self.font.render(item, False, 'Black')
+            text_surf = self.font.render(item.as_serialised_string(), False, 'Black')
             self.text_surfs.append(text_surf)
             self.total_height += text_surf.get_height() + (self.padding * 2)
 
         self.total_height += (len(self.text_surfs) - 1) * self.space
+
         self.menu_top = SCREEN_HEIGHT / 2 - self.total_height / 2
         self.main_rect = pygame.Rect(
             SCREEN_WIDTH / 2 - self.width / 2,
@@ -55,8 +60,6 @@ class Menu:
             self.total_height)
 
         # buy / sell text surface
-        self.buy_text = self.font.render('buy', False, 'Black')
-        self.sell_text = self.font.render('sell', False, 'Black')
 
     def input(self):
         keys = pygame.key.get_just_pressed()
@@ -70,16 +73,15 @@ class Menu:
 
         if keys[pygame.K_SPACE]:
             current_item = self.options[self.index]
-            if 'seed' in current_item:
-                seed_price = PURCHASE_PRICES[current_item]
-                if self.player.money >= seed_price:
+            if current_item.is_seed():
+                if self.player.money >= current_item.get_worth():
                     self.player.inventory[current_item] += 1
-                    self.player.money -= PURCHASE_PRICES[current_item]
+                    self.player.money -= current_item.get_worth()
 
             else:
                 if self.player.inventory[current_item] > 0:
                     self.player.inventory[current_item] -= 1
-                    self.player.money += SALE_PRICES[current_item]
+                    self.player.money += current_item.get_worth() // 2
 
     def show_entry(self, text_surf, amount, top, index, text_index):
 
@@ -106,7 +108,7 @@ class Menu:
                 midleft=(self.main_rect.left + 250, bg_rect.centery))
             surf = (
                 self.buy_text
-                if 'seed' in self.options[index]
+                if self.options[index].is_seed()
                 else self.sell_text
             )
             self.display_surface.blit(surf, pos_rect)

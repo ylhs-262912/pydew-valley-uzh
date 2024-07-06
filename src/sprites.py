@@ -22,7 +22,7 @@ class Sprite(pygame.sprite.Sprite):
                  pos: tuple[int | float,
                             int | float],
                  surf: pygame.Surface,
-                 groups: tuple[pygame.sprite.Group],
+                 groups: tuple[pygame.sprite.Group] | pygame.sprite.Group,
                  z: int = LAYERS['main'],
                  name: str | None = None):
         super().__init__(groups)
@@ -182,9 +182,14 @@ class Entity(Sprite):
         super().__init__(pos, frames[self.state][0], groups, z)
 
 
+_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
+_SEED_INVENTORY_DEFAULT_AMOUNT = 5
+
+
 class Player(CollideableSprite):
     def __init__(
             self,
+            save_data: dict,
             pos: settings.Coordinate,
             frames,
             groups,
@@ -219,15 +224,15 @@ class Player(CollideableSprite):
 
         # tools
         self.available_tools = ['axe', 'hoe', 'water']
-        self.tool_index = 0
-        self.current_tool = FarmingTool.get_first_tool_id()
+        self.current_tool = save_data.get("current_tool", FarmingTool.get_first_tool_id())
+        self.tool_index = self.current_tool.value - 1
         # self.current_tool = self.available_tools[self.tool_index]
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
         self.pause_menu = PauseMenu(self.font)
         self.settings_menu = SettingsMenu(self.font, self.sounds)
-        # seeds 
+        # seeds
         self.available_seeds = ['corn', 'tomato']
         self.seed_index = 0
         self.current_seed = FarmingTool.get_first_seed_id()
@@ -235,12 +240,12 @@ class Player(CollideableSprite):
 
         # inventory
         self.inventory = {
-            'wood': 20,
-            'apple': 20,
-            'corn': 20,
-            'tomato': 20,
-            'tomato seed': 5,
-            'corn seed': 5,
+            res: save_data.get(
+                res.as_serialised_string(),
+                _SEED_INVENTORY_DEFAULT_AMOUNT if res >= InventoryResource.CORN_SEED else
+                _NONSEED_INVENTORY_DEFAULT_AMOUNT
+                )
+            for res in InventoryResource.__members__.values()
         }
         self.money = 200
 

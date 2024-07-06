@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, nonmember  # noqa
 
 
 class PlayerState(IntEnum):
@@ -22,8 +22,41 @@ _FT_SERIALISED_STRINGS = (
 )
 
 
-class FarmingTool(IntEnum):
+# NOTE : DO NOT pay attention to anything the IDE might complain about in this class, as the enum generation mechanisms
+# will ensure _SERIALISABLE_STRINGS is actually treated like a tuple of strings instead of an integer.
+class _SerialisableEnum(IntEnum):
+    _SERIALISABLE_STRINGS = nonmember(())  # This will be overridden in derived enums.
+
+    def as_serialised_string(self):
+        # We keep that method separate from the actual str dunder, so we can still get the original repr when debugging
+        return self._SERIALISABLE_STRINGS[self]  # noqa
+
+    @classmethod
+    def from_serialised_string(cls, val: str):
+        """Return an enum member from a serialised string.
+
+        :param val: The serialised string.
+        :return: The corresponding enum member.
+        :raise LookupError: if no enum member matches this string."""
+        try:
+            return cls(cls._SERIALISABLE_STRINGS.index(val))  # noqa
+        except IndexError as exc:
+            raise LookupError(f"serialised string '{val}' does not match any member in enum '{cls.__name__}'") from exc
+
+
+class FarmingTool(_SerialisableEnum):
     """Notably used to distinguish the different farming tools (including seeds) in-code."""
+    _SERIALISABLE_STRINGS = nonmember(
+        (
+            "none",
+            "axe",
+            "hoe",
+            "water",
+            "corn seed",
+            "tomato seed"
+        )
+    )
+
     NONE = 0  # Possible placeholder value if needed somewhere
     AXE = 1
     HOE = 2
@@ -56,35 +89,33 @@ class FarmingTool(IntEnum):
         """Same as get_first_tool_id, but for the seeds. Duh."""
         return cls.CORN_SEED
 
-    def as_serialised_string(self):
-        # We keep that method separate from the actual str dunder, so we can still get the original repr when debugging
-        return _FT_SERIALISED_STRINGS[self]
 
-    @classmethod
-    def from_serialised_string(cls, val: str):
-        """Return a FarmingTool enum member from a serialised string.
-
-        :param val: The serialised string.
-        :return: The corresponding enum member.
-        :raise LookupError: if no enum member matches this string."""
-        try:
-            return cls(_FT_SERIALISED_STRINGS.index(val))
-        except IndexError as exc:
-            raise LookupError(f"serialised string '{val}' does not match any member in enum 'FarmingTool'") from exc
-
-
-_IR_SERIALISED_STRINGS = (
-    "wood",
-    "apple",
-    "corn",
-    "tomato",
-    "corn seed",
-    "tomato seed"
-)
-
-
-class InventoryResource(IntEnum):
+class InventoryResource(_SerialisableEnum):
     """All stored items in the inventory."""
+    _SERIALISABLE_STRINGS = nonmember(
+        (
+            "wood",
+            "apple",
+            "corn",
+            "tomato",
+            "corn seed",
+            "tomato seed"
+        )
+    )
+
+    # All item worths in the game. When traders buy things off you, they pay you for half the worth.
+    # If YOU buy something from THEM, then you have to pay the FULL worth, though.
+    _ITEM_WORTHS = nonmember(
+        (
+            8,  # WOOD
+            4,  # APPLE
+            20,  # CORN
+            40,  # TOMATO
+            4,  # CORN_SEED
+            5,  # TOMATO_SEED
+        )
+    )
+
     WOOD = 0
     APPLE = 1
     CORN = 2
@@ -92,19 +123,8 @@ class InventoryResource(IntEnum):
     CORN_SEED = 4
     TOMATO_SEED = 5
 
-    def as_serialised_string(self):
-        # We keep that method separate from the actual str dunder, so we can still get the original repr when debugging
-        return _IR_SERIALISED_STRINGS[self]
+    def get_worth(self):
+        return self._ITEM_WORTHS[self]  # noqa
 
-    @classmethod
-    def from_serialised_string(cls, val: str):
-        """Return an InventoryResource enum member from a serialised string.
-
-        :param val: The serialised string.
-        :return: The corresponding enum member.
-        :raise LookupError: if no enum member matches this string."""
-        try:
-            return cls(_IR_SERIALISED_STRINGS.index(val))
-        except IndexError as exc:
-            raise LookupError(f"serialised string '{val}' does not match any member in enum 'InventoryResource'") from exc
-
+    def is_seed(self):
+        return self >= self.CORN_SEED
