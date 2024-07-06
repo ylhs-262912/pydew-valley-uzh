@@ -558,13 +558,15 @@ class Description:
         if event.type == pygame.MOUSEWHEEL:
             speed = 10
             self.description_slider_rect.y += event.y * speed
+
+            y = self.description_slider_rect.y
+            y_max = 0
+            self.description_slider_rect.y = min(y_max, y)
+
             height_s1 = self.description_surface.height
             height_s2 = self.description_slider_surface.height
             y = self.description_slider_rect.y
             y_min = height_s1 - height_s2
-            y_max = 0
-
-            self.description_slider_rect.y = min(y_max, y)
             self.description_slider_rect.y = max(y_min, y)
 
     # draw
