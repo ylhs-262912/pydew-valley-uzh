@@ -15,7 +15,6 @@ from src.sprites import (
     Player,
 )
 from src.enums import FarmingTool
-from src import savefile
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -42,7 +41,6 @@ class Level:
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
         self.font = font
-        self.save = savefile.load_savefile()
         # soil 
         self.soil_layer = SoilLayer(
             self.all_sprites,
@@ -142,7 +140,6 @@ class Level:
         self.entities = {}
         for obj in tmx_maps['main'].get_layer_by_name('Entities'):
             self.entities[obj.name] = Player(pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
-                                             save_data=self.save,
                                              frames=character_frames['rabbit'],
                                              groups=self.all_sprites,
                                              collision_sprites=self.collision_sprites,

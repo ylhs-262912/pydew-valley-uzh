@@ -22,7 +22,7 @@ class PauseMenu:
         self.pressed_play = False
         self.pressed_quit = False
         # entries
-        self.options = ("Resume", "Options", "Main Menu")
+        self.options = ("Resume", "Options", "Save and Resume", "Main Menu")
         self.setup()
 
     def setup(self):
@@ -52,6 +52,10 @@ class PauseMenu:
         if keys[pygame.K_SPACE]:
             current_item = self.options[self.index]
             if 'Resume' in current_item:
+                if not self.pressed_quit:
+                    self.pressed_play = True
+                    self.index = 0
+            if current_item == "Save and Resume":
                 if not self.pressed_quit:
                     self.pressed_play = True
                     self.index = 0

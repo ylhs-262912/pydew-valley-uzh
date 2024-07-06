@@ -10,6 +10,7 @@ from src.settings import (
 from types import FunctionType as Function
 
 from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src import savefile
 
 from src import support
 from src import timer
@@ -189,7 +190,6 @@ _SEED_INVENTORY_DEFAULT_AMOUNT = 5
 class Player(CollideableSprite):
     def __init__(
             self,
-            save_data: dict,
             pos: settings.Coordinate,
             frames,
             groups,
@@ -198,6 +198,7 @@ class Player(CollideableSprite):
             interact: Function,
             sounds: settings.SoundDict,
             font: pygame.font.Font):
+        save_data = savefile.load_savefile()
         self.frames = frames
         self.frame_index = 0
         self.state = 'idle'
@@ -234,23 +235,26 @@ class Player(CollideableSprite):
         self.settings_menu = SettingsMenu(self.font, self.sounds)
         # seeds
         self.available_seeds = ['corn', 'tomato']
-        self.seed_index = 0
-        self.current_seed = FarmingTool.get_first_seed_id()
+        self.current_seed = save_data.get("current_seed", FarmingTool.get_first_seed_id())
+        self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
         # self.current_seed = self.available_seeds[self.seed_index]
 
         # inventory
         self.inventory = {
-            res: save_data.get(
+            res: save_data["inventory"].get(
                 res.as_serialised_string(),
                 _SEED_INVENTORY_DEFAULT_AMOUNT if res >= InventoryResource.CORN_SEED else
                 _NONSEED_INVENTORY_DEFAULT_AMOUNT
                 )
             for res in InventoryResource.__members__.values()
         }
-        self.money = 200
+        self.money = save_data.get("money", 200)
 
         # sounds
         self.sounds = sounds
+
+    def save(self):
+        savefile.save(self.current_tool, self.current_seed, self.inventory)
 
     def input(self):
         keys = pygame.key.get_pressed()

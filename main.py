@@ -66,7 +66,7 @@ class Game:
             self.screen.fill('gray')
             self.level.update(dt)
             if self.level.entities["Player"].paused:
-                pause_menu = self.level.entities["Player"].PauseMenu
+                pause_menu = self.level.entities["Player"].pause_menu
                 self.settings_menu = False
                 if pause_menu.pressed_play:
                     self.level.entities["Player"].paused = (
@@ -80,7 +80,7 @@ class Game:
                     self.level.entities["Player"].paused = False
                     self.main_menu.run()
                 elif pause_menu.pressed_settings:
-                    self.settings_menu = self.level.entities["Player"].SettingsMenu
+                    self.settings_menu = self.level.entities["Player"].settings_menu
                 if self.settings_menu and self.settings_menu.go_back:
                     self.settings_menu.go_back = False
                     self.settings_menu = False
