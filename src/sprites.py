@@ -147,7 +147,6 @@ class Player(CollideableSprite):
         self.font = font
         self.collision_sprites = collision_sprites
         self.blocked = False
-        self.paused = False
         self.interact = interact
         self.plant_collide_rect = self.hitbox_rect.inflate(10, 10)
 
@@ -179,10 +178,13 @@ class Player(CollideableSprite):
     
     def import_controls(self):
         try:
-            return load_data('keybinds.json')
+            data =  load_data('keybinds.json')
+            if len(data) == len(KEYBINDS):
+                return data
         except:
-            save_data(KEYBINDS, 'keybinds.json')
-            return KEYBINDS            
+            pass
+        save_data(KEYBINDS, 'keybinds.json')
+        return KEYBINDS            
 
     # controls
     def update_controls(self):
@@ -210,22 +212,16 @@ class Player(CollideableSprite):
 
         # movement
         if not self.tool_active and not self.blocked:
-            recent_keys = pygame.key.get_just_pressed()
-
-        if not self.tool_active and not self.blocked and not self.paused:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
             self.direction = self.direction.normalize() if self.direction else self.direction
 
-            recent_keys = pygame.key.get_just_pressed()
             # tool switch 
-            # if recent_keys[self.keybinds['Cycle Seeds']]:
             if self.controls['next tool']:
                 self.tool_index = (self.tool_index + 1) % len(self.available_tools)
                 self.current_tool = self.available_tools[self.tool_index]
 
             # tool use
-            # if recent_keys[self.keybinds['Use']]:
             if self.controls['use']:
                 self.tool_active = True
                 self.frame_index = 0
@@ -234,7 +230,6 @@ class Player(CollideableSprite):
                     self.sounds['swing'].play()
 
             # seed switch 
-            # if recent_keys[self.keybinds['Cycle Tools']]:
             if self.controls['next seed']:
                 self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
                 self.current_seed = self.available_seeds[self.seed_index]
@@ -243,8 +238,8 @@ class Player(CollideableSprite):
             if self.controls['plant']:
                 self.use_tool('seed')
 
-                # interact
-            if recent_keys[pygame.K_i]:
+            # interact
+            if self.controls['interact']:
                 self.interact()
 
     def get_state(self):

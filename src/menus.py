@@ -1,8 +1,8 @@
-import pygame, sys
+import pygame
+import sys
 
 from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
-from pygame.mouse import get_pressed as mouse_buttons
 
 from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState, KEYBINDS
 from .support import save_data, load_data
@@ -11,13 +11,14 @@ from .support import save_data, load_data
 # -------  Menu ------- #
 
 class GeneralMenu:
-    def __init__(self,  title, options, switch_screen, size, background=None, center=None):
+    def __init__(self,  title, options, switch, size, background, center=None):
         # general setup
         self.display_surface = pygame.display.get_surface()
         self.buttons_surface = pygame.Surface(size)
         self.buttons_surface.set_colorkey('green')
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
-        self.background = pygame.transform.scale(background, (SCREEN_WIDTH, SCREEN_HEIGHT)) if background else None
+        screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.background = pygame.transform.scale(background, screen_size)
         self.title = title
 
         # rect
@@ -33,33 +34,33 @@ class GeneralMenu:
         self.button_setup()
 
         # switch
-        self.switch_screen = switch_screen
-    
+        self.switch_screen = switch
 
     # setup
     def rect_setup(self):
         self.rect = pygame.Rect((0, 0), self.size)
-        self.rect.center = self.center if self.center else (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        screen_center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        self.rect.center = self.center if self.center else screen_center
 
     def button_setup(self):
         # button setup
         button_width = 400
         button_height = 50
+        size = (button_width, button_height)
         space = 10
         top_margin = 20
 
         # generic button rect
-        generic_button_rect = pygame.Rect((0,0), (button_width, button_height))
+        generic_button_rect = pygame.Rect((0, 0), size)
         generic_button_rect.top = self.rect.top + top_margin
         generic_button_rect.centerx = self.rect.centerx
 
-
         # create buttons
-        for item in self.options:
-            button = Button(item, self.font, generic_button_rect, self.rect.topleft)
+        for title in self.options:
+            rect = generic_button_rect
+            button = Button(title, self.font, rect, self.rect.topleft)
             self.buttons.append(button)
-            generic_button_rect = generic_button_rect.move(0, button_height + space)
-
+            generic_button_rect = rect.move(0, button_height + space)
 
     # events
     def event_loop(self):
@@ -71,7 +72,7 @@ class GeneralMenu:
 
             self.click(event)
             self.handle_events(event)
-    
+
     def handle_events(self, event):
         pass
 
@@ -80,7 +81,7 @@ class GeneralMenu:
             if button.mouse_hover():
                 return button
         return None
-            
+
     def click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.pressed_button = self.get_hovered_button()
@@ -96,9 +97,7 @@ class GeneralMenu:
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
                 self.pressed_button = None
-            
 
-    
     def mouse_hover(self):
         for button in self.buttons:
             if button.hover_active:
@@ -111,16 +110,16 @@ class GeneralMenu:
             self.switch_screen(GameState.LEVEL)
         if text == 'Quit':
             self.quit_game()
-    
+
     def quit_game(self):
         pygame.quit()
         sys.exit()
 
-
     # draw
     def draw_title(self):
         text_surf = self.font.render(self.title, False, 'Black')
-        text_rect = text_surf.get_frect(midtop=(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 20))
+        midtop = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 20)
+        text_rect = text_surf.get_frect(midtop=midtop)
 
         bg_rect = pygame.Rect((0, 0), (200, 50))
         bg_rect.center = text_rect.center
@@ -131,19 +130,17 @@ class GeneralMenu:
     def draw_background(self):
         if self.background:
             self.display_surface.blit(self.background, (0, 0))
-    
+
     def draw_buttons(self):
         self.buttons_surface.fill('green')
         for button in self.buttons:
             button.draw(self.display_surface)
         self.display_surface.blit(self.buttons_surface, self.rect.topleft)
 
-    
     def draw(self):
         self.draw_background()
         self.draw_title()
         self.draw_buttons()
-    
 
     # update
     def update_buttons(self, dt):
@@ -164,7 +161,7 @@ class MainMenu(GeneralMenu):
         title = 'Main Menu'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size, background)
-    
+
     def button_action(self, text):
         if text == 'Play':
             self.switch_screen(GameState.LEVEL)
@@ -177,6 +174,7 @@ class MainMenu(GeneralMenu):
                 self.quit_game()
             if event.key == pygame.K_RETURN:
                 self.switch_screen(GameState.LEVEL)
+
 
 class PauseMenu(GeneralMenu):
     def __init__(self, switch_screen):
@@ -193,11 +191,12 @@ class PauseMenu(GeneralMenu):
             self.switch_screen(GameState.SETTINGS)
         if text == 'Quit':
             self.quit_game()
-        
+
     def handle_events(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.LEVEL)
+
 
 class SettingsMenu(GeneralMenu):
     def __init__(self, switch_screen, sounds):
@@ -205,8 +204,9 @@ class SettingsMenu(GeneralMenu):
         background = pygame.image.load('images/menu_background/bg.png')
         title = 'Settings'
         size = (400, 400)
+        switch = switch_screen
         center = vector(SCREEN_WIDTH/2, SCREEN_HEIGHT/2) + vector(-350, 0)
-        super().__init__(title, options, switch_screen, size, background, center)
+        super().__init__(title, options, switch, size, background, center)
 
         # description
         description_pos = self.rect.topright + vector(100, 0)
@@ -229,11 +229,12 @@ class SettingsMenu(GeneralMenu):
             self.switch_screen(GameState.PAUSE)
         if text == 'Reset':
             self.keybinds_description.reset_keybinds()
+
     # events
     def handle_events(self, event):
         self.current_description.handle_events(event)
         self.echap(event)
-    
+
     def echap(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -248,7 +249,8 @@ class SettingsMenu(GeneralMenu):
     def update(self, dt):
         self.keybinds_description.update_keybinds(dt)
         super().update(dt)
-    
+
+
 class ShopMenu(GeneralMenu):
     def __init__(self, player, switch_screen):
         options = ['wood', 'apple', 'hoe', 'water', 'corn', 'tomato', 'seed']
@@ -256,7 +258,7 @@ class ShopMenu(GeneralMenu):
         title = 'Shop'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size, background)
-    
+
     def button_action(self, text):
         self.switch_screen(GameState.PAUSE)
 
@@ -307,10 +309,11 @@ class Component:
         self.current_x = 0
         self.update_rect(0)
 
-
     # animation
     def extend_animation_with_release_steps(self):
-        self.animation_steps = self.press_animation_steps + self.release_animation_steps
+        press_list = self.press_animation_steps
+        release_list = self.release_animation_steps
+        self.animation_steps = press_list + release_list
 
     def advance_to_next_step(self):
         if self.is_last_step():
@@ -336,7 +339,6 @@ class Component:
             else:
                 self.current_x += x_increment
                 self.update_rect(self.current_x)
-
 
     # draw
     def draw(self, surface):
@@ -367,7 +369,7 @@ class Button(Component):
 
     def mouse_hover(self):
         return self.rect.collidepoint(mouse_pos())
-    
+
     # draw
     def draw_text(self):
         text_surf = self.font.render(self.text, False, 'Black')
@@ -387,6 +389,7 @@ class Button(Component):
         self.draw_text()
         self.draw_hover()
 
+
 class KeySetup(Component):
     def __init__(self, name, unicode, params, pos, image):
         # params
@@ -396,7 +399,7 @@ class KeySetup(Component):
         self.title = params['text']
         self.unicode = unicode
 
-
+        # design
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
         self.hover_active = False
         self.bg_color = 'grey'
@@ -410,34 +413,35 @@ class KeySetup(Component):
         # symbol
         self.symbol_image = image
         self.symbol_image = pygame.transform.scale(self.symbol_image, (40, 40))
-        self.symbol_image_rect = self.symbol_image.get_rect(midright=self.rect.midright - vector(10, 0))
-    
+        midright = self.rect.midright - vector(10, 0)
+        self.symbol_image_rect = self.symbol_image.get_rect(midright=midright)
 
     def hover(self, offset):
         self.offset = vector(offset)
         self.hover_active = self.rect.collidepoint(mouse_pos() - self.offset)
         return self.hover_active
 
-
-
     # draw
     def draw_key_name(self):
         text_surf = self.font.render(self.title, False, 'Black')
-        text_rect = text_surf.get_frect(midleft=(self.rect.left + 10, self.rect.centery))
-        pygame.draw.rect(self.surface, 'White', text_rect.inflate(10, 10), 0, 4)
+        midleft = (self.rect.left + 10, self.rect.centery)
+        text_rect = text_surf.get_frect(midleft=midleft)
+        rect = text_rect.inflate(10, 10)
+        pygame.draw.rect(self.surface, 'White', rect, 0, 4)
         self.surface.blit(text_surf, text_rect)
-    
+
     def draw_symbol(self):
         text_surf = self.font.render(self.unicode, False, 'White')
-        text_rect = text_surf.get_frect(center=self.symbol_image_rect.center)   
+        text_rect = text_surf.get_frect(center=self.symbol_image_rect.center)
         self.surface.blit(self.symbol_image, self.symbol_image_rect)
         self.surface.blit(text_surf, text_rect)
-    
+
     def draw(self, surface):
         self.surface = surface
         pygame.draw.rect(self.surface, self.bg_color, self.rect, 0, 4)
         self.draw_key_name()
         self.draw_symbol()
+
 
 class Slider:
     def __init__(self, rect, min_value, max_value, init_value, sounds, offset):
@@ -459,11 +463,9 @@ class Slider:
         self.knob_radius = 10
         self.drag_active = False
 
-
-
     def get_value(self):
         return self.value
-    
+
     # events
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -474,10 +476,13 @@ class Slider:
             self.drag_active = False
 
         if event.type == pygame.MOUSEMOTION and self.drag_active:
-            self.value = self.min_value + (self.max_value - self.min_value) * (mouse_pos()[0] - self.offset.x - self.rect.left) / (self.rect.width - 10)
+            diff = self.max_value - self.min_value
+            origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
+            size = self.rect.width - 10
+            self.value = self.min_value + diff * origin_x / size
             self.value = max(self.min_value, min(self.max_value, self.value))
             self.update_volume()
-    
+
     def update_volume(self):
         self.sounds['music'].set_volume(min((self.value / 1000), 0.4))
         for key in self.sounds:
@@ -487,17 +492,27 @@ class Slider:
     # draw
     def draw_value(self):
         text_surf = self.font.render(str(int(self.value)), False, 'Black')
-        text_rect = text_surf.get_frect(midtop=(self.rect.centerx, self.rect.bottom + 10))
+        midtop = (self.rect.centerx, self.rect.bottom + 10)
+        text_rect = text_surf.get_frect(midtop=midtop)
         self.surface.blit(text_surf, text_rect)
-    
+
     def draw_knob(self):
-        knob_x = self.rect.left + (self.rect.width - 10) * (self.value - self.min_value) / (self.max_value - self.min_value)
-        pygame.draw.circle(self.surface, (232, 207, 166), (int(knob_x), self.rect.centery), self.knob_radius)
+        value = (self.value - self.min_value)
+        diff = (self.max_value - self.min_value)
+        knob_x = self.rect.left + (self.rect.width - 10) * value / diff
+        color = (232, 207, 166)
+        center = (int(knob_x), self.rect.centery)
+        pygame.draw.circle(self.surface, color, center, self.knob_radius)
 
     def draw_rect(self):
-        pygame.draw.rect(self.surface, (220, 185, 138), self.rect, 0, 4)
-        pygame.draw.rect(self.surface, (243, 229, 194), self.rect.inflate(-4, -4), 0, 4)
+        # border
+        border_color = (220, 185, 138)
+        pygame.draw.rect(self.surface, border_color, self.rect, 0, 4)
 
+        # bg
+        bg_color = (243, 229, 194)
+        rect = self.rect.inflate(-4, -4)
+        pygame.draw.rect(self.surface, bg_color, rect, 0, 4)
 
     def draw(self, surface):
         self.surface = surface
@@ -522,7 +537,6 @@ class Description:
         # font
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
 
-
     # setup
     def setup(self):
         # description
@@ -532,10 +546,9 @@ class Description:
         self.description_surface.set_colorkey('green')
 
         # slider
-        self.description_slider_surface = pygame.Surface((600, 500))
+        self.description_slider_surface = pygame.Surface((600, 600))
         self.description_slider_rect = self.description_surface.get_rect()
         self.description_slider_surface.set_colorkey('green')
-
 
     # events
     def handle_events(self, event):
@@ -545,9 +558,14 @@ class Description:
         if event.type == pygame.MOUSEWHEEL:
             speed = 10
             self.description_slider_rect.y += event.y * speed
-            self.description_slider_rect.y = min(0, self.description_slider_rect.y)
-            self.description_slider_rect.y = max(self.description_surface.height - self.description_slider_surface.height, self.description_slider_rect.y)
+            height_s1 = self.description_surface.height
+            height_s2 = self.description_slider_surface.height
+            y = self.description_slider_rect.y
+            y_min = height_s1 - height_s2
+            y_max = 0
 
+            self.description_slider_rect.y = min(y_max, y)
+            self.description_slider_rect.y = max(y_min, y)
 
     # draw
     def make_surface_transparent(self):
@@ -561,7 +579,7 @@ class Description:
 
         coeff = height2 / height1
         slider_height = coeff * height2
-        
+
         slide_bar_rect = pygame.Rect(0, 0, 10, slider_height)
         slide_bar_rect.right = self.description_rect.right - 2
         slide_bar_rect.top = self.description_rect.top - Y1 * coeff
@@ -572,6 +590,7 @@ class Description:
         pygame.draw.rect(self.display_surface, 'White', self.rect, 0, 4)
         self.make_surface_transparent()
         self.draw_slider_bar()
+
 
 class KeybindsDescription(Description):
     def __init__(self, pos):
@@ -584,14 +603,12 @@ class KeybindsDescription(Description):
         # setup
         self.import_data()
         self.create_keybinds()
-        reset_button_rect = pygame.Rect(0, 0, 100, 50)
-        reset_button_rect.bottomright = self.rect.bottomleft - vector(10, 0)
-        self.reset_button = Button('Reset', self.font, reset_button_rect , (0, 0))
-        
+        reset_btn_rect = pygame.Rect(0, 0, 100, 50)
+        reset_btn_rect.bottomright = self.rect.bottomleft - vector(10, 0)
+
+        self.reset_button = Button('Reset', self.font, reset_btn_rect, (0, 0))
 
     # setup
-  
-
     def import_data(self):
         self.default_keybinds = KEYBINDS
 
@@ -599,7 +616,7 @@ class KeybindsDescription(Description):
             self.keybinds = load_data('keybinds.json')
         except FileNotFoundError:
             self.keybinds = self.default_keybinds
-    
+
     def save_data(self):
         data = {}
 
@@ -615,19 +632,18 @@ class KeybindsDescription(Description):
 
     def create_keybinds(self):
         index = 0
-        for key_name, params in self.keybinds.items():
-            key_unicode = self.value_to_unicode(params['value'])
+        for name, params in self.keybinds.items():
+            unicode = self.value_to_unicode(params['value'])
             path = self.get_path(params['value'])
 
             image = pygame.image.load(path)
             image = pygame.transform.scale(image, (40, 40))
 
             topleft = (10, 10 + 60 * index)
-            key_setup_button = KeySetup(key_name, key_unicode, params, topleft, image)
+            key_setup_button = KeySetup(name, unicode, params, topleft, image)
             self.keys_group.append(key_setup_button)
 
             index += 1
-  
 
     # events
     def handle_events(self, event):
@@ -635,11 +651,11 @@ class KeybindsDescription(Description):
         self.set_key(event)
         self.keysetup_selection(event)
 
-                
-
     # keybinds
     def get_hovered_key(self):
-        offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+        s1_pos = self.description_rect.topleft
+        s2_pos = self.description_slider_rect.topleft
+        offset = vector(s1_pos) + vector(s2_pos)
         for key in self.keys_group:
             if key.hover(offset):
                 return key
@@ -654,7 +670,9 @@ class KeybindsDescription(Description):
                 self.pressed_key.start_press_animation()
 
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+            s1_pos = self.description_rect.topleft
+            s2_pos = self.description_slider_rect.topleft
+            offset = vector(s1_pos) + vector(s2_pos)
             if self.pressed_key:
                 self.pressed_key.start_release_animation()
 
@@ -666,13 +684,18 @@ class KeybindsDescription(Description):
 
     def set_key(self, event):
         if self.selection_key:
-            offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1, 3] and self.selection_key.hover(offset):
-                path = 'images/keys/lclick.png' if event.button == 1 else 'images/keys/rclick.png'
-                value = 0 if event.button == 1 else 2
-                k_type = 'mouse'
-                unicode = None
-                self.update_key_value(path, value, k_type, unicode)
+            s1_pos = self.description_rect.topleft
+            s2_pos = self.description_slider_rect.topleft
+            offset = vector(s1_pos) + vector(s2_pos)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1, 3]:
+                if self.selection_key.hover(offset):
+                    rpath = 'images/keys/rclick.png'
+                    lpath = 'images/keys/lclick.png'
+                    path = lpath if event.button == 1 else rpath
+                    value = 0 if event.button == 1 else 2
+                    k_type = 'mouse'
+                    unicode = None
+                    self.update_key_value(path, value, k_type, unicode)
 
             if event.type == pygame.KEYDOWN:
                 path = self.get_path(event.key)
@@ -680,12 +703,13 @@ class KeybindsDescription(Description):
                 k_type = 'key'
                 unicode = event.unicode.upper()
                 self.update_key_value(path, value, k_type, unicode)
-    
+
     def update_key_value(self, path, value, k_type, unicode):
         image = pygame.image.load(path)
         image = pygame.transform.scale(image, (40, 40))
 
-        self.selection_key.unicode = unicode if self.is_generic(unicode) else None
+        k_unicode = unicode if self.is_generic(unicode) else None
+        self.selection_key.unicode = k_unicode
         self.selection_key.type = k_type
         self.selection_key.symbol_image = image
         self.selection_key.value = value
@@ -696,7 +720,7 @@ class KeybindsDescription(Description):
         if self.pressed_key:
             self.pressed_key.bg_color = 'grey'
             self.pressed_key = None
-    
+
     def reset_keybinds(self):
         for key in self.keys_group:
             key.value = self.default_keybinds[key.name]['value']
@@ -708,9 +732,11 @@ class KeybindsDescription(Description):
             key.symbol_image = image
 
     def is_generic(self, symbol):
-        if symbol == None or not len(symbol) == 1:
+        if not symbol or len(symbol) != 1:
             return False
-        return symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?" 
+        alpha = symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+        other = symbol in "!@#$%^&*()_+-=[]{}|;':,.<>/?"
+        return alpha or other
 
     def get_path(self, keydown):
         if keydown == 0:
@@ -736,35 +762,40 @@ class KeybindsDescription(Description):
 
         if keydown in special_keys:
             return special_keys[keydown]
-        
+
         return "images/keys/generic.png"
 
     def value_to_unicode(self, value):
-        if value == None:
+        if value is None:
             return None
         if value in range(48, 58):
             return str(value - 48)
         if value in range(97, 123):
             return chr(value - 32)
         return None
-    
+
     # update
     def update_keybinds(self, dt):
         for key in self.keys_group:
             key.update(dt)
-
 
     # draw
     def draw_keybinds(self):
         for key in self.keys_group:
             key.draw(self.description_slider_surface)
 
-        self.description_surface.blit(self.description_slider_surface, self.description_slider_rect)
-        self.display_surface.blit(self.description_surface, self.description_rect.topleft)
-    
+        # blit description slider
+        pos = self.description_slider_rect.topleft
+        self.description_surface.blit(self.description_slider_surface, pos)
+
+        # blit description
+        pos = self.description_rect.topleft
+        self.display_surface.blit(self.description_surface, pos)
+
     def draw(self):
         super().draw()
         self.draw_keybinds()
+
 
 class VolumeDescription(Description):
     def __init__(self, pos, sounds):
@@ -778,18 +809,18 @@ class VolumeDescription(Description):
     # setup
     def create_slider(self):
         slider_rect = pygame.Rect((30, 30), (200, 10))
-        self.slider = Slider(slider_rect, 0, 100, 50, self.sounds, self.rect.topleft)
-    
+        pos = self.rect.topleft
+        self.slider = Slider(slider_rect, 0, 100, 50, self.sounds, pos)
+
     def save_data(self):
         data = self.slider.get_value()
         save_data(int(data), 'volume.json')
-    
+
     def import_data(self):
         try:
             self.slider.value = load_data('volume.json')
         except FileNotFoundError:
             pass
-
 
     # events
     def handle_events(self, event):
@@ -799,13 +830,15 @@ class VolumeDescription(Description):
     # draw
     def draw_slider(self):
         self.slider.draw(self.description_slider_surface)
-        self.description_surface.blit(self.description_slider_surface, self.description_slider_rect.topleft)
-        self.display_surface.blit(self.description_surface, self.description_rect.topleft)
+
+        # blit description slider
+        pos = self.description_slider_rect.topleft
+        self.description_surface.blit(self.description_slider_surface, pos)
+
+        # blit description
+        pos = self.description_rect.topleft
+        self.display_surface.blit(self.description_surface, pos)
 
     def draw(self):
         super().draw()
         self.draw_slider()
-    
-
-
-

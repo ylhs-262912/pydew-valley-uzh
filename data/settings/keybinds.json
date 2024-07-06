@@ -38,5 +38,10 @@
         "type": "mouse",
         "value": 2,
         "text": "Plant Current Seed"
+    },
+    "interact": {
+        "type": "key",
+        "value": 105,
+        "text": "Interact"
     }
 }
