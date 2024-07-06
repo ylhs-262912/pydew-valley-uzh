@@ -1,5 +1,5 @@
 from src.level import Level
-from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu
+from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu, Component
 import pygame
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
 from src.support import tmx_importer, animation_importer, import_folder_dict, import_folder, character_importer, sound_importer, import_font
@@ -82,10 +82,37 @@ class Game:
             screen.update(dt)
 
             pygame.display.update()
+    
+
+    def run_class_tests(self):
+
+        class_test = Component(pygame.Rect(100, 100, 400, 50))
+
+        while self.running:
+            dt = self.clock.tick() / 1000
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+
+                if event.type == pygame.KEYDOWN:
+                    class_test.start_press_animation()
+                if event.type == pygame.KEYUP:
+                    class_test.start_release_animation()
+            
+            self.display_surface.fill('white')
+            class_test.update(dt)
+            class_test.draw(self.display_surface)
+
+            pygame.display.update()
+
+
+
 
  
 
 
 if __name__ == '__main__':
     game = Game()
+    # game.run_class_tests()
     game.run()

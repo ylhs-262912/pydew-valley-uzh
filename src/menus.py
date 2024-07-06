@@ -11,7 +11,7 @@ from .support import save_data, load_data
 # -------  Menu ------- #
 
 class GeneralMenu:
-    def __init__(self, title, options, switch_screen, size, background=None):
+    def __init__(self,  title, options, switch_screen, size, background=None, center=None):
         # general setup
         self.display_surface = pygame.display.get_surface()
         self.buttons_surface = pygame.Surface(size)
@@ -21,6 +21,7 @@ class GeneralMenu:
         self.title = title
 
         # rect
+        self.center = center
         self.size = size
         self.rect = None
         self.rect_setup()
@@ -37,13 +38,16 @@ class GeneralMenu:
     # setup
     def rect_setup(self):
         self.rect = pygame.Rect((0, 0), self.size)
-        self.rect.center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+        self.rect.center = self.center if self.center else (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
 
     def button_setup(self):
         button_width = 400
         button_height = 50
         space = 10
+        top_margin = 20
         generic_button_rect = pygame.Rect((0,0), (button_width, button_height))
+        generic_button_rect.top = self.rect.top + top_margin
+        generic_button_rect.centerx = self.rect.centerx
         for item in self.options:
             button = Button(item, self.font, generic_button_rect, self.rect.topleft)
             self.buttons.append(button)
@@ -64,11 +68,22 @@ class GeneralMenu:
         pass
             
     def click(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for button in self.buttons:
                 if button.hover_active:
+                    button.start_press_animation()
+
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            for button in self.buttons:
+                if button.hover_active:
+                    button.start_release_animation()
                     self.button_action(button.text)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                else:
+                    if button.animation_active:
+                        button.reset_animation()
+        
+
     
     def mouse_hover(self):
         for button in self.buttons:
@@ -106,7 +121,7 @@ class GeneralMenu:
     def draw_buttons(self):
         self.buttons_surface.fill('green')
         for button in self.buttons:
-            button.draw(self.buttons_surface)
+            button.draw(self.display_surface)
         self.display_surface.blit(self.buttons_surface, self.rect.topleft)
 
     
@@ -117,8 +132,14 @@ class GeneralMenu:
     
 
     # update
+    def update_buttons(self, dt):
+        for button in self.buttons:
+            button.update(dt)
+
     def update(self, dt):
         self.event_loop()
+        self.update_buttons(dt)
+
         self.draw()
 
 
@@ -170,15 +191,15 @@ class SettingsMenu(GeneralMenu):
         background = pygame.image.load('images/menu_background/bg.png')
         title = 'Settings'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
-
-        # rect
-        self.setup()
+        center = vector(SCREEN_WIDTH/2, SCREEN_HEIGHT/2) + vector(-350, 0)
+        super().__init__(title, options, switch_screen, size, background, center)
 
         # description
         description_pos = self.rect.topright + vector(100, 0)
         self.keybinds_description = KeybindsDescription(description_pos)
         self.volume_description = VolumeDescription(description_pos, sounds)
+
+        self.buttons.append(self.keybinds_description.reset_button)
 
         self.current_description = self.keybinds_description
 
@@ -192,13 +213,8 @@ class SettingsMenu(GeneralMenu):
             self.keybinds_description.save_data()
             self.volume_description.save_data()
             self.switch_screen(GameState.PAUSE)
-
-    def setup(self):
-        offset = vector(-350, 0)
-        self.rect.topleft += offset
-        for button in self.buttons:
-            button.offset = vector(self.rect.topleft)
-
+        if text == 'Reset':
+            self.keybinds_description.reset_keybinds()
     # events
     def handle_events(self, event):
         self.current_description.handle_events(event)
@@ -211,11 +227,14 @@ class SettingsMenu(GeneralMenu):
 
     # draw
     def draw(self):
-        self.draw_background()
-        self.draw_title()
-        self.draw_buttons()
+        super().draw()
         self.current_description.draw()
 
+    # update
+    def update(self, dt):
+        self.keybinds_description.update_keybinds(dt)
+        super().update(dt)
+    
 class ShopMenu(GeneralMenu):
     def __init__(self, player, switch_screen):
         options = ['wood', 'apple', 'hoe', 'water', 'corn', 'tomato', 'seed']
@@ -230,11 +249,102 @@ class ShopMenu(GeneralMenu):
 
 # ------- Components ------- #
 
-class Button:
+
+class Component:
+    def __init__(self, rect):
+        self.display_surface = pygame.display.get_surface()
+        self.initial_rect = rect.copy()
+        self.rect = rect
+
+        self.animation_active = False
+        self.is_press_active = False
+
+        self.press_animation_steps = [-10]
+        self.release_animation_steps = [10, 0]
+        self.animation_steps = self.press_animation_steps
+
+        self.animation_speed = 0.15
+        self.current_step_index = 0
+
+        self.initial_x = 0
+        self.current_x = 0
+        self.target_x = self.animation_steps[self.current_step_index]
+
+    # animation controls
+    def start_press_animation(self):
+        self.animation_active = True
+        self.is_press_active = True
+
+    def start_release_animation(self):
+        if self.is_press_active:
+            self.extend_animation_with_release_steps()
+        else:
+            self.animation_steps = self.release_animation_steps
+            self.animation_active = True
+
+        self.is_press_active = False
+
+    def reset_animation(self):
+        self.animation_active = False
+        self.is_press_active = False
+        self.animation_steps = self.press_animation_steps
+        self.current_step_index = 0
+        self.target_x = self.animation_steps[self.current_step_index]
+        self.current_x = 0
+        self.update_rect(0)
+
+
+    # animation
+    def extend_animation_with_release_steps(self):
+        self.animation_steps = self.press_animation_steps + self.release_animation_steps
+
+    def advance_to_next_step(self):
+        if self.is_last_step():
+            if not self.is_press_active:
+                self.reset_animation()
+        else:
+            self.current_step_index += 1
+            self.update_rect(self.target_x)
+            self.target_x = self.animation_steps[self.current_step_index]
+
+    def has_reached_target_x(self, x):
+        return abs(self.current_x - self.target_x) < abs(x)
+
+    def is_last_step(self):
+        return self.current_step_index >= len(self.animation_steps) - 1
+
+    def animate(self, dt):
+        if self.animation_active:
+            direction = 1 if self.target_x > self.current_x else -1
+            x_increment = direction * self.animation_speed * dt * 1000
+            if self.has_reached_target_x(x_increment):
+                self.advance_to_next_step()
+            else:
+                self.current_x += x_increment
+                self.update_rect(self.current_x)
+
+
+    # draw
+    def draw(self, surface):
+        pygame.draw.rect(surface, 'red', self.rect, 0, 4)
+
+    # update
+    def update_rect(self, x):
+        self.rect.width = self.initial_rect.width + x
+        self.rect.height = self.initial_rect.height + x
+        self.rect.center = self.initial_rect.center
+
+    def update(self, dt):
+        self.animate(dt)
+
+
+class Button(Component):
     def __init__(self, text, font, rect, offset):
+        super().__init__(rect)
+        self.initial_rect = rect.copy()
+        self.font_size = 30
         self.font = font
         self.text = text
-        self.rect = rect
         self.offset = vector(offset)
         self.color = 'White'
         self.hover_active = False
@@ -242,7 +352,7 @@ class Button:
         self.display_surface = None
 
     def mouse_hover(self):
-        return self.rect.collidepoint(mouse_pos()-self.offset)
+        return self.rect.collidepoint(mouse_pos())
     
     # draw
     def draw_text(self):
@@ -263,17 +373,19 @@ class Button:
         self.draw_text()
         self.draw_hover()
 
-class KeySetup:
+class KeySetup(Component):
     def __init__(self, key_name, key_value, pos, symbol_image):
         self.key_name = key_name
         self.key_symbol = None
         self.key_value = key_value
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
         self.offset = vector()
+        self.hover_active = False
 
         # rect
         self.pos = pos
         self.rect = pygame.Rect(pos, (300, 50))
+        super().__init__(self.rect)
 
         # symbol
         self.symbol_image = symbol_image
@@ -283,26 +395,29 @@ class KeySetup:
 
     def hover(self, offset):
         self.offset = vector(offset)
-        return self.rect.collidepoint(mouse_pos() - self.offset)
+        self.hover_active = self.rect.collidepoint(mouse_pos() - self.offset)
+        return self.hover_active
+
 
 
     # draw
-    def draw_key_name(self, surface):
+    def draw_key_name(self):
         text_surf = self.font.render(self.key_name, False, 'Black')
         text_rect = text_surf.get_frect(midleft=(self.rect.left + 10, self.rect.centery))
-        pygame.draw.rect(surface, 'White', text_rect.inflate(10, 10), 0, 4)
-        surface.blit(text_surf, text_rect)
+        pygame.draw.rect(self.surface, 'White', text_rect.inflate(10, 10), 0, 4)
+        self.surface.blit(text_surf, text_rect)
     
-    def draw_symbol(self, surface):
+    def draw_symbol(self):
         text_surf = self.font.render(self.key_symbol, False, 'White')
         text_rect = text_surf.get_frect(center=self.symbol_image_rect.center)   
-        surface.blit(self.symbol_image, self.symbol_image_rect)
-        surface.blit(text_surf, text_rect)
+        self.surface.blit(self.symbol_image, self.symbol_image_rect)
+        self.surface.blit(text_surf, text_rect)
     
     def draw(self, surface):
-        pygame.draw.rect(surface, 'grey', self.rect, 0, 4)
-        self.draw_key_name(surface)
-        self.draw_symbol(surface)
+        self.surface = surface
+        pygame.draw.rect(self.surface, 'grey', self.rect, 0, 4)
+        self.draw_key_name()
+        self.draw_symbol()
 
 class Slider:
     def __init__(self, rect, min_value, max_value, init_value, sounds, offset):
@@ -444,11 +559,13 @@ class KeybindsDescription(Description):
         self.keybinds = {}
         self.keys_group = []
         self.selection_key = None
-        self.key_setup = None     # TODO: change name
 
         # setup
         self.import_data()
         self.create_keybinds()
+        reset_button_rect = pygame.Rect(0, 0, 100, 50)
+        reset_button_rect.bottomright = self.rect.bottomleft - vector(10, 0)
+        self.reset_button = Button('Reset', self.font, reset_button_rect , (0, 0))
         
 
     # setup
@@ -475,7 +592,7 @@ class KeybindsDescription(Description):
         save_data(data, 'keybinds.json')
 
     def import_data(self):
-        self.keybinds = {
+        self.default_keybinds = {
             "Up": pygame.K_UP,
             "Down": pygame.K_DOWN,
             "Left": pygame.K_LEFT,
@@ -489,7 +606,7 @@ class KeybindsDescription(Description):
         try:
             self.keybinds = load_data('keybinds.json')
         except FileNotFoundError:
-            pass
+            self.keybinds = self.default_keybinds
 
 
     # events
@@ -498,49 +615,91 @@ class KeybindsDescription(Description):
         self.select_keySetup(event)
         self.set_key(event)
 
+                
+
     # keybinds
     def select_keySetup(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             for key in self.keys_group:
                 offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
                 if key.hover(offset):
-                    self.key_setup = key
+                    key.start_press_animation()
                     return
-            self.key_setup = None
+
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            for key in self.keys_group:
+                offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
+                if key.hover(offset):
+                    key.start_release_animation()
+                    self.selection_key = key
+                    return
+                else:
+                    if key.animation_active:
+                        key.reset_animation()
+            self.selection_key = None
 
     def set_key(self, event):
-        if self.key_setup:
-            if event.type == pygame.KEYDOWN:
-                symbol = event.unicode.upper()
-                path = self.get_path(event.key)
-                image = pygame.image.load(path)
-                image = pygame.transform.scale(image, (40, 40))
+        if self.selection_key:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button not in [1, 3]:
+                    return
+                if event.button == 1:
+                    path = 'images/keys/lclick.png'
+                if event.button == 3:
+                    path = 'images/keys/rclick.png'
+                symbol = 'LMB' if event.button == 1 else 'RMB'
+                key = None
+                self.update_key_value(symbol, key, path)
 
-                self.key_setup.key_symbol = symbol if self.is_generic(symbol) else None
-                self.key_setup.symbol_image = image
-                self.key_setup.key_value = event.key
-                self.key_setup = None
-        
+            if event.type == pygame.KEYDOWN:
+                path = self.get_path(event.key)
+                symbol = event.unicode.upper()
+                key = event.key
+                self.update_key_value(symbol, key, path)
+    
+    def update_key_value(self, symbol, key, path):
+        image = pygame.image.load(path)
+        image = pygame.transform.scale(image, (40, 40))
+
+        self.selection_key.key_symbol = symbol if self.is_generic(symbol) else None
+        self.selection_key.symbol_image = image
+        self.selection_key.key_value = key
+        self.selection_key = None
+    
+    def reset_keybinds(self):
+        for key in self.keys_group:
+            key.key_value = self.default_keybinds[key.key_name]
+            key.symbol_image = pygame.image.load(self.get_path(key.key_value))
+            key.symbol_image = pygame.transform.scale(key.symbol_image, (40, 40))
+            key.key_symbol = self.value_to_unicode(key.key_value)
+
     def is_generic(self, symbol):
         return symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?"
 
     def get_path(self, keydown):
         if keydown == None:
-            return "images/keys/generic.svg"
+            return "images/keys/generic.png"
 
         special_keys = {
-            pygame.K_SPACE: "images/keys/space.svg",
+            pygame.K_SPACE: "images/keys/space.png",
             pygame.K_LCTRL: "images/keys/lctrl.png",
             pygame.K_LEFT: "images/keys/left.png",
-            pygame.K_UP: "images/keys/up.svg",
-            pygame.K_DOWN: "images/keys/down.svg",
-            pygame.K_RIGHT: "images/keys/right.svg"
+            pygame.K_UP: "images/keys/up.png",
+            pygame.K_DOWN: "images/keys/down.png",
+            pygame.K_RIGHT: "images/keys/right.png",
+            pygame.K_RETURN: "images/keys/return.png",
+            pygame.K_TAB: "images/keys/tab.png",
+            pygame.K_LSHIFT: "images/keys/lshift.png",
+            pygame.K_RSHIFT: "images/keys/rshift.png",
+            pygame.K_RCTRL: "images/keys/rctrl.png",
+            pygame.K_LALT: "images/keys/alt.png",
+            pygame.K_RALT: "images/keys/alt.png",
         }
 
         if keydown in special_keys:
             return special_keys[keydown]
         
-        return "images/keys/generic.svg"
+        return "images/keys/generic.png"
 
     def value_to_unicode(self, value):
         if value == None:
@@ -551,11 +710,16 @@ class KeybindsDescription(Description):
             return chr(value - 32)
         return None
     
+    # update
+    def update_keybinds(self, dt):
+        for key in self.keys_group:
+            key.update(dt)
+
 
     # draw
     def draw_selected_key_indicator(self):
-        if self.key_setup:
-            pygame.draw.rect(self.description_slider_surface, 'red', self.key_setup.rect, 4, 4)
+        if self.selection_key:
+            pygame.draw.rect(self.description_slider_surface, 'red', self.selection_key.rect, 4, 4)
 
     def draw_keybinds(self):
         for key in self.keys_group:
