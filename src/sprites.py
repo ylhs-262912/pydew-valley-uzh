@@ -1,7 +1,8 @@
-from .settings import LAYERS, GROW_SPEED, APPLE_POS, SCALE_FACTOR
+from .settings import LAYERS, GROW_SPEED, APPLE_POS, SCALE_FACTOR, KEYBINDS
 import pygame
 from .timer import Timer
 from random import randint, choice
+from .support import load_data, save_data
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -140,6 +141,7 @@ class Player(CollideableSprite):
                          (44 * SCALE_FACTOR, 40 * SCALE_FACTOR))
 
         # movement
+        self.keybinds = self.import_controls() 
         self.direction = pygame.Vector2()
         self.speed = 250
         self.font = font
@@ -147,7 +149,6 @@ class Player(CollideableSprite):
         self.blocked = False
         self.paused = False
         self.interact = interact
-        self.sounds = sounds
         self.plant_collide_rect = self.hitbox_rect.inflate(10, 10)
 
         # tools
@@ -175,30 +176,57 @@ class Player(CollideableSprite):
 
         # sounds
         self.sounds = sounds
+    
+    def import_controls(self):
+        try:
+            return load_data('keybinds.json')
+        except:
+            save_data(KEYBINDS, 'keybinds.json')
+            return KEYBINDS            
+
+    # controls
+    def update_controls(self):
+        controls = {}
+        keys = pygame.key.get_just_pressed()
+        linear_keys = pygame.key.get_pressed()
+        mouse_buttons = pygame.mouse.get_pressed()
+
+        for control_name, control in self.keybinds.items():
+            control_type = control['type']
+            value = control['value']
+            if control_type == 'key':
+                controls[control_name] = keys[value]
+            if control_type == 'mouse':
+                controls[control_name] = mouse_buttons[value]
+            if control_name in ('up', 'down', 'left', 'right'):
+                controls[control_name] = linear_keys[value]
+        return controls
+    
+
+
 
     def input(self):
-        keys = pygame.key.get_pressed()
+        self.controls = self.update_controls()
+
         # movement
         if not self.tool_active and not self.blocked:
             recent_keys = pygame.key.get_just_pressed()
-            # if recent_keys[pygame.K_ESCAPE]:
-            #     self.paused = not self.paused
-            #     self.direction.y = 0
-            #     self.direction.x = 0
 
         if not self.tool_active and not self.blocked and not self.paused:
-            self.direction.x = int(keys[pygame.K_RIGHT]) - int(keys[pygame.K_LEFT])
-            self.direction.y = int(keys[pygame.K_DOWN]) - int(keys[pygame.K_UP])
+            self.direction.x = int(self.controls['right']) - int(self.controls['left'])
+            self.direction.y = int(self.controls['down']) - int(self.controls['up'])
             self.direction = self.direction.normalize() if self.direction else self.direction
 
             recent_keys = pygame.key.get_just_pressed()
             # tool switch 
-            if recent_keys[pygame.K_q]:
+            # if recent_keys[self.keybinds['Cycle Seeds']]:
+            if self.controls['next tool']:
                 self.tool_index = (self.tool_index + 1) % len(self.available_tools)
                 self.current_tool = self.available_tools[self.tool_index]
 
             # tool use
-            if recent_keys[pygame.K_SPACE]:
+            # if recent_keys[self.keybinds['Use']]:
+            if self.controls['use']:
                 self.tool_active = True
                 self.frame_index = 0
                 self.direction = pygame.Vector2()
@@ -206,17 +234,18 @@ class Player(CollideableSprite):
                     self.sounds['swing'].play()
 
             # seed switch 
-            if recent_keys[pygame.K_e]:
+            # if recent_keys[self.keybinds['Cycle Tools']]:
+            if self.controls['next seed']:
                 self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
                 self.current_seed = self.available_seeds[self.seed_index]
 
             # seed used 
-            if recent_keys[pygame.K_LCTRL]:
+            if self.controls['plant']:
                 self.use_tool('seed')
 
                 # interact
-            if recent_keys[pygame.K_RETURN]:
-                self.interact(self.rect.center)
+            if recent_keys[pygame.K_i]:
+                self.interact()
 
     def get_state(self):
         self.state = 'walk' if self.direction else 'idle'

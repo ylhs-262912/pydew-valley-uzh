@@ -4,7 +4,7 @@ from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
 from pygame.mouse import get_pressed as mouse_buttons
 
-from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
+from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState, KEYBINDS
 from .support import save_data, load_data
 
 
@@ -27,6 +27,7 @@ class GeneralMenu:
         self.rect_setup()
 
         # buttons
+        self.pressed_button = None
         self.options = options
         self.buttons = []
         self.button_setup()
@@ -41,13 +42,19 @@ class GeneralMenu:
         self.rect.center = self.center if self.center else (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
 
     def button_setup(self):
+        # button setup
         button_width = 400
         button_height = 50
         space = 10
         top_margin = 20
+
+        # generic button rect
         generic_button_rect = pygame.Rect((0,0), (button_width, button_height))
         generic_button_rect.top = self.rect.top + top_margin
         generic_button_rect.centerx = self.rect.centerx
+
+
+        # create buttons
         for item in self.options:
             button = Button(item, self.font, generic_button_rect, self.rect.topleft)
             self.buttons.append(button)
@@ -61,28 +68,35 @@ class GeneralMenu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit_game()
+
             self.click(event)
             self.handle_events(event)
     
     def handle_events(self, event):
         pass
+
+    def get_hovered_button(self):
+        for button in self.buttons:
+            if button.mouse_hover():
+                return button
+        return None
             
     def click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            for button in self.buttons:
-                if button.hover_active:
-                    button.start_press_animation()
+            self.pressed_button = self.get_hovered_button()
+            if self.pressed_button:
+                self.pressed_button.start_press_animation()
 
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            for button in self.buttons:
-                if button.hover_active:
-                    button.start_release_animation()
-                    self.button_action(button.text)
+            if self.pressed_button:
+                self.pressed_button.start_release_animation()
+
+                if self.pressed_button.mouse_hover():
+                    self.button_action(self.pressed_button.text)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-                else:
-                    if button.animation_active:
-                        button.reset_animation()
-        
+
+                self.pressed_button = None
+            
 
     
     def mouse_hover(self):
@@ -374,22 +388,27 @@ class Button(Component):
         self.draw_hover()
 
 class KeySetup(Component):
-    def __init__(self, key_name, key_value, pos, symbol_image):
-        self.key_name = key_name
-        self.key_symbol = None
-        self.key_value = key_value
+    def __init__(self, name, unicode, params, pos, image):
+        # params
+        self.name = name
+        self.type = params['type']
+        self.value = params['value']
+        self.title = params['text']
+        self.unicode = unicode
+
+
         self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
-        self.offset = vector()
         self.hover_active = False
         self.bg_color = 'grey'
 
         # rect
         self.pos = pos
         self.rect = pygame.Rect(pos, (300, 50))
+        self.offset = vector()
         super().__init__(self.rect)
 
         # symbol
-        self.symbol_image = symbol_image
+        self.symbol_image = image
         self.symbol_image = pygame.transform.scale(self.symbol_image, (40, 40))
         self.symbol_image_rect = self.symbol_image.get_rect(midright=self.rect.midright - vector(10, 0))
     
@@ -403,13 +422,13 @@ class KeySetup(Component):
 
     # draw
     def draw_key_name(self):
-        text_surf = self.font.render(self.key_name, False, 'Black')
+        text_surf = self.font.render(self.title, False, 'Black')
         text_rect = text_surf.get_frect(midleft=(self.rect.left + 10, self.rect.centery))
         pygame.draw.rect(self.surface, 'White', text_rect.inflate(10, 10), 0, 4)
         self.surface.blit(text_surf, text_rect)
     
     def draw_symbol(self):
-        text_surf = self.font.render(self.key_symbol, False, 'White')
+        text_surf = self.font.render(self.unicode, False, 'White')
         text_rect = text_surf.get_frect(center=self.symbol_image_rect.center)   
         self.surface.blit(self.symbol_image, self.symbol_image_rect)
         self.surface.blit(text_surf, text_rect)
@@ -571,56 +590,54 @@ class KeybindsDescription(Description):
         
 
     # setup
-    def create_keybinds(self):
-        index = 0
-        for key_name, value in self.keybinds.items():
-            key_value = value
-            symbol = self.value_to_unicode(key_value)
-
-            path = self.get_path(key_value)
-            image = pygame.image.load(path)
-            image = pygame.transform.scale(image, (40, 40))
-
-            pos = (10, 10 + 60 * index)
-            key_setup = KeySetup(key_name, key_value, pos, image)
-            key_setup.key_symbol = symbol
-            self.keys_group.append(key_setup)
-            index += 1
-    
-    def save_data(self):
-        data = {}
-        for key in self.keys_group:
-            data[key.key_name] = key.key_value
-        save_data(data, 'keybinds.json')
+  
 
     def import_data(self):
-        self.default_keybinds = {
-            "Up": pygame.K_UP,
-            "Down": pygame.K_DOWN,
-            "Left": pygame.K_LEFT,
-            "Right": pygame.K_RIGHT,
-            "Use": pygame.K_SPACE,
-            "Cycle Tools": pygame.K_TAB,
-            "Cycle Seeds": pygame.K_LSHIFT,
-            "Plant Current Seed": pygame.K_RETURN,
-        }
+        self.default_keybinds = KEYBINDS
 
         try:
             self.keybinds = load_data('keybinds.json')
         except FileNotFoundError:
             self.keybinds = self.default_keybinds
+    
+    def save_data(self):
+        data = {}
 
+        for key in self.keys_group:
+            value = {}
+            value['type'] = key.type
+            value['value'] = key.value
+            value['text'] = key.title
+
+            data[key.name] = value
+
+        save_data(data, 'keybinds.json')
+
+    def create_keybinds(self):
+        index = 0
+        for key_name, params in self.keybinds.items():
+            key_unicode = self.value_to_unicode(params['value'])
+            path = self.get_path(params['value'])
+
+            image = pygame.image.load(path)
+            image = pygame.transform.scale(image, (40, 40))
+
+            topleft = (10, 10 + 60 * index)
+            key_setup_button = KeySetup(key_name, key_unicode, params, topleft, image)
+            self.keys_group.append(key_setup_button)
+
+            index += 1
+  
 
     # events
     def handle_events(self, event):
         super().handle_events(event)
         self.set_key(event)
-        self.select_keySetup(event)
+        self.keysetup_selection(event)
 
                 
 
     # keybinds
-
     def get_hovered_key(self):
         offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
         for key in self.keys_group:
@@ -628,7 +645,7 @@ class KeybindsDescription(Description):
                 return key
         return None
 
-    def select_keySetup(self, event):
+    def keysetup_selection(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.remove_selection()
             hovered_key = self.get_hovered_key()
@@ -638,59 +655,68 @@ class KeybindsDescription(Description):
 
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
-            if self.pressed_key and self.pressed_key.hover(offset):
-                self.selection_key = self.pressed_key
-                self.selection_key.start_release_animation()
-                self.selection_key.bg_color = 'red'
+            if self.pressed_key:
+                self.pressed_key.start_release_animation()
 
-            else:
-                self.remove_selection()
-            
+                if self.pressed_key.hover(offset):
+                    self.selection_key = self.pressed_key
+                    self.selection_key.bg_color = 'red'
+                else:
+                    self.remove_selection()
 
     def set_key(self, event):
         if self.selection_key:
             offset = vector(self.description_slider_rect.topleft) + self.description_rect.topleft
             if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1, 3] and self.selection_key.hover(offset):
                 path = 'images/keys/lclick.png' if event.button == 1 else 'images/keys/rclick.png'
-                symbol = 'LMB' if event.button == 1 else 'RMB'
-                key = None
-                self.update_key_value(symbol, key, path)
+                value = 0 if event.button == 1 else 2
+                k_type = 'mouse'
+                unicode = None
+                self.update_key_value(path, value, k_type, unicode)
 
             if event.type == pygame.KEYDOWN:
                 path = self.get_path(event.key)
-                symbol = event.unicode.upper()
-                key = event.key
-                self.update_key_value(symbol, key, path)
+                value = event.key
+                k_type = 'key'
+                unicode = event.unicode.upper()
+                self.update_key_value(path, value, k_type, unicode)
     
-    def update_key_value(self, symbol, key, path):
+    def update_key_value(self, path, value, k_type, unicode):
         image = pygame.image.load(path)
         image = pygame.transform.scale(image, (40, 40))
 
-        self.selection_key.key_symbol = symbol if self.is_generic(symbol) else None
+        self.selection_key.unicode = unicode if self.is_generic(unicode) else None
+        self.selection_key.type = k_type
         self.selection_key.symbol_image = image
-        self.selection_key.key_value = key
+        self.selection_key.value = value
 
     def remove_selection(self):
         self.selection_key = None
 
         if self.pressed_key:
             self.pressed_key.bg_color = 'grey'
-            self.pressed_key.reset_animation()
             self.pressed_key = None
     
     def reset_keybinds(self):
         for key in self.keys_group:
-            key.key_value = self.default_keybinds[key.key_name]
-            key.symbol_image = pygame.image.load(self.get_path(key.key_value))
-            key.symbol_image = pygame.transform.scale(key.symbol_image, (40, 40))
-            key.key_symbol = self.value_to_unicode(key.key_value)
+            key.value = self.default_keybinds[key.name]['value']
+            key.type = self.default_keybinds[key.name]['type']
+            key.unicode = self.value_to_unicode(key.value)
+            path = self.get_path(key.value)
+            image = pygame.image.load(path)
+            image = pygame.transform.scale(image, (40, 40))
+            key.symbol_image = image
 
     def is_generic(self, symbol):
-        return symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?"
+        if symbol == None or not len(symbol) == 1:
+            return False
+        return symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()_+-=[]{}|;':,.<>/?" 
 
     def get_path(self, keydown):
-        if keydown == None:
-            return "images/keys/generic.png"
+        if keydown == 0:
+            return "images/keys/lclick.png"
+        if keydown == 2:
+            return "images/keys/rclick.png"
 
         special_keys = {
             pygame.K_SPACE: "images/keys/space.png",
