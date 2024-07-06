@@ -135,9 +135,9 @@ class Tree(CollideableSprite):
         if len(self.apple_sprites.sprites()) > 0:
             random_apple = random.choice(self.apple_sprites.sprites())
             random_apple.kill()
-            entity.add_resource('apple')
+            entity.add_resource(InventoryResource.APPLE)
         if self.health < 0 and self.alive:
-            entity.add_resource("wood", 5)
+            entity.add_resource(InventoryResource.WOOD, 5)
         self.image = support.generate_particle_surf(self.image)
         self.timer.activate()
 
