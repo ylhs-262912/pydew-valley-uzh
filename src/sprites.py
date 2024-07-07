@@ -12,8 +12,6 @@ from types import FunctionType as Function
 
 from src import support
 from src import timer
-from src.pause_menu import PauseMenu
-from src.settings_menu import SettingsMenu
 
 
 class Sprite(pygame.sprite.Sprite):

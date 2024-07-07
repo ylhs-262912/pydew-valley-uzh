@@ -5,7 +5,6 @@ from src import settings
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
 from src import support
 from src import level
-from src import main_menu
 
 from src.level import Level
 from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu
@@ -44,13 +43,6 @@ class Game:
 
         # game setup
         self.running = True
-        self.level = level.Level(
-            self.tmx_maps,
-            self.character_frames,
-            self.level_frames,
-            self.overlay_frames,
-            self.font,
-            self.sounds)
         self.clock = pygame.time.Clock()
 
         # screens

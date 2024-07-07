@@ -8,6 +8,7 @@ from src.settings import (
     SCALE_FACTOR,
     TILE_SIZE,
 )
+import json
 
 
 def resource_path(relative_path: str):
@@ -141,9 +142,11 @@ def save_data(data, file_name):
     with open(resource_path('data/settings/' + file_name), 'w') as file:
         json.dump(data, file, indent=4)
 
+
 def load_data(file_name):
     with open(resource_path('data/settings/' + file_name), 'r') as file:
         return json.load(file)
+
 
 def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
     px_mask = pygame.mask.from_surface(img)
