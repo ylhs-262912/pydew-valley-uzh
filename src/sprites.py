@@ -185,6 +185,10 @@ class Entity(Sprite):
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_INV_DEFAULT_AMOUNTS = (
+    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
+    _SEED_INVENTORY_DEFAULT_AMOUNT
+)
 
 
 class Player(CollideableSprite):
@@ -254,7 +258,17 @@ class Player(CollideableSprite):
         self.sounds = sounds
 
     def save(self):
-        savefile.save(self.current_tool, self.current_seed, self.money, self.inventory)
+        # We compact the inventory first, i.e. remove any default values if they didn't change.
+        # This is to save space in the save file.
+        compacted_inv = self.inventory.copy()
+        key_set = list(compacted_inv.keys())
+        for k in key_set:
+            # The default amount for each resource differs
+            # according to whether said resource is a seed or not
+            # (5 units for seeds, 20 units for everything else).
+            if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
+                del compacted_inv[k]
+        savefile.save(self.current_tool, self.current_seed, self.money, compacted_inv)
 
     def input(self):
         keys = pygame.key.get_pressed()
