@@ -1,4 +1,5 @@
 import pygame
+
 import random
 from src import settings
 from src.settings import (
@@ -11,8 +12,6 @@ from types import FunctionType as Function
 
 from src import support
 from src import timer
-from src.pause_menu import PauseMenu
-from src.settings_menu import SettingsMenu
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -220,8 +219,6 @@ class Player(CollideableSprite):
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
-        self.pause_menu = PauseMenu(self.font)
-        self.settings_menu = SettingsMenu(self.font, self.sounds)
         # seeds
         self.available_seeds = ['corn', 'tomato']
         self.seed_index = 0
@@ -246,10 +243,10 @@ class Player(CollideableSprite):
         # movement
         if not self.tool_active and not self.blocked:
             recent_keys = pygame.key.get_just_pressed()
-            if recent_keys[pygame.K_ESCAPE]:
-                self.paused = not self.paused
-                self.direction.y = 0
-                self.direction.x = 0
+            # if recent_keys[pygame.K_ESCAPE]:
+            #     self.paused = not self.paused
+            #     self.direction.y = 0
+            #     self.direction.x = 0
 
         if not self.tool_active and not self.blocked and not self.paused:
             self.direction.x = int(
