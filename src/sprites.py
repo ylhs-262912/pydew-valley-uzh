@@ -14,8 +14,6 @@ from src import savefile
 
 from src import support
 from src import timer
-from src.pause_menu import PauseMenu
-from src.settings_menu import SettingsMenu
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -275,10 +273,10 @@ class Player(CollideableSprite):
         # movement
         if not self.tool_active and not self.blocked:
             recent_keys = pygame.key.get_just_pressed()
-            if recent_keys[pygame.K_ESCAPE]:
-                self.paused = not self.paused
-                self.direction.y = 0
-                self.direction.x = 0
+            # if recent_keys[pygame.K_ESCAPE]:
+            #     self.paused = not self.paused
+            #     self.direction.y = 0
+            #     self.direction.x = 0
 
         if not self.tool_active and not self.blocked and not self.paused:
             self.direction.x = int(

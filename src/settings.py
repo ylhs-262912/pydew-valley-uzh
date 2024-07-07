@@ -4,6 +4,7 @@ import warnings
 # The explicit import is needed, as this module is not automatically
 # imported when you import pygame.
 import pygame.freetype
+from enum import Enum
 if not getattr(pygame, "IS_CE", False):
     raise ImportError(
         "The game requires Pygame CE to function. "
@@ -65,3 +66,15 @@ APPLE_POS = {
     'small': [(18, 17), (30, 37), (12, 50), (30, 45), (20, 30), (30, 10)],
     'default': [(30, 24), (60, 65), (50, 50), (16, 40), (45, 50), (42, 70)]
 }
+
+
+class GameState(Enum):
+    MAIN_MENU = 0
+    LEVEL = 1
+    PAUSE = 2
+    SETTINGS = 3
+    SHOP = 4
+    EXIT = 5
+    GAME_OVER = 6
+    WIN = 7
+    CREDITS = 8
