@@ -233,8 +233,6 @@ class Player(CollideableSprite):
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
-        self.pause_menu = PauseMenu(self.font, self.save)
-        self.settings_menu = SettingsMenu(self.font, self.sounds)
         # seeds
         self.available_seeds = ['corn', 'tomato']
         self.current_seed = save_data.get("current_seed", FarmingTool.get_first_seed_id())

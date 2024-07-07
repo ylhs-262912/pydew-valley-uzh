@@ -67,14 +67,3 @@ APPLE_POS = {
     'default': [(30, 24), (60, 65), (50, 50), (16, 40), (45, 50), (42, 70)]
 }
 
-
-class GameState(Enum):
-    MAIN_MENU = 0
-    LEVEL = 1
-    PAUSE = 2
-    SETTINGS = 3
-    SHOP = 4
-    EXIT = 5
-    GAME_OVER = 6
-    WIN = 7
-    CREDITS = 8

@@ -22,6 +22,18 @@ _FT_SERIALISED_STRINGS = (
 )
 
 
+class GameState(IntEnum):
+    MAIN_MENU = 0
+    LEVEL = 1
+    PAUSE = 2
+    SETTINGS = 3
+    SHOP = 4
+    EXIT = 5
+    GAME_OVER = 6
+    WIN = 7
+    CREDITS = 8
+
+
 # NOTE : DO NOT pay attention to anything the IDE might complain about in this class, as the enum generation mechanisms
 # will ensure _SERIALISABLE_STRINGS is actually treated like a tuple of strings instead of an integer.
 class _SerialisableEnum(IntEnum):
