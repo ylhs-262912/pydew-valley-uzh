@@ -37,16 +37,12 @@ class Game:
         self.clock = pygame.time.Clock()
 
         # screens
+        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds)
-        self.level = Level(
-            switch=self.switch_state,
-            tmx_maps=self.tmx_maps,
-            frames=self.frames,
-            sounds=self.sounds
-        )
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
 
+        # state
         self.screens = {
             GameState.MAIN_MENU: self.main_menu,
             GameState.PAUSE: self.pause_menu,
@@ -58,6 +54,7 @@ class Game:
 
     def switch_state(self, state):
         self.current_state = state
+
 
     def load_assets(self):
         self.tmx_maps = tmx_importer('data/maps')

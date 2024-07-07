@@ -199,7 +199,7 @@ class PauseMenu(GeneralMenu):
 
 
 class SettingsMenu(GeneralMenu):
-    def __init__(self, switch_screen, sounds):
+    def __init__(self, switch_screen, sounds, level):
         options = ['Keybinds', 'Volume', 'Back']
         background = pygame.image.load('images/menu_background/bg.png')
         title = 'Settings'
@@ -212,10 +212,12 @@ class SettingsMenu(GeneralMenu):
         description_pos = self.rect.topright + vector(100, 0)
         self.keybinds_description = KeybindsDescription(description_pos)
         self.volume_description = VolumeDescription(description_pos, sounds)
+        self.current_description = self.keybinds_description
 
+        # buttons
         self.buttons.append(self.keybinds_description.reset_button)
 
-        self.current_description = self.keybinds_description
+        self.level = level
 
     # setup
     def button_action(self, text):
@@ -226,6 +228,7 @@ class SettingsMenu(GeneralMenu):
         if text == 'Back':
             self.keybinds_description.save_data()
             self.volume_description.save_data()
+            self.level.player.update_keybinds()
             self.switch_screen(GameState.PAUSE)
         if text == 'Reset':
             self.keybinds_description.reset_keybinds()

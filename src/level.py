@@ -127,7 +127,11 @@ class Level:
         return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
 
     def activate_music(self):
-        volume = load_data('volume.json') / 1000
+        volume = 0.1
+        try:
+            volume = load_data('volume.json') / 1000
+        except FileNotFoundError:
+            pass
         self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
 

@@ -302,6 +302,9 @@ class Player(CollideableSprite):
     def add_resource(self, resource, amount=1):
         self.inventory[resource] += amount
         self.sounds['success'].play()
+    
+    def update_keybinds(self):
+        self.keybinds = load_data('keybinds.json')
 
     def update(self, dt):
         self.input()
