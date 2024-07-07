@@ -29,6 +29,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
+TB_LAYER = 11
 
 LAYERS = {
     'water': 0,
@@ -41,7 +42,8 @@ LAYERS = {
     'main': 7,
     'fruit': 8,
     'rain drops': 9,
-    'particles': 10
+    'particles': 10,
+    "TextBox": TB_LAYER
 }
 
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
@@ -49,18 +51,6 @@ GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 OVERLAY_POSITIONS = {
     'tool': (40, SCREEN_HEIGHT - 15),
     'seed': (70, SCREEN_HEIGHT - 5)}
-
-# SALE_PRICES = {
-#     'wood': 4,
-#     'apple': 2,
-#     'corn': 10,
-#     'tomato': 20
-# }
-
-# PURCHASE_PRICES = {
-#     'corn seed': 4,
-#     'tomato seed': 5
-# }
 
 APPLE_POS = {
     'small': [(18, 17), (30, 37), (12, 50), (30, 45), (20, 30), (30, 10)],
