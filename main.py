@@ -1,17 +1,21 @@
-from src.level import Level
-from src.menus import MainMenu, PauseMenu, SettingsMenu, ShopMenu, Component
 import pygame
+
+from src.level import Level
+from src.menus import MainMenu, PauseMenu, SettingsMenu
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
-from src.support import tmx_importer, animation_importer, import_folder_dict, import_folder, character_importer, sound_importer, import_font
+from src.support import tmx_importer, animation_importer, import_folder_dict
+from src.support import import_folder, character_importer, sound_importer
+from src.support import import_font
 
 
 class Game:
     def __init__(self):
         # main setup
         pygame.init()
-        self.display_surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.display_surface = pygame.display.set_mode(screen_size)
         pygame.display.set_caption('PyDew')
-        
+
         # frames
         self.character_frames = None
         self.level_frames = None
@@ -27,7 +31,7 @@ class Game:
             'level': self.level_frames,
             'overlay': self.overlay_frames
         }
-        
+
         # game setup
         self.running = True
         self.clock = pygame.time.Clock()
@@ -36,19 +40,22 @@ class Game:
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds)
-        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(
+            switch=self.switch_state,
+            tmx_maps=self.tmx_maps,
+            frames=self.frames,
+            sounds=self.sounds
+        )
 
-
-        self.screens = { 
+        self.screens = {
             GameState.MAIN_MENU: self.main_menu,
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.LEVEL: self.level
         }
 
+        self.current_state = GameState.MAIN_MENU
 
-        self.current_state = GameState.SETTINGS
-    
     def switch_state(self, state):
         self.current_state = state
 
@@ -70,7 +77,6 @@ class Game:
         self.character_frames = character_importer('images/characters')
 
         self.sounds = sound_importer('audio', default_volume=0)
-          
 
         self.font = import_font(30, 'font/LycheeSoda.ttf')
 
@@ -82,37 +88,8 @@ class Game:
             screen.update(dt)
 
             pygame.display.update()
-    
-
-    def run_class_tests(self):
-
-        class_test = Component(pygame.Rect(100, 100, 400, 50))
-
-        while self.running:
-            dt = self.clock.tick() / 1000
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-
-                if event.type == pygame.KEYDOWN:
-                    class_test.start_press_animation()
-                if event.type == pygame.KEYUP:
-                    class_test.start_release_animation()
-            
-            self.display_surface.fill('white')
-            class_test.update(dt)
-            class_test.draw(self.display_surface)
-
-            pygame.display.update()
-
-
-
-
- 
 
 
 if __name__ == '__main__':
     game = Game()
-    # game.run_class_tests()
     game.run()
