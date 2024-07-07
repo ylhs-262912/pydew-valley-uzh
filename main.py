@@ -46,7 +46,7 @@ class Game:
         # game setup
         self.running = True
         self.level = Level(self, self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font,
-                           self.sounds)
+                           self.sounds, self.switch_state)
         self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
         self.clock = pygame.time.Clock()
 
