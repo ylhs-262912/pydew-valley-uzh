@@ -231,7 +231,7 @@ class Player(CollideableSprite):
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
-        self.pause_menu = PauseMenu(self.font)
+        self.pause_menu = PauseMenu(self.font, self.save)
         self.settings_menu = SettingsMenu(self.font, self.sounds)
         # seeds
         self.available_seeds = ['corn', 'tomato']
@@ -254,7 +254,7 @@ class Player(CollideableSprite):
         self.sounds = sounds
 
     def save(self):
-        savefile.save(self.current_tool, self.current_seed, self.inventory)
+        savefile.save(self.current_tool, self.current_seed, self.money, self.inventory)
 
     def input(self):
         keys = pygame.key.get_pressed()

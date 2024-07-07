@@ -3,10 +3,11 @@ from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
+from typing import Callable
 
 
 class PauseMenu:
-    def __init__(self, font):
+    def __init__(self, font, save_func:Callable):
 
         # general setup
         self.text_surfs = []
@@ -15,6 +16,7 @@ class PauseMenu:
         self.font = font
         self.index = 0
         # options
+        self.save = save_func
         self.width = 400
         self.space = 10
         self.padding = 8
@@ -56,6 +58,7 @@ class PauseMenu:
                     self.pressed_play = True
                     self.index = 0
             if current_item == "Save and Resume":
+                self.save()
                 if not self.pressed_quit:
                     self.pressed_play = True
                     self.index = 0

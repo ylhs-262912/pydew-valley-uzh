@@ -2,7 +2,6 @@
   "__FarmingTool__": ["current_tool", "current_seed"],
   "current_tool": "hoe",
   "current_seed": "tomato seed",
-  "money": 300,
   "inventory": {
     "__InventoryResource__": ["wood", "corn"],
     "wood": 25,
