@@ -182,6 +182,7 @@ class Entity(Sprite):
 class Player(CollideableSprite):
     def __init__(
             self,
+            game,
             pos: settings.Coordinate,
             frames,
             groups,
@@ -190,6 +191,7 @@ class Player(CollideableSprite):
             interact: Function,
             sounds: settings.SoundDict,
             font: pygame.font.Font):
+        self.game = game
         self.frames = frames
         self.frame_index = 0
         self.state = 'idle'
@@ -240,13 +242,26 @@ class Player(CollideableSprite):
 
     def input(self):
         keys = pygame.key.get_pressed()
+        recent_keys = pygame.key.get_just_pressed()
+        if recent_keys[pygame.K_SPACE] and self.game.dm.showing_dialogue:
+            self.game.dm.advance()
+            if not self.game.dm.showing_dialogue:
+                self.blocked = False
+            return
         # movement
         if not self.tool_active and not self.blocked:
-            recent_keys = pygame.key.get_just_pressed()
-            # if recent_keys[pygame.K_ESCAPE]:
-            #     self.paused = not self.paused
-            #     self.direction.y = 0
-            #     self.direction.x = 0
+            if recent_keys[pygame.K_ESCAPE]:
+                self.paused = not self.paused
+                self.direction.y = 0
+                self.direction.x = 0
+                return
+            if recent_keys[pygame.K_t]:
+                if self.game.dm.showing_dialogue:
+                    pass
+                else:
+                    self.game.dm.open_dialogue("test")
+                    self.blocked = True
+                return
 
         if not self.tool_active and not self.blocked and not self.paused:
             self.direction.x = int(
@@ -259,7 +274,6 @@ class Player(CollideableSprite):
                 else self.direction
             )
 
-            recent_keys = pygame.key.get_just_pressed()
             # tool switch
             if recent_keys[pygame.K_q]:
                 self.tool_index = (self.tool_index +
