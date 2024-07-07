@@ -1,7 +1,5 @@
 import pygame
-from src.settings import (
-    OVERLAY_POSITIONS,
-)
+from src.settings import OVERLAY_POSITIONS
 
 
 class Overlay:
@@ -29,18 +27,9 @@ class Overlay:
         # clock
         font = pygame.font.SysFont('Arial', 30)  # font/size is temporary
 
-        if (time[0] < 10):
-            # if hours are less than 10, add a 0 to stay in the hh:mm format
-            hours = f"0{time[0]}"
-        else:
-            hours = f"{time[0]}"
+        # hours, minutes format
+        hours = f"0{time[0]}" if time[0] < 10 else f"{time[0]}"
+        minutes = f"0{time[1]}" if time[1] < 10 else f"{time[1]}"
 
-        if (time[1] < 10):
-            # if minutes are less than 10, add a 0 to stay in the hh:mm format
-            minutes = f"0{time[1]}"
-        else:
-            minutes = f"{time[1]}"
-
-        text_surface = font.render(
-            f"{hours}:{minutes}", False, (255, 255, 255))
+        text_surface = font.render(f"{hours}:{minutes}", False, (255, 255, 255))
         self.display_surface.blit(text_surface, (10, 10))

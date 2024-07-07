@@ -7,6 +7,8 @@ from src.settings import (
 )
 
 
+# TODO: Refactor this class
+
 class Menu:
     def __init__(self, player, toggle_menu, font):
 

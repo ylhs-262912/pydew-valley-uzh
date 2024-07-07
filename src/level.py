@@ -1,17 +1,21 @@
 import math
+import random
 
 import pygame
-import random
 
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
+from src.settings import *
+from src.sprites import *
+
 from src.groups import AllSprites
 from src.soil import SoilLayer
 from src.transition import Transition
+from random import randint
 from src.sky import Sky, Rain
 from src.overlay import Overlay
-from src.menu import Menu
+from src.shop import Menu
 from src.sprites import (
     AnimatedSprite,
     ParticleSprite,
@@ -29,14 +33,8 @@ from src.settings import (
 
 
 class Level:
-    def __init__(
-            self,
-            tmx_maps: MapDict,
-            character_frames,
-            level_frames,
-            overlay_frames,
-            font,
-            sounds):
+
+    def __init__(self, tmx_maps, character_frames, level_frames, overlay_frames, font, sounds, switch):
         self.display_surface = pygame.display.get_surface()
 
         # sprite groups
@@ -87,7 +85,10 @@ class Level:
         self.menu = Menu(self.entities['Player'], self.toggle_shop, font)
         self.shop_active = False
 
-    def setup(self, tmx_maps: MapDict, character_frames, level_frames):
+        # switch
+        self.switch_screen = switch
+
+    def setup(self, tmx_maps, character_frames, level_frames):
         self.sounds["music"].set_volume(0.1)
         self.sounds["music"].play(-1)
 
@@ -205,12 +206,21 @@ class Level:
                 pf_finder=self.pf_finder,
             )
 
+    def event_loop(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.switch_screen(GameState.PAUSE)
+
     def apply_tool(self, tool, pos, entity):
         if tool == 'axe':
             for tree in self.tree_sprites:
                 if tree.rect.collidepoint(pos):
                     tree.hit(entity)
-                    # self.create_particle(tree)
                     self.sounds['axe'].play()
 
         if tool == 'hoe':
@@ -247,7 +257,7 @@ class Level:
 
         # soil
         self.soil_layer.remove_water()
-        self.raining = random.randint(0, 10) > 7
+        self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining
         if self.raining:
             self.soil_layer.water_all()
@@ -292,10 +302,15 @@ class Level:
         self.shop_active = not self.shop_active
 
     def update(self, dt):
+        self.display_surface.fill('gray')
+        self.event_loop()
+
         if not self.shop_active:
             self.all_sprites.update(dt)
+
         self.all_sprites.draw(self.entities['Player'].rect.center)
         self.plant_collision()
+
         self.overlay.display(self.sky.get_time())
         self.sky.display(dt)
 
@@ -307,3 +322,4 @@ class Level:
 
         if self.day_transition:
             self.transition.play()
+

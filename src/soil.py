@@ -1,14 +1,7 @@
+from src.settings import TILE_SIZE, SCALE_FACTOR, LAYERS
 import pygame
-from src.settings import (
-    TILE_SIZE,
-    SCALE_FACTOR,
-    LAYERS,
-)
-from src.sprites import (
-    Plant,
-    Sprite,
-)
-import random
+from src.sprites import Sprite, Plant
+from random import choice
 
 
 class SoilLayer:
@@ -46,7 +39,7 @@ class SoilLayer:
                 self.grid[y][x].append('W')
 
                 pos = soil_sprite.rect.topleft
-                surf = random.choice(
+                surf = choice(
                     list(self.level_frames['soil water'].values())
                 )
                 Sprite(pos, surf, [self.all_sprites,
@@ -59,7 +52,7 @@ class SoilLayer:
                     cell.append('W')
                     x = index_col * TILE_SIZE * SCALE_FACTOR
                     y = index_row * TILE_SIZE * SCALE_FACTOR
-                    surf = random.choice(
+                    surf = choice(
                         list(self.level_frames['soil water'].values())
                     )
                     Sprite(
