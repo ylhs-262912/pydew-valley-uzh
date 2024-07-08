@@ -169,7 +169,6 @@ class NPCBehaviourMethods:
             context, random.choice(possible_coordinates), on_path_completion
         )
 
-    # FIXME: When NPCs water the plants, the hoe is displayed as the item used instead of the watering can
     @staticmethod
     def water_farmland(context: NPCBehaviourContext) -> bool:
         """
@@ -218,6 +217,7 @@ class NPCBehaviourMethods:
             #  interact with (cf. Entity.get_target_pos)
             context.npc.pf_path.pop(-1)
 
+            @context.npc.on_path_completion
             def inner():
                 context.npc.direction.update(facing)
                 context.npc.get_facing_direction()
@@ -225,9 +225,6 @@ class NPCBehaviourMethods:
 
                 on_path_completion()
 
-                context.npc.pf_on_path_completion = lambda: None
-
-            context.npc.pf_on_path_completion = inner
             return True
         return False
 
@@ -265,9 +262,7 @@ class NPCBehaviourMethods:
             if context.npc.create_path_to_tile(pos):
                 break
         else:
-            context.npc.pf_state = NPCState.IDLE
-            context.npc.direction.update((0, 0))
-            context.npc.pf_state_duration = 1
+            context.npc.abort_path()
             return False
         return True
 
@@ -294,8 +289,6 @@ class NPC(Entity):
        Each tile on which the NPC is moving is represented by its own coordinate tuple,
        while the first one in the list always being the NPCs current target position."""
 
-    pf_on_path_completion: Callable[[], None]
-
     def __init__(
             self,
             pos: Coordinate,
@@ -316,7 +309,9 @@ class NPC(Entity):
         self.pf_state = NPCState.IDLE
         self.pf_state_duration = 0
         self.pf_path = []
-        self.pf_on_path_completion = lambda: None
+
+        self.__on_path_abortion_funcs = []
+        self.__on_path_completion_funcs = []
 
         super().__init__(
             pos,
@@ -368,12 +363,39 @@ class NPC(Entity):
         self.pf_path = [(i.x + .5, i.y + .5) for i in path_raw[0][1:]]
 
         if not self.pf_path:
-            self.pf_state = NPCState.IDLE
-            self.direction.update((0, 0))
-            self.pf_state_duration = 1
+            self.abort_path()
             return False
 
         return True
+
+    def on_path_abortion(self, func: Callable[[], None]):
+        pass
+
+    def abort_path(self):
+        self.pf_state = NPCState.IDLE
+        self.direction.update((0, 0))
+        self.pf_state_duration = 1
+
+        for func in self.__on_path_abortion_funcs:
+            func()
+        self.__on_path_abortion_funcs.clear()
+        self.__on_path_completion_funcs.clear()
+        return
+
+    def on_path_completion(self, func: Callable[[], None]):
+        self.__on_path_completion_funcs.append(func)
+        return
+
+    def complete_path(self):
+        self.pf_state = NPCState.IDLE
+        self.direction.update((0, 0))
+        self.pf_state_duration = random.randint(2, 5)
+
+        for func in self.__on_path_completion_funcs:
+            func()
+        self.__on_path_abortion_funcs.clear()
+        self.__on_path_completion_funcs.clear()
+        return
 
     def move(self, dt):
         tile_size = SCALE_FACTOR * 16
@@ -391,11 +413,7 @@ class NPC(Entity):
             if not self.pf_path:
                 # runs in case the path has been emptied in the meantime
                 #  (e.g. NPCBehaviourMethods.wander_to_interact created a path to a tile adjacent to the NPC)
-                self.pf_state = NPCState.IDLE
-                self.direction.update((0, 0))
-                self.pf_state_duration = random.randint(2, 5)
-
-                self.pf_on_path_completion()
+                self.complete_path()
                 return
 
             next_position = (tile_coord.x, tile_coord.y)
@@ -410,11 +428,7 @@ class NPC(Entity):
 
                 if not len(self.pf_path):
                     # the NPC has completed its path
-                    self.pf_state = NPCState.IDLE
-                    self.direction.update((0, 0))
-                    self.pf_state_duration = random.randint(2, 5)
-
-                    self.pf_on_path_completion()
+                    self.complete_path()
                     break
 
                 # x- and y-distances from the NPCs current position to its target position
@@ -458,9 +472,7 @@ class NPC(Entity):
             colliding = colliding or self.collision('vertical')
 
             if colliding:
-                self.pf_state = NPCState.IDLE
-                self.direction.update((0, 0))
-                self.pf_state_duration = 1
+                self.abort_path()
 
         self.rect.update((self.hitbox_rect.centerx - self.rect.width / 2,
                           self.hitbox_rect.centery - self.rect.height / 2), self.rect.size)
