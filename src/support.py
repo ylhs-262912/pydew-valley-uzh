@@ -1,4 +1,5 @@
 import json, pygame, sys
+import os
 from os import path, sep, walk, listdir
 from os.path import join           
 from pytmx.util_pygame import load_pygame          
@@ -109,6 +110,9 @@ def sound_importer(*path, default_volume=0.5):
 
 
 def save_data(data, file_name):
+    folder_path = resource_path('data/settings')
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
     with open(resource_path('data/settings/' + file_name), 'w') as file:
         json.dump(data, file, indent=4)
     
