@@ -55,51 +55,11 @@ class _SerialisableEnum(IntEnum):
         except IndexError as exc:
             raise LookupError(f"serialised string '{val}' does not match any member in enum '{cls.__name__}'") from exc
 
-
-class FarmingTool(_SerialisableEnum):
-    """Notably used to distinguish the different farming tools (including seeds) in-code."""
-    _SERIALISABLE_STRINGS = nonmember(
-        (
-            "none",
-            "axe",
-            "hoe",
-            "water",
-            "corn seed",
-            "tomato seed"
-        )
-    )
-
-    NONE = 0  # Possible placeholder value if needed somewhere
-    AXE = 1
-    HOE = 2
-    WATERING_CAN = 3
-    CORN_SEED = 4
-    TOMATO_SEED = 5
-
-    @property
-    def _swinging_tools(self):
-        return {self.HOE, self.AXE}
-
-    def is_swinging_tool(self):
-        return self in self._swinging_tools
-
-    @classmethod
-    def get_first_tool_id(cls):
-        """Return the first tool ID. This might change in the course of development."""
-        return cls.AXE
-
-    @classmethod
-    def get_tool_count(cls):
-        return cls.get_first_seed_id() - cls.get_first_tool_id()
-
-    @classmethod
-    def get_seed_count(cls):
-        return len(cls) - cls.get_first_seed_id()
-
-    @classmethod
-    def get_first_seed_id(cls):
-        """Same as get_first_tool_id, but for the seeds. Duh."""
-        return cls.CORN_SEED
+    def as_plant_name(self):
+        """Returns the same as FarmingTool.as_serialised_string(),
+        but strips the return value of whitespaces and occurrences of
+        the word 'seed'."""
+        return self.as_serialised_string().removesuffix(" seed")
 
 
 class InventoryResource(_SerialisableEnum):
@@ -140,3 +100,57 @@ class InventoryResource(_SerialisableEnum):
 
     def is_seed(self):
         return self >= self.CORN_SEED
+
+
+class FarmingTool(_SerialisableEnum):
+    """Notably used to distinguish the different farming tools (including seeds) in-code."""
+    _SERIALISABLE_STRINGS = nonmember(
+        (
+            "none",
+            "axe",
+            "hoe",
+            "water",
+            "corn seed",
+            "tomato seed"
+        )
+    )
+
+    NONE = 0  # Possible placeholder value if needed somewhere
+    AXE = 1
+    HOE = 2
+    WATERING_CAN = 3
+    CORN_SEED = 4
+    TOMATO_SEED = 5
+
+    @property
+    def _swinging_tools(self):
+        return {self.HOE, self.AXE}
+
+    def is_swinging_tool(self):
+        return self in self._swinging_tools
+
+    def is_seed(self):
+        return self >= self.get_first_seed_id()
+
+    @classmethod
+    def get_first_tool_id(cls):
+        """Return the first tool ID. This might change in the course of development."""
+        return cls.AXE
+
+    @classmethod
+    def get_tool_count(cls):
+        return cls.get_first_seed_id() - cls.get_first_tool_id()
+
+    @classmethod
+    def get_seed_count(cls):
+        return len(cls) - cls.get_first_seed_id()
+
+    @classmethod
+    def get_first_seed_id(cls):
+        """Same as get_first_tool_id, but for the seeds. Duh."""
+        return cls.CORN_SEED
+
+    def as_inventory_resource(self):
+        """Converts self to InventoryResource type if possible.
+        (Conversion is possible if self is considered a seed.)"""
+        return InventoryResource(self.value) if self.is_seed() else self
