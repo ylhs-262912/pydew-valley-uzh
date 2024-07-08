@@ -96,7 +96,6 @@ class NPCBehaviourMethods:
 
         return (unplanted_farmland_available == 0 and unwatered_farmland_available == 0) or random.randint(0, 2) == 0
 
-    # FIXME: When NPCs till tiles, the axe is displayed as the item used instead of the hoe
     @staticmethod
     def create_new_farmland(context: NPCBehaviourContext) -> bool:
         """
@@ -116,6 +115,7 @@ class NPCBehaviourMethods:
         def on_path_completion():
             context.npc.tool_active = True
             context.npc.current_tool = FarmingTool.HOE
+            context.npc.tool_index = context.npc.current_tool.value - 1
             context.npc.frame_index = 0
 
         return NPCBehaviourMethods.wander_to_interact(
@@ -162,6 +162,7 @@ class NPCBehaviourMethods:
 
         def on_path_completion():
             context.npc.current_seed = FarmingTool.CORN_SEED
+            context.npc.seed_index = context.npc.current_seed.value - FarmingTool.get_first_seed_id().value
             context.npc.use_tool(ItemToUse(1))
 
         return NPCBehaviourMethods.wander_to_interact(
@@ -169,7 +170,6 @@ class NPCBehaviourMethods:
         )
 
     # FIXME: When NPCs water the plants, the hoe is displayed as the item used instead of the watering can
-    # FIXME: When NPCs water the plants, the axe is displayed as the item used instead of the watering can
     @staticmethod
     def water_farmland(context: NPCBehaviourContext) -> bool:
         """
@@ -189,6 +189,7 @@ class NPCBehaviourMethods:
         def on_path_completion():
             context.npc.tool_active = True
             context.npc.current_tool = FarmingTool.WATERING_CAN
+            context.npc.tool_index = context.npc.current_tool.value - 1
             context.npc.frame_index = 0
 
         return NPCBehaviourMethods.wander_to_interact(
