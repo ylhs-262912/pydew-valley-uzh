@@ -122,6 +122,13 @@ class FarmingTool(_SerialisableEnum):
     CORN_SEED = 4
     TOMATO_SEED = 5
 
+    _AS_IR = nonmember(
+        {
+            CORN_SEED: InventoryResource.CORN,
+            TOMATO_SEED: InventoryResource.TOMATO
+        }
+    )
+
     @property
     def _swinging_tools(self):
         return {self.HOE, self.AXE}
@@ -153,4 +160,4 @@ class FarmingTool(_SerialisableEnum):
     def as_inventory_resource(self):
         """Converts self to InventoryResource type if possible.
         (Conversion is possible if self is considered a seed.)"""
-        return InventoryResource(self.value) if self.is_seed() else self
+        return self._AS_IR.get(self, self)
