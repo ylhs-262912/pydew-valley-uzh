@@ -74,7 +74,7 @@ class Plant(CollideableSprite):
         self.seed_type = seed_type
         self.age = 0
         self.max_age = len(self.frames) - 1
-        self.grow_speed = GROW_SPEED[seed_type]
+        self.grow_speed = GROW_SPEED[seed_type.as_plant_name()]
         self.harvestable = False
 
     def grow(self):
@@ -325,9 +325,7 @@ class Entity(CollideableSprite, ABC):
         self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)
 
     def add_resource(self, resource, amount=1):
-        # FIXME: Should be changed to a better method to refer from the "old" resource strings to the new enum values
-        self.inventory[{"corn": InventoryResource.CORN,
-                        "tomato": InventoryResource.TOMATO}[resource]] += amount
+        self.inventory[resource] += amount
 
     def update(self, dt):
         self.get_state()

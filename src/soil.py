@@ -88,23 +88,21 @@ class SoilLayer:
                 x = int(soil_sprite.rect.x / (TILE_SIZE * SCALE_FACTOR))
                 y = int(soil_sprite.rect.y / (TILE_SIZE * SCALE_FACTOR))
 
-                # FIXME: Should be changed to a better method to refer from the "old" resource strings to the new enum values
-                inventory_resource = {"corn": InventoryResource.CORN_SEED,
-                                      "tomato": InventoryResource.TOMATO_SEED}[seed]
+                inventory_resource = seed.as_inventory_resource()
 
                 if ('P' not in self.grid[y][x]
                         and inventory[inventory_resource] > 0):
                     self.grid[y][x].append('P')
-                    Plant(seed,
+                    Plant(seed.as_inventory_resource(),
                           [self.all_sprites,
                            self.plant_sprites],
                           soil_sprite,
-                          self.level_frames[seed],
+                          self.level_frames[seed.as_plant_name()],
                           self.check_watered)
                     inventory[inventory_resource] -= 1
                     plant_sounds[0].play()
                 else:
-                    # play a sound that indecates u cant plant a seed
+                    # play a sound that indicates you can't plant a seed
                     plant_sounds[1].play()
 
     def update_plants(self):

@@ -231,7 +231,7 @@ class Level:
                 self.soil_layer.water(pos)
                 self.sounds['water'].play()
             case _:  # All seeds
-                self.soil_layer.plant_seed(pos, entity.available_seeds[tool - FarmingTool.get_first_seed_id()],
+                self.soil_layer.plant_seed(pos, tool,
                                            entity.inventory, plant_sounds=[self.sounds['plant'],
                                                                            self.sounds['cant_plant']])
 
