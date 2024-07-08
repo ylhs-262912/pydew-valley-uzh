@@ -1,5 +1,4 @@
 import pygame
-
 import random
 from src import settings
 from src.settings import (
@@ -10,6 +9,9 @@ from src.settings import (
 )
 from types import FunctionType as Function
 
+from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src import savefile
+
 from src import support
 from src import timer
 
@@ -19,7 +21,7 @@ class Sprite(pygame.sprite.Sprite):
                  pos: tuple[int | float,
                             int | float],
                  surf: pygame.Surface,
-                 groups: tuple[pygame.sprite.Group],
+                 groups: tuple[pygame.sprite.Group] | pygame.sprite.Group,
                  z: int = LAYERS['main'],
                  name: str | None = None):
         super().__init__(groups)
@@ -132,9 +134,9 @@ class Tree(CollideableSprite):
         if len(self.apple_sprites.sprites()) > 0:
             random_apple = random.choice(self.apple_sprites.sprites())
             random_apple.kill()
-            entity.add_resource('apple')
+            entity.add_resource(InventoryResource.APPLE)
         if self.health < 0 and self.alive:
-            entity.add_resource("wood", 5)
+            entity.add_resource(InventoryResource.WOOD, 5)
         self.image = support.generate_particle_surf(self.image)
         self.timer.activate()
 
@@ -179,6 +181,14 @@ class Entity(Sprite):
         super().__init__(pos, frames[self.state][0], groups, z)
 
 
+_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
+_SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_INV_DEFAULT_AMOUNTS = (
+    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
+    _SEED_INVENTORY_DEFAULT_AMOUNT
+)
+
+
 class Player(CollideableSprite):
     def __init__(
             self,
@@ -191,6 +201,7 @@ class Player(CollideableSprite):
             interact: Function,
             sounds: settings.SoundDict,
             font: pygame.font.Font):
+        save_data = savefile.load_savefile()
         self.game = game
         self.frames = frames
         self.frame_index = 0
@@ -202,6 +213,8 @@ class Player(CollideableSprite):
             groups,
             (44 * SCALE_FACTOR, 40 * SCALE_FACTOR),
         )
+
+        self.font = font
 
         # movement
         self.direction = pygame.Vector2()
@@ -216,29 +229,44 @@ class Player(CollideableSprite):
 
         # tools
         self.available_tools = ['axe', 'hoe', 'water']
-        self.tool_index = 0
-        self.current_tool = self.available_tools[self.tool_index]
+        self.current_tool = save_data.get("current_tool", FarmingTool.get_first_tool_id())
+        self.tool_index = self.current_tool.value - 1
+        # self.current_tool = self.available_tools[self.tool_index]
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
         # seeds
         self.available_seeds = ['corn', 'tomato']
-        self.seed_index = 0
-        self.current_seed = self.available_seeds[self.seed_index]
+        self.current_seed = save_data.get("current_seed", FarmingTool.get_first_seed_id())
+        self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
+        # self.current_seed = self.available_seeds[self.seed_index]
 
         # inventory
         self.inventory = {
-            'wood': 20,
-            'apple': 20,
-            'corn': 20,
-            'tomato': 20,
-            'tomato seed': 5,
-            'corn seed': 5,
+            res: save_data["inventory"].get(
+                res.as_serialised_string(),
+                _SEED_INVENTORY_DEFAULT_AMOUNT if res >= InventoryResource.CORN_SEED else
+                _NONSEED_INVENTORY_DEFAULT_AMOUNT
+                )
+            for res in InventoryResource.__members__.values()
         }
-        self.money = 200
+        self.money = save_data.get("money", 200)
 
         # sounds
         self.sounds = sounds
+
+    def save(self):
+        # We compact the inventory first, i.e. remove any default values if they didn't change.
+        # This is to save space in the save file.
+        compacted_inv = self.inventory.copy()
+        key_set = list(compacted_inv.keys())
+        for k in key_set:
+            # The default amount for each resource differs
+            # according to whether said resource is a seed or not
+            # (5 units for seeds, 20 units for everything else).
+            if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
+                del compacted_inv[k]
+        savefile.save(self.current_tool, self.current_seed, self.money, compacted_inv)
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -276,28 +304,25 @@ class Player(CollideableSprite):
 
             # tool switch
             if recent_keys[pygame.K_q]:
-                self.tool_index = (self.tool_index +
-                                   1) % len(self.available_tools)
-                self.current_tool = self.available_tools[self.tool_index]
+                self.tool_index = (self.tool_index + 1) % FarmingTool.get_tool_count()
+                self.current_tool = FarmingTool(self.tool_index + FarmingTool.get_first_tool_id())
 
             # tool use
             if recent_keys[pygame.K_SPACE]:
                 self.tool_active = True
                 self.frame_index = 0
                 self.direction = pygame.Vector2()
-                if self.current_tool in {'hoe', 'axe'}:
+                if self.current_tool.is_swinging_tool():
                     self.sounds['swing'].play()
 
             # seed switch
             if recent_keys[pygame.K_e]:
-                self.seed_index = (
-                    self.seed_index + 1
-                ) % len(self.available_seeds)
-                self.current_seed = self.available_seeds[self.seed_index]
+                self.seed_index = (self.seed_index + 1) % FarmingTool.get_seed_count()
+                self.current_seed = FarmingTool(self.seed_index + FarmingTool.get_first_seed_id())
 
             # seed used
             if recent_keys[pygame.K_LCTRL]:
-                self.use_tool('seed')
+                self.use_tool(ItemToUse.SEED)
 
                 # interact
             if recent_keys[pygame.K_RETURN]:
@@ -345,6 +370,12 @@ class Player(CollideableSprite):
                     if self.direction.y > 0:
                         self.hitbox_rect.bottom = sprite.rect.top
 
+    def get_current_tool_string(self):
+        return self.available_tools[self.tool_index]
+
+    def get_current_seed_string(self):
+        return self.available_seeds[self.seed_index]
+
     def animate(self, dt):
         current_animation = self.frames[self.state][self.facing_direction]
         self.frame_index += 4 * dt
@@ -360,18 +391,14 @@ class Player(CollideableSprite):
                 if round(self.frame_index) == len(tool_animation) - \
                         1 and not self.just_used_tool:
                     self.just_used_tool = True
-                    self.use_tool('tool')
+                    self.use_tool(ItemToUse.REGULAR_TOOL)
             else:
-                # self.use_tool('tool')
                 self.state = 'idle'
                 self.tool_active = False
                 self.just_used_tool = False
 
-    def use_tool(self, option):
-        self.apply_tool(
-            self.current_tool if option == 'tool' else self.current_seed,
-            self.get_target_pos(),
-            self)
+    def use_tool(self, option: ItemToUse):
+        self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)
 
     def add_resource(self, resource, amount=1):
         self.inventory[resource] += amount

@@ -16,7 +16,7 @@ def resource_path(relative_path: str):
     relative_path = relative_path.replace("/", os.sep)
     try:
         base_path = sys._MEIPASS
-    except Exception:
+    except AttributeError:
         base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     return os.path.join(base_path, relative_path)
 
@@ -88,8 +88,8 @@ def single_character_importer(*sc_path: str) -> settings.AniFrames:
     char_dict = {}
     full_path = os.path.join(*sc_path)
     surf = pygame.image.load(full_path).convert_alpha()
-    for row, dir in enumerate(['down', 'up', 'left']):
-        char_dict[dir] = []
+    for row, dirct in enumerate(['down', 'up', 'left']):
+        char_dict[dirct] = []
         for col in range(surf.get_width() // CHAR_TILE_SIZE):
             cutout_surf = pygame.Surface((48, 48), pygame.SRCALPHA)
             cutout_rect = pygame.Rect(
@@ -98,7 +98,7 @@ def single_character_importer(*sc_path: str) -> settings.AniFrames:
                 CHAR_TILE_SIZE,
                 CHAR_TILE_SIZE)
             cutout_surf.blit(surf, (0, 0), cutout_rect)
-            char_dict[dir].append(
+            char_dict[dirct].append(
                 pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
     char_dict['right'] = [pygame.transform.flip(
         surf, True, False) for surf in char_dict['left']]
@@ -152,4 +152,12 @@ def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
     px_mask = pygame.mask.from_surface(img)
     ret = px_mask.to_surface()
     ret.set_colorkey("black")
+    return ret
+
+
+def flip_items(d: dict) -> dict:
+    """Returns a copy of d with key-value pairs flipped (i.e. keys become values and vice-versa)."""
+    ret = {}
+    for key, val in d.items():
+        ret[val] = key
     return ret

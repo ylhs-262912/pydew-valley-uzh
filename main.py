@@ -1,8 +1,9 @@
 import sys
-import pygame
+import pygame  # noqa
 
 from src import settings
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.enums import GameState
 from src import support
 from src import level
 
