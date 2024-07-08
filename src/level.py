@@ -1,11 +1,12 @@
 import math
-import random
+import sys
 
 import pygame  # noqa
 
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
+from src import settings
 from src.groups import AllSprites
 from src.soil import SoilLayer
 from src.transition import Transition
@@ -21,7 +22,7 @@ from src.sprites import (
     Player,
     NPC, NPCBehaviourMethods,
 )
-from src.enums import FarmingTool
+from src.enums import FarmingTool, GameState
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -179,6 +180,7 @@ class Level:
         self.entities = {}
         for obj in tmx_maps['main'].get_layer_by_name('Entities'):
             self.entities[obj.name] = Player(
+                game=self.game,
                 pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
                 frames=character_frames['rabbit'],
                 groups=(self.all_sprites, self.collision_sprites),

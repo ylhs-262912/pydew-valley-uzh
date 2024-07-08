@@ -10,6 +10,7 @@ from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 from src import settings
+from src.menus import PauseMenu, SettingsMenu
 from src.npc_behaviour import Selector, Sequence, Condition, Action
 from src.npc_behaviour import Context as BehaviourContext
 from src.settings import (
@@ -209,8 +210,6 @@ class Entity(CollideableSprite, ABC):
             z=z
         )
 
-        self.font = font
-
         # movement
         self.direction = pygame.Vector2()
         self.speed = 100
@@ -219,27 +218,26 @@ class Entity(CollideableSprite, ABC):
 
         # tools
         self.available_tools = ['axe', 'hoe', 'water']
-        self.current_tool = save_data.get("current_tool", FarmingTool.get_first_tool_id())
-        self.tool_index = self.current_tool.value - 1
-        # self.current_tool = self.available_tools[self.tool_index]
+        self.current_tool = FarmingTool.get_first_tool_id()
+        self.tool_index = self.current_tool.value - FarmingTool.get_first_tool_id().value
+
         self.tool_active = False
         self.just_used_tool = False
         self.apply_tool = apply_tool
         
         # seeds
         self.available_seeds = ['corn', 'tomato']
-        self.current_seed = save_data.get("current_seed", FarmingTool.get_first_seed_id())
+        self.current_seed = FarmingTool.get_first_seed_id()
         self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
-        # self.current_seed = self.available_seeds[self.seed_index]
 
         # inventory
         self.inventory = {
-            'wood': 0,
-            'apple': 0,
-            'corn': 0,
-            'tomato': 0,
-            'tomato seed': 0,
-            'corn seed': 0,
+            InventoryResource.WOOD: 0,
+            InventoryResource.APPLE: 0,
+            InventoryResource.CORN: 0,
+            InventoryResource.TOMATO: 0,
+            InventoryResource.CORN_SEED: 0,
+            InventoryResource.TOMATO_SEED: 0,
         }
 
         # Not all Entities can go to the market, so those that can't should not have money either
@@ -323,14 +321,13 @@ class Entity(CollideableSprite, ABC):
                 self.tool_active = False
                 self.just_used_tool = False
 
-    def use_tool(self, option):
-        self.apply_tool(
-            self.current_tool if option == 'tool' else self.current_seed,
-            self.get_target_pos(),
-            self)
+    def use_tool(self, option: ItemToUse):
+        self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)
 
     def add_resource(self, resource, amount=1):
-        self.inventory[resource] += amount
+        # FIXME: Should be changed to a better method to refer from the "old" resource strings to the new enum values
+        self.inventory[{"corn": InventoryResource.CORN,
+                        "tomato": InventoryResource.TOMATO}[resource]] += amount
 
     def update(self, dt):
         self.get_state()
@@ -412,6 +409,7 @@ class NPCBehaviourMethods:
 
         return (unplanted_farmland_available == 0 and unwatered_farmland_available == 0) or random.randint(0, 2) == 0
 
+    # FIXME: When NPCs till tiles, the axe is displayed as the item used instead of the hoe
     @staticmethod
     def create_new_farmland(context: NPCBehaviourContext) -> bool:
         """
@@ -430,7 +428,7 @@ class NPCBehaviourMethods:
 
         def on_path_completion():
             context.npc.tool_active = True
-            context.npc.current_tool = "hoe"
+            context.npc.current_tool = FarmingTool.HOE
             context.npc.frame_index = 0
 
         return NPCBehaviourMethods.wander_to_interact(
@@ -476,13 +474,15 @@ class NPCBehaviourMethods:
             return False
 
         def on_path_completion():
-            context.npc.use_tool("seed")
+            context.npc.current_seed = FarmingTool.CORN_SEED
+            context.npc.use_tool(ItemToUse(1))
 
         return NPCBehaviourMethods.wander_to_interact(
             context, random.choice(possible_coordinates), on_path_completion
         )
 
     # FIXME: When NPCs water the plants, the hoe is displayed as the item used instead of the watering can
+    # FIXME: When NPCs water the plants, the axe is displayed as the item used instead of the watering can
     @staticmethod
     def water_farmland(context: NPCBehaviourContext) -> bool:
         """
@@ -501,7 +501,7 @@ class NPCBehaviourMethods:
 
         def on_path_completion():
             context.npc.tool_active = True
-            context.npc.current_tool = "water"
+            context.npc.current_tool = FarmingTool.WATERING_CAN
             context.npc.frame_index = 0
 
         return NPCBehaviourMethods.wander_to_interact(
@@ -646,12 +646,12 @@ class NPC(Entity):
 
         # TODO: Ensure that the NPC always has all needed seeds it needs in its inventory
         self.inventory = {
-            'wood': 0,
-            'apple': 0,
-            'corn': 0,
-            'tomato': 0,
-            'tomato seed': 999,
-            'corn seed': 999,
+            InventoryResource.WOOD: 0,
+            InventoryResource.APPLE: 0,
+            InventoryResource.CORN: 0,
+            InventoryResource.TOMATO: 0,
+            InventoryResource.CORN_SEED: 999,
+            InventoryResource.TOMATO_SEED: 999,
         }
 
     def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
@@ -801,7 +801,7 @@ class Player(Entity):
             sounds: settings.SoundDict,
             font: pygame.font.Font):
       
-        self.data = savefile.load_savefile()
+        save_data = savefile.load_savefile()
         self.game = game
 
         super().__init__(
@@ -931,9 +931,6 @@ class Player(Entity):
 
     def get_current_seed_string(self):
         return self.available_seeds[self.seed_index]
-
-    def use_tool(self, option: ItemToUse):
-        self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)
 
     def add_resource(self, resource, amount=1):
         super().add_resource(resource, amount)
