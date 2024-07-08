@@ -1,10 +1,11 @@
-import pygame
+import pygame  # noqa
 from src.settings import (
     LAYERS,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     Coordinate,
 )
+from src.dialog import TextBox
 
 
 # TODO : we could replace this with pygame.sprite.LayeredUpdates, as that
@@ -24,7 +25,7 @@ class AllSprites(pygame.sprite.Group):
 
             for sprite in sorted(
                     self.sprites(),
-                    key=lambda sprite: sprite.rect.centery):
+                    key=lambda spr: spr.rect.centery):
                 if sprite.z == layer:
                     self.display_surface.blit(
-                        sprite.image, sprite.rect.topleft + self.offset)
+                        sprite.image, sprite.rect.topleft + (self.offset if not isinstance(sprite, TextBox) else (0, 0)))

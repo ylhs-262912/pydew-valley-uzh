@@ -29,6 +29,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
+TB_LAYER = 11
 
 LAYERS = {
     'water': 0,
@@ -41,7 +42,8 @@ LAYERS = {
     'main': 7,
     'fruit': 8,
     'rain drops': 9,
-    'particles': 10
+    'particles': 10,
+    "TextBox": TB_LAYER
 }
 
 ENABLE_NPCS = False
@@ -52,30 +54,10 @@ OVERLAY_POSITIONS = {
     'tool': (40, SCREEN_HEIGHT - 15),
     'seed': (70, SCREEN_HEIGHT - 5)}
 
-SALE_PRICES = {
-    'wood': 4,
-    'apple': 2,
-    'corn': 10,
-    'tomato': 20
-}
-PURCHASE_PRICES = {
-    'corn seed': 4,
-    'tomato seed': 5
-}
-
 APPLE_POS = {
     'small': [(18, 17), (30, 37), (12, 50), (30, 45), (20, 30), (30, 10)],
     'default': [(30, 24), (60, 65), (50, 50), (16, 40), (45, 50), (42, 70)]
 }
 
-
-class GameState(Enum):
-    MAIN_MENU = 0
-    LEVEL = 1
-    PAUSE = 2
-    SETTINGS = 3
-    SHOP = 4
-    EXIT = 5
-    GAME_OVER = 6
-    WIN = 7
-    CREDITS = 8
+CHARS_PER_LINE = 45
+TB_SIZE = (493, 264)

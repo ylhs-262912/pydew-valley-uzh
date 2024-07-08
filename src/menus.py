@@ -4,7 +4,8 @@ from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
 from pygame.mouse import get_pressed as mouse_buttons
 
-from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
+from .settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from .enums import GameState
 from .support import save_data, load_data
 
 

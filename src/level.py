@@ -1,13 +1,10 @@
 import math
 import random
 
-import pygame
+import pygame  # noqa
 
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
-
-from src.settings import *
-from src.sprites import *
 
 from src.groups import AllSprites
 from src.soil import SoilLayer
@@ -24,6 +21,7 @@ from src.sprites import (
     Player,
     NPC, NPCBehaviourMethods,
 )
+from src.enums import FarmingTool
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -34,8 +32,9 @@ from src.settings import (
 
 class Level:
 
-    def __init__(self, tmx_maps, character_frames, level_frames, overlay_frames, font, sounds, switch):
+    def __init__(self, game, tmx_maps: MapDict, character_frames, level_frames, overlay_frames, font, sounds, switch):
         self.display_surface = pygame.display.get_surface()
+        self.game = game
 
         # sprite groups
         self.entities = {}
@@ -88,7 +87,7 @@ class Level:
         # switch
         self.switch_screen = switch
 
-    def setup(self, tmx_maps, character_frames, level_frames):
+    def setup(self, tmx_maps: MapDict, character_frames, level_frames):
         self.sounds["music"].set_volume(0.1)
         self.sounds["music"].play(-1)
 
@@ -217,24 +216,22 @@ class Level:
                 if event.key == pygame.K_ESCAPE:
                     self.switch_screen(GameState.PAUSE)
 
-    def apply_tool(self, tool, pos, entity):
-        if tool == 'axe':
-            for tree in self.tree_sprites:
-                if tree.rect.collidepoint(pos):
-                    tree.hit(entity)
-                    self.sounds['axe'].play()
-
-        if tool == 'hoe':
-            self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
-
-        if tool == 'water':
-            self.soil_layer.water(pos)
-            self.sounds['water'].play()
-
-        if tool in ('corn', 'tomato'):
-            self.soil_layer.plant_seed(
-                pos, tool, entity.inventory, plant_sounds=[
-                    self.sounds['plant'], self.sounds['cant_plant']])
+    def apply_tool(self, tool: FarmingTool, pos, entity):
+        match tool:
+            case FarmingTool.AXE:
+                for tree in self.tree_sprites:
+                    if tree.rect.collidepoint(pos):
+                        tree.hit(entity)
+                        self.sounds['axe'].play()
+            case FarmingTool.HOE:
+                self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+            case FarmingTool.WATERING_CAN:
+                self.soil_layer.water(pos)
+                self.sounds['water'].play()
+            case _:  # All seeds
+                self.soil_layer.plant_seed(pos, entity.available_seeds[tool - FarmingTool.get_first_seed_id()],
+                                           entity.inventory, plant_sounds=[self.sounds['plant'],
+                                                                           self.sounds['cant_plant']])
 
     def create_particle(self, sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, (self.all_sprites,))
@@ -264,6 +261,7 @@ class Level:
             self.soil_layer.water_all()
 
         # apples on the trees
+
         # No need to iterate using explicit sprites() call.
         # Iterating over a sprite group normally will do the same thing
         for tree in self.tree_sprites:
