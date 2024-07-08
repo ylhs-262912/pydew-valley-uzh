@@ -27,6 +27,7 @@ class Level:
     def __init__(self, game, tmx_maps: MapDict, character_frames, level_frames, overlay_frames, font, sounds, switch):
         self.display_surface = pygame.display.get_surface()
         self.game = game
+        self.switch_screen = switch
 
         # sprite groups
         self.entities = {}
@@ -68,9 +69,6 @@ class Level:
         self.overlay = Overlay(self.entities['Player'], overlay_frames)
         self.menu = Menu(self.entities['Player'], self.toggle_shop, font)
         self.shop_active = False
-
-        # switch
-        self.switch_screen = switch
 
     def setup(self, tmx_maps: MapDict, character_frames, level_frames):
         self.sounds["music"].set_volume(0.1)
@@ -144,7 +142,8 @@ class Level:
                                              apply_tool=self.apply_tool,
                                              interact=self.interact,
                                              sounds=self.sounds, 
-                                             font=self.font)
+                                             font=self.font,
+                                             switch = self.switch_screen)
 
     def event_loop(self):
         for event in pygame.event.get():
@@ -155,6 +154,9 @@ class Level:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.switch_screen(GameState.PAUSE)
+                    self.entities['Player'].direction.y = 0
+                    self.entities['Player'].direction.x = 0
+
 
     def apply_tool(self, tool, pos, entity):
         if tool == 'axe':

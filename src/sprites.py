@@ -7,6 +7,7 @@ from src.settings import (
     GROW_SPEED,
     LAYERS,
     SCALE_FACTOR,
+    GameState
 )
 from types import FunctionType as Function
 
@@ -190,7 +191,8 @@ class Player(CollideableSprite):
             apply_tool: Function,
             interact: Function,
             sounds: settings.SoundDict,
-            font: pygame.font.Font):
+            font: pygame.font.Font,
+            switch):
         self.game = game
         self.frames = frames
         self.frame_index = 0
@@ -240,6 +242,9 @@ class Player(CollideableSprite):
         # sounds
         self.sounds = sounds
 
+        # pause
+        self.switch_screen = switch
+
     def input(self):
         keys = pygame.key.get_pressed()
         recent_keys = pygame.key.get_just_pressed()
@@ -250,11 +255,6 @@ class Player(CollideableSprite):
             return
         # movement
         if not self.tool_active and not self.blocked:
-            if recent_keys[pygame.K_ESCAPE]:
-                self.paused = not self.paused
-                self.direction.y = 0
-                self.direction.x = 0
-                return
             if recent_keys[pygame.K_t]:
                 if self.game.dm.showing_dialogue:
                     pass
@@ -378,8 +378,10 @@ class Player(CollideableSprite):
         self.sounds['success'].play()
 
     def update(self, dt):
-        self.input()
+        if not self.game.check_pause():
+            self.input()
+            
+        self.move(dt)
         self.get_state()
         self.get_facing_direction()
-        self.move(dt)
         self.animate(dt)

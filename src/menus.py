@@ -53,22 +53,22 @@ class GeneralMenu:
     # events
     def event_loop(self):
         self.mouse_hover()
+        if pygame.mouse.get_pressed()[0]:
+            self.click()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit_game()
-            self.click(event)
             self.handle_events(event)
     
     def handle_events(self, event):
         pass
             
-    def click(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            for button in self.buttons:
-                if button.hover_active:
-                    self.button_action(button.text)
-                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+    def click(self):
+        for button in self.buttons:
+            if button.hover_active:
+                self.button_action(button.text)
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
     
     def mouse_hover(self):
         for button in self.buttons:
@@ -86,7 +86,6 @@ class GeneralMenu:
     def quit_game(self):
         pygame.quit()
         sys.exit()
-
 
     # draw
     def draw_title(self):
@@ -117,18 +116,16 @@ class GeneralMenu:
     
 
     # update
-    def update(self, dt):
+    def update(self):
         self.event_loop()
         self.draw()
-
 
 class MainMenu(GeneralMenu):
     def __init__(self, switch_screen):
         options = ['Play', 'Quit']
-        background = pygame.image.load('images/menu_background/bg.png')
         title = 'Main Menu'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
+        super().__init__(title, options, switch_screen, size)
     
     def button_action(self, text):
         if text == 'Play':
@@ -146,10 +143,9 @@ class MainMenu(GeneralMenu):
 class PauseMenu(GeneralMenu):
     def __init__(self, switch_screen):
         options = ['Resume', 'Options', 'Quit']
-        background = pygame.image.load('images/menu_background/bg.png')
         title = 'Pause Menu'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
+        super().__init__(title, options, switch_screen, size)
 
     def button_action(self, text):
         if text == 'Resume':
@@ -167,10 +163,9 @@ class PauseMenu(GeneralMenu):
 class SettingsMenu(GeneralMenu):
     def __init__(self, switch_screen, sounds):
         options = ['Keybinds', 'Volume', 'Back']
-        background = pygame.image.load('images/menu_background/bg.png')
         title = 'Settings'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
+        super().__init__(title, options, switch_screen, size)
 
         # rect
         self.setup()
@@ -219,10 +214,9 @@ class SettingsMenu(GeneralMenu):
 class ShopMenu(GeneralMenu):
     def __init__(self, player, switch_screen):
         options = ['wood', 'apple', 'hoe', 'water', 'corn', 'tomato', 'seed']
-        background = pygame.image.load('images/menu_background/bg.png')
         title = 'Shop'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
+        super().__init__(title, options, switch_screen, size)
     
     def button_action(self, text):
         self.switch_screen(GameState.PAUSE)
