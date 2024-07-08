@@ -123,7 +123,7 @@
  </layer>
  <objectgroup id="8" name="Collisions">
   <object id="6" x="80.7734" y="112.137" width="46.4017" height="47.4758"/>
-  <object id="7" x="337.272" y="111.923" width="45.9721" height="47.9055"/>
+  <object id="7" x="337.272" y="112.1" width="45.9721" height="47.8"/>
   <object id="8" x="432.653" y="207.089" width="47.0462" height="48.5499"/>
   <object id="30" x="64.3333" y="336.667" width="351.333" height="62.6667"/>
   <object id="31" x="48" y="368.364" width="16" height="31.4545"/>
@@ -145,6 +145,14 @@
   <object id="5" gid="216" x="320" y="352" width="16" height="12"/>
   <object id="12" gid="220" x="56.8024" y="198.474" width="14" height="17"/>
   <object id="13" gid="219" x="288.381" y="162.665" width="14" height="22"/>
+ </objectgroup>
+ <objectgroup id="12" name="NPCs">
+  <object id="45" name="npc1" x="176" y="128">
+   <point/>
+  </object>
+  <object id="46" name="npc0" x="208" y="224">
+   <point/>
+  </object>
  </objectgroup>
  <objectgroup id="5" name="Entities">
   <object id="1" name="Player" x="112" y="192">

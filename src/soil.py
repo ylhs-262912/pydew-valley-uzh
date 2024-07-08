@@ -1,3 +1,4 @@
+from src.enums import InventoryResource
 from src.settings import TILE_SIZE, SCALE_FACTOR, LAYERS
 import pygame
 from src.sprites import Sprite, Plant
@@ -87,17 +88,20 @@ class SoilLayer:
                 x = int(soil_sprite.rect.x / (TILE_SIZE * SCALE_FACTOR))
                 y = int(soil_sprite.rect.y / (TILE_SIZE * SCALE_FACTOR))
 
+                # FIXME: Should be changed to a better method to refer from the "old" resource strings to the new enum values
+                inventory_resource = {"corn": InventoryResource.CORN_SEED,
+                                      "tomato": InventoryResource.TOMATO_SEED}[seed]
+
                 if ('P' not in self.grid[y][x]
-                        and inventory[seed + " seed"] > 0):
+                        and inventory[inventory_resource] > 0):
                     self.grid[y][x].append('P')
                     Plant(seed,
                           [self.all_sprites,
-                           self.plant_sprites,
-                           self.collision_sprites],
+                           self.plant_sprites],
                           soil_sprite,
                           self.level_frames[seed],
                           self.check_watered)
-                    inventory[seed + " seed"] -= 1
+                    inventory[inventory_resource] -= 1
                     plant_sounds[0].play()
                 else:
                     # play a sound that indecates u cant plant a seed

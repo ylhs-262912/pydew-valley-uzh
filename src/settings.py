@@ -46,6 +46,8 @@ LAYERS = {
     "TextBox": TB_LAYER
 }
 
+ENABLE_NPCS = False
+
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 
 OVERLAY_POSITIONS = {
