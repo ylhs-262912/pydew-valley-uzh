@@ -9,6 +9,7 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 from src import settings
 from src.groups import AllSprites
 from src.soil import SoilLayer
+from src.support import get_object_hitboxes
 from src.transition import Transition
 from random import randint
 from src.sky import Sky, Rain
@@ -20,7 +21,7 @@ from src.sprites import (
     Tree,
     Sprite,
     Player,
-    NPC, NPCBehaviourMethods,
+    NPC, NPCBehaviourMethods, CollideableSprite,
 )
 from src.enums import FarmingTool, GameState
 from src.settings import (
@@ -116,6 +117,8 @@ class Level:
                            self.all_sprites,
                            LAYERS['water'])
 
+        collidable_object_hitboxes = get_object_hitboxes("data/tilesets/objects.tsx")
+
         # objects
         for obj in tmx_maps['main'].get_layer_by_name('Collidable objects'):
             if obj.name == 'Tree':
@@ -126,16 +129,25 @@ class Level:
                      (self.all_sprites,
                       self.collision_sprites,
                       self.tree_sprites),
+                     collidable_object_hitboxes.get(obj.properties.get("id")),
                      obj.name,
                      level_frames['objects']['apple'],
                      level_frames['objects']['stump'])
             else:
-                Sprite((obj.x * SCALE_FACTOR,
+                hitbox = collidable_object_hitboxes.get(obj.properties.get("id"))
+                x = CollideableSprite((obj.x * SCALE_FACTOR,
                         obj.y * SCALE_FACTOR),
                        pygame.transform.scale_by(obj.image,
                                                  SCALE_FACTOR),
                        (self.all_sprites,
-                        self.collision_sprites))
+                        self.collision_sprites),
+                                      (0, 0))
+                x.hitbox_rect = pygame.rect.Rect(
+                    x.rect.left + hitbox[0] * settings.SCALE_FACTOR,
+                    x.rect.top + hitbox[1] * settings.SCALE_FACTOR,
+                    hitbox[2] * settings.SCALE_FACTOR,
+                    hitbox[3] * settings.SCALE_FACTOR,
+                )
 
             tile_x = int(obj.x / 16)
             tile_y = int(obj.y / 16)
@@ -182,6 +194,7 @@ class Level:
             self.entities[obj.name] = Player(
                 game=self.game,
                 pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
+                hitbox=(18, 26, 12, 6),
                 frames=character_frames['rabbit'],
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
@@ -198,6 +211,7 @@ class Level:
             for obj in tmx_maps['main'].get_layer_by_name('NPCs'):
                 self.npcs[obj.name] = NPC(
                     pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
+                    hitbox=(18, 26, 12, 6),
                     frames=character_frames['rabbit'],
                     groups=(self.all_sprites, self.collision_sprites),
                     collision_sprites=self.collision_sprites,
@@ -324,3 +338,15 @@ class Level:
         if self.day_transition:
             self.transition.play()
 
+        for npc in self.npcs.values():
+            pygame.draw.rect(self.display_surface, (255, 0, 0),
+                             (npc.hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
+                              npc.hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.width / 2,
+                              npc.hitbox_rect.width, npc.hitbox_rect.height),
+                             2)
+
+        pygame.draw.rect(self.display_surface, (0, 0, 255),
+                         (self.entities["Player"].hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
+                          self.entities["Player"].hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.height / 2,
+                          self.entities["Player"].hitbox_rect.width, self.entities["Player"].hitbox_rect.height),
+                         2)

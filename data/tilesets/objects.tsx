@@ -27,9 +27,15 @@
  </tile>
  <tile id="17">
   <image width="16" height="12" source="../../images/objects/rock.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="1" y="6" width="14" height="5"/>
+  </objectgroup>
  </tile>
  <tile id="18">
   <image width="10" height="8" source="../../images/objects/rock_small.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="1" y="4" width="8" height="3"/>
+  </objectgroup>
  </tile>
  <tile id="19">
   <image width="10" height="10" source="../../images/objects/stump.png"/>
@@ -42,9 +48,15 @@
  </tile>
  <tile id="22">
   <image width="24" height="30" source="../../images/objects/tree.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="7" y="22" width="10" height="8"/>
+  </objectgroup>
  </tile>
  <tile id="23">
   <image width="14" height="28" source="../../images/objects/tree_small.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="3" y="20" width="8" height="8"/>
+  </objectgroup>
  </tile>
  <tile id="24">
   <image width="16" height="15" source="../../images/objects/water_lilies.png"/>
@@ -54,17 +66,29 @@
  </tile>
  <tile id="26">
   <image width="16" height="12" source="../../images/objects/water_rock.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="1" y="6" width="14" height="5"/>
+  </objectgroup>
  </tile>
  <tile id="27">
   <image width="10" height="8" source="../../images/objects/water_rock_small.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="1" y="4" width="8" height="3"/>
+  </objectgroup>
  </tile>
  <tile id="28">
   <image width="11" height="12" source="../../images/objects/flower_4.png"/>
  </tile>
  <tile id="29">
   <image width="14" height="22" source="../../images/objects/bed.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="3" width="14" height="19"/>
+  </objectgroup>
  </tile>
  <tile id="30">
   <image width="14" height="17" source="../../images/objects/merchant.png"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="1" y="11" width="12" height="6"/>
+  </objectgroup>
  </tile>
 </tileset>

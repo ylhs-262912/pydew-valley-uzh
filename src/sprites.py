@@ -55,15 +55,15 @@ class ParticleSprite(Sprite):
 
 
 class CollideableSprite(Sprite):
-    def __init__(self, pos, surf, groups, shrink, z=LAYERS['main']):
+    def __init__(self, pos, surf, groups, z=LAYERS['main']):
         super().__init__(pos, surf, groups, z)
-        self.hitbox_rect = self.rect.inflate(-shrink[0], -shrink[1])
+        self.hitbox_rect = pygame.rect.FRect()
 
 
-class Plant(CollideableSprite):
+class Plant(Sprite):
     def __init__(self, seed_type, groups, soil_sprite, frames, check_watered):
         super().__init__(soil_sprite.rect.center,
-                         frames[0], groups, (0, 0), LAYERS['plant'])
+                         frames[0], groups, LAYERS['plant'])
         self.rect.center = soil_sprite.rect.center + \
             pygame.Vector2(0.5, -3) * SCALE_FACTOR
         self.soil = soil_sprite
@@ -95,12 +95,17 @@ class Plant(CollideableSprite):
 
 
 class Tree(CollideableSprite):
-    def __init__(self, pos, surf, groups, name, apple_surf, stump_surf):
+    def __init__(self, pos, surf, groups, hitbox: tuple[int, int, int, int], name, apple_surf, stump_surf):
         super().__init__(
             pos,
             surf,
             groups,
-            (30 * SCALE_FACTOR, 20 * SCALE_FACTOR),
+        )
+        self.hitbox_rect = pygame.rect.Rect(
+            self.rect.left + hitbox[0] * settings.SCALE_FACTOR,
+            self.rect.top + hitbox[1] * settings.SCALE_FACTOR,
+            hitbox[2] * settings.SCALE_FACTOR,
+            hitbox[3] * settings.SCALE_FACTOR,
         )
         self.name = name
         self.part_surf = support.generate_particle_surf(self.image)
@@ -193,7 +198,6 @@ class Entity(CollideableSprite, ABC):
             frames: dict[str, settings.AniFrames],
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
-            shrink: tuple[int, int],
             apply_tool: Callable,
             z=LAYERS['main']):
                 
@@ -206,7 +210,6 @@ class Entity(CollideableSprite, ABC):
             pos,
             self.frames[self.state][self.facing_direction][self.frame_index],
             groups,
-            shrink,
             z=z
         )
 
@@ -272,14 +275,14 @@ class Entity(CollideableSprite, ABC):
         """
         :return: true: Entity collides with a sprite in self.collision_sprites, otherwise false
         """
-        colliding_rect = False
+        colliding_rect = None
 
         for sprite in self.collision_sprites:
             if sprite is not self:
 
                 # Entities should collide with their hitbox_rects to make them able to approach
                 #  each other further than the empty space on their sprite images would allow
-                if isinstance(sprite, Entity):
+                if isinstance(sprite, CollideableSprite):
                     if sprite.hitbox_rect.colliderect(self.hitbox_rect):
                         colliding_rect = sprite.hitbox_rect
                 elif sprite.rect.colliderect(self.hitbox_rect):
@@ -327,7 +330,9 @@ class Entity(CollideableSprite, ABC):
     def add_resource(self, resource, amount=1):
         # FIXME: Should be changed to a better method to refer from the "old" resource strings to the new enum values
         self.inventory[{"corn": InventoryResource.CORN,
-                        "tomato": InventoryResource.TOMATO}[resource]] += amount
+                        "tomato": InventoryResource.TOMATO,
+                        InventoryResource.APPLE: InventoryResource.APPLE,
+                        InventoryResource.WOOD: InventoryResource.WOOD}[resource]] += amount
 
     def update(self, dt):
         self.get_state()
@@ -605,6 +610,7 @@ class NPC(Entity):
     def __init__(
             self,
             pos: settings.Coordinate,
+            hitbox: tuple[int, int, int, int],
             frames: dict[str, settings.AniFrames],
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
@@ -632,10 +638,18 @@ class NPC(Entity):
             groups,
             collision_sprites,
 
-            (32 * SCALE_FACTOR, 32 * SCALE_FACTOR),
-            # scales the hitbox down to the exact tile size
-
             apply_tool
+        )
+        self.relative_hitbox_rect = pygame.rect.Rect(
+            hitbox[0] * settings.SCALE_FACTOR,
+            hitbox[1] * settings.SCALE_FACTOR,
+            hitbox[2] * settings.SCALE_FACTOR,
+            hitbox[3] * settings.SCALE_FACTOR,
+        )
+        self.hitbox_rect.update(
+            self.rect.left + self.relative_hitbox_rect.x,
+            self.rect.top + self.relative_hitbox_rect.y,
+            self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
         )
 
         self.speed = 150
@@ -654,7 +668,7 @@ class NPC(Entity):
         if not self.pf_grid.walkable(coord[0], coord[1]):
             return False
 
-        tile_size = settings.SCALE_FACTOR * 16
+        tile_size = settings.SCALE_FACTOR * settings.TILE_SIZE
 
         # current NPC position on the tilemap
         tile_coord = pygame.Vector2(self.rect.centerx, self.rect.centery) / tile_size
@@ -711,7 +725,7 @@ class NPC(Entity):
         return
 
     def move(self, dt):
-        tile_size = settings.SCALE_FACTOR * 16
+        tile_size = settings.SCALE_FACTOR * settings.TILE_SIZE
 
         # current NPC position on the tilemap
         tile_coord = pygame.Vector2(self.rect.centerx, self.rect.centery) / tile_size
@@ -773,22 +787,22 @@ class NPC(Entity):
                     self.direction.update((round(dx / distance), round(dy / distance)))
 
             self.hitbox_rect.update((
-                next_position[0] * tile_size - self.hitbox_rect.width / 2,
+                next_position[0] * tile_size - self.rect.width / 2 + self.relative_hitbox_rect.x,
                 self.hitbox_rect.top,
             ), self.hitbox_rect.size)
             colliding = self.collision('horizontal')
 
             self.hitbox_rect.update((
                 self.hitbox_rect.left,
-                next_position[1] * tile_size - self.hitbox_rect.height / 2
+                next_position[1] * tile_size - self.rect.height / 2 + self.relative_hitbox_rect.y
             ), self.hitbox_rect.size)
             colliding = colliding or self.collision('vertical')
 
             if colliding:
                 self.abort_path()
 
-        self.rect.update((self.hitbox_rect.centerx - self.rect.width / 2,
-                          self.hitbox_rect.centery - self.rect.height / 2), self.rect.size)
+        self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
+                          self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
         self.plant_collide_rect.center = self.hitbox_rect.center
 # </editor-fold>
 
@@ -806,6 +820,7 @@ class Player(Entity):
             self,
             game,
             pos: settings.Coordinate,
+            hitbox: tuple[int, int, int, int],
             frames,
             groups,
             collision_sprites: pygame.sprite.Group,
@@ -822,8 +837,18 @@ class Player(Entity):
             frames,
             groups,
             collision_sprites,
-            (44 * SCALE_FACTOR, 40 * SCALE_FACTOR),
             apply_tool
+        )
+        self.relative_hitbox_rect = pygame.rect.Rect(
+            hitbox[0] * settings.SCALE_FACTOR,
+            hitbox[1] * settings.SCALE_FACTOR,
+            hitbox[2] * settings.SCALE_FACTOR,
+            hitbox[3] * settings.SCALE_FACTOR,
+        )
+        self.hitbox_rect.update(
+            self.rect.left + self.relative_hitbox_rect.x,
+            self.rect.top + self.relative_hitbox_rect.y,
+            self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
         )
 
         # movement
@@ -936,7 +961,8 @@ class Player(Entity):
         self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
         self.collision('vertical')
-        self.rect.center = self.hitbox_rect.center
+        self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
+                          self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
         self.plant_collide_rect.center = self.hitbox_rect.center
 
     def get_current_tool_string(self):

@@ -1,4 +1,6 @@
 import os
+from xml.etree import ElementTree
+
 import pygame
 import pytmx
 import sys
@@ -161,3 +163,49 @@ def flip_items(d: dict) -> dict:
     for key, val in d.items():
         ret[val] = key
     return ret
+
+
+def get_object_hitboxes(path_to_tileset: str) -> dict[int, tuple[int, int, int, int]]:
+    """
+    Returns a dictionary mapping the IDs of all tiles in a given tileset
+    to the first hitbox created with the Tiled Tile Collision Editor.
+    If no hitbox is found, it uses the dimensions of the Tile's image.
+
+    This function is currently experimental and has only been tested with rectangular hitboxes.
+    It is also currently limited to integer values within the dimensions of the hitbox.
+
+    :return: Dictionary mapping the IDs of all tiles in a given tileset to its hitbox (x, y, width, height)
+    """
+    tree = ElementTree.parse(path_to_tileset)
+    root = tree.getroot()
+
+    objects = {}
+    try:
+        for child in root:
+            obj = {
+                "id": None,
+                "hitbox": None
+            }
+            if child.tag == "tile":
+                obj["id"] = int(child.attrib["id"])
+                objectgroup = child.find("objectgroup")
+                if objectgroup is not None:
+                    hitbox = objectgroup.find("object")
+                    if hitbox is not None:
+                        obj["hitbox"] = (int(hitbox.attrib["x"]),
+                                         int(hitbox.attrib["y"]),
+                                         int(hitbox.attrib["width"]),
+                                         int(hitbox.attrib["height"]))
+                else:
+                    img = child.find("image")
+                    if img is not None:
+                        obj["hitbox"] = (0, 0,
+                                         int(img.attrib["width"]),
+                                         int(img.attrib["height"]))
+                if obj["id"] is not None and obj["hitbox"] is not None:
+                    objects[obj["id"]] = obj["hitbox"]
+                else:
+                    print("An error occurred when parsing the tileset")
+    except KeyError as e:
+        raise Exception(f"Malformed tileset {path_to_tileset}\n{e}")
+    return objects
