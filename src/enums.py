@@ -55,12 +55,6 @@ class _SerialisableEnum(IntEnum):
         except IndexError as exc:
             raise LookupError(f"serialised string '{val}' does not match any member in enum '{cls.__name__}'") from exc
 
-    def as_plant_name(self):
-        """Returns the same as FarmingTool.as_serialised_string(),
-        but strips the return value of whitespaces and occurrences of
-        the word 'seed'."""
-        return self.as_serialised_string().removesuffix(" seed")
-
 
 class InventoryResource(_SerialisableEnum):
     """All stored items in the inventory."""
@@ -161,3 +155,47 @@ class FarmingTool(_SerialisableEnum):
         """Converts self to InventoryResource type if possible.
         (Conversion is possible if self is considered a seed.)"""
         return self._AS_IR.get(self, self)
+
+
+class SeedType(IntEnum):
+
+    _AS_FTS = nonmember(
+        (
+            FarmingTool.CORN_SEED,
+            FarmingTool.TOMATO_SEED
+        )
+    )
+
+    _AS_IRS = nonmember(
+        (
+            InventoryResource.CORN_SEED,
+            InventoryResource.TOMATO_SEED
+        )
+    )
+
+    _AS_NS_IRS = nonmember(
+        (
+            InventoryResource.CORN,
+            InventoryResource.TOMATO
+        )
+    )
+
+    CORN = 0
+    TOMATO = 1
+
+    @classmethod
+    def from_farming_tool(cls, val: FarmingTool):
+        return cls(cls._AS_FTS.index(val))
+
+    @classmethod
+    def from_inventory_resource(cls, val: InventoryResource):
+        return cls(cls._AS_IRS.index(val))
+
+    def as_ir(self):
+        return self._AS_IRS[self]
+
+    def as_nonseed_ir(self):
+        return self._AS_NS_IRS[self]
+
+    def as_plant_name(self):
+        return self._AS_FTS[self].as_serialised_string().removesuffix(" seed")

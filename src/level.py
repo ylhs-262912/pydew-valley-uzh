@@ -291,7 +291,7 @@ class Level:
                 if plant.harvestable and plant.rect.colliderect(
                         self.entities['Player'].plant_collide_rect):
                     plant.kill()
-                    self.entities['Player'].add_resource(plant.seed_type, 3)
+                    self.entities['Player'].add_resource(plant.seed_type.as_nonseed_ir(), 3)
                     self.create_particle(plant)
                     self.soil_layer.grid[
                         int(plant.rect.centery / (TILE_SIZE * SCALE_FACTOR))
