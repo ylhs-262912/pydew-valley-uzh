@@ -61,11 +61,10 @@ class Game:
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
 
-        self.screens = {
+        self.menus = {
             GameState.MAIN_MENU: self.main_menu,
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
-            GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -98,12 +97,20 @@ class Game:
 
         self.font = support.import_font(30, 'font/LycheeSoda.ttf')
 
+    def check_pause(self):
+        return self.current_state != GameState.LEVEL
+
     def run(self):
         while self.running:
             dt = self.clock.tick() / 1000
 
-            screen = self.screens[self.current_state]
-            screen.update(dt)
+            game_paused = self.check_pause()
+            self.level.update(dt,)
+
+            # a menu is opened
+            if game_paused:
+                self.menus[self.current_state].update()
+                
 
             pygame.display.update()
 

@@ -191,12 +191,13 @@ class Level:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
+                self.player.direction.xy = (0, 0)
 
 
     # plant collision
     def plant_collision(self):
         if self.soil_layer.plant_sprites:
-            for plant in self.soil_layer.plant_sprites.sprites():
+            for plant in self.soil_layer.plant_sprites
 
                 is_player_near = plant.rect.colliderect(self.player.plant_collide_rect)
 

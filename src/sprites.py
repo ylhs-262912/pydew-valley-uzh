@@ -18,6 +18,7 @@ from src.settings import (
     GROW_SPEED,
     LAYERS,
     SCALE_FACTOR,
+    GameState
 )
 
 from src.enums import InventoryResource, FarmingTool, ItemToUse
@@ -196,7 +197,6 @@ class Entity(CollideableSprite, ABC):
             shrink: tuple[int, int],
             apply_tool: Callable,
             z=LAYERS['main']):
-
         self.frames = frames
         self.frame_index = 0
         self.state = 'idle'
@@ -330,7 +330,6 @@ class Entity(CollideableSprite, ABC):
     def update(self, dt):
         self.get_state()
         self.get_facing_direction()
-        self.move(dt)
         self.animate(dt)
 
 

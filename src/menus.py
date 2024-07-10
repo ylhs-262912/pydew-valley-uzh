@@ -12,14 +12,13 @@ from src.support import save_data, load_data, resource_path
 # -------  Menu ------- #
 
 class GeneralMenu:
-    def __init__(self,  title, options, switch, size, background, center=None):
+    def __init__(self,  title, options, switch, size, center=None):
         # general setup
         self.display_surface = pygame.display.get_surface()
         self.buttons_surface = pygame.Surface(size)
         self.buttons_surface.set_colorkey('green')
         self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
         screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
-        self.background = pygame.transform.scale(background, screen_size)
         self.title = title
 
         # rect
@@ -66,16 +65,17 @@ class GeneralMenu:
     # events
     def event_loop(self):
         self.mouse_hover()
+        if pygame.mouse.get_pressed()[0]:
+            self.click()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.quit_game()
-
-            self.click(event)
             self.handle_events(event)
 
     def handle_events(self, event):
         pass
+    
 
     def get_hovered_button(self):
         for button in self.buttons:
@@ -98,7 +98,6 @@ class GeneralMenu:
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
                 self.pressed_button = None
-
     def mouse_hover(self):
         for button in self.buttons:
             if button.hover_active:
@@ -128,10 +127,6 @@ class GeneralMenu:
         pygame.draw.rect(self.display_surface, 'White', bg_rect, 0, 4)
         self.display_surface.blit(text_surf, text_rect)
 
-    def draw_background(self):
-        if self.background:
-            self.display_surface.blit(self.background, (0, 0))
-
     def draw_buttons(self):
         self.buttons_surface.fill('green')
         for button in self.buttons:
@@ -139,7 +134,6 @@ class GeneralMenu:
         self.display_surface.blit(self.buttons_surface, self.rect.topleft)
 
     def draw(self):
-        self.draw_background()
         self.draw_title()
         self.draw_buttons()
 
@@ -153,15 +147,13 @@ class GeneralMenu:
         self.update_buttons(dt)
         self.draw()
 
-
 class MainMenu(GeneralMenu):
     def __init__(self, switch_screen):
         options = ['Play', 'Quit']
-        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Main Menu'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
-
+        super().__init__(title, options, switch_screen, size)
+        
     def button_action(self, text):
         if text == 'Play':
             self.switch_screen(GameState.LEVEL)
@@ -179,10 +171,9 @@ class MainMenu(GeneralMenu):
 class PauseMenu(GeneralMenu):
     def __init__(self, switch_screen):
         options = ['Resume', 'Options', 'Quit']
-        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Pause Menu'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
+        super().__init__(title, options, switch_screen, size)
 
     def button_action(self, text):
         if text == 'Resume':
@@ -201,12 +192,11 @@ class PauseMenu(GeneralMenu):
 class SettingsMenu(GeneralMenu):
     def __init__(self, switch_screen, sounds, level):
         options = ['Keybinds', 'Volume', 'Back']
-        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Settings'
         size = (400, 400)
         switch = switch_screen
         center = vector(SCREEN_WIDTH/2, SCREEN_HEIGHT/2) + vector(-350, 0)
-        super().__init__(title, options, switch, size, background, center)
+        super().__init__(title, options, switch, size, center)
 
         # description
         description_pos = self.rect.topright + vector(100, 0)
@@ -257,10 +247,9 @@ class SettingsMenu(GeneralMenu):
 class ShopMenu(GeneralMenu):
     def __init__(self, player, switch_screen):
         options = ['wood', 'apple', 'hoe', 'water', 'corn', 'tomato', 'seed']
-        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Shop'
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, background)
+        super().__init__(title, options, switch_screen, size)
 
     def button_action(self, text):
         self.switch_screen(GameState.PAUSE)
