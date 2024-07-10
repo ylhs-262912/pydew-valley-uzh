@@ -1,8 +1,9 @@
 import sys
-import pygame
+import pygame  # noqa
 
 from src import settings
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.enums import GameState
 from src import support
 from src import level
 
@@ -15,7 +16,8 @@ class Game:
     def __init__(self):
         # main setup
         pygame.init()
-        self.display_surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.display_surface = pygame.display.set_mode(screen_size)
         pygame.display.set_caption('PyDew')
 
         # frames
@@ -42,25 +44,28 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         self.load_assets()
+        self.frames = {
+            'character': self.character_frames,
+            'level': self.level_frames,
+            'overlay': self.overlay_frames
+        }
 
         # game setup
         self.running = True
-        self.level = Level(self, self.tmx_maps, self.character_frames, self.level_frames, self.overlay_frames, self.font,
-                           self.sounds, self.switch_state)
+        self.level = Level(self, self.switch_state, self.tmx_maps, self.frames, self.sounds)
         self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
         self.clock = pygame.time.Clock()
 
         # screens
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds)
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
 
         self.menus = {
             GameState.MAIN_MENU: self.main_menu,
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
         }
-
         self.current_state = GameState.MAIN_MENU
 
     def switch_state(self, state):

@@ -1,5 +1,13 @@
-from src.settings import *
-from src.sprites import *
+import math
+import sys
+
+import pygame  # noqa
+
+from pathfinding.core.grid import Grid as PF_Grid
+from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
+
+from src import settings
+from src.support import map_coords_to_tile, load_data, resource_path
 from src.groups import AllSprites
 from src.soil import SoilLayer
 from src.transition import Transition
@@ -13,7 +21,9 @@ from src.sprites import (
     Tree,
     Sprite,
     Player,
+    NPC, NPCBehaviourMethods,
 )
+from src.enums import FarmingTool, GameState
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -23,32 +33,48 @@ from src.settings import (
 
 
 class Level:
-
-    def __init__(self, game, tmx_maps: MapDict, character_frames, level_frames, overlay_frames, font, sounds, switch):
+    def __init__(self, game, switch, tmx_maps: MapDict, frames, sounds):
+        # main setup
         self.display_surface = pygame.display.get_surface()
         self.game = game
         self.switch_screen = switch
 
+        # pathfinding
+        self.pf_matrix = []
+        self.pf_grid: PF_Grid
+        self.pf_finder = PF_AStarFinder()
+
         # sprite groups
         self.entities = {}
+        self.npcs = {}
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
-        self.font = font
+
+        # assets
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
+        self.frames = frames
+        self.sounds = sounds
+        self.tmx_maps = tmx_maps
+
         # soil
         self.soil_layer = SoilLayer(
             self.all_sprites,
             self.collision_sprites,
             tmx_maps['main'],
-            level_frames)
+            frames["level"])
+
+        # weather
+        self.sky = Sky()
+        self.rain = Rain(self.all_sprites, frames['level'], self.get_map_size())
         self.raining = False
 
-        # sounds
-        self.sounds = sounds
+        # setup map
+        self.setup()
+        self.player = self.entities['Player']
 
-        # data
-        self.setup(tmx_maps, character_frames, level_frames)
+        # day night cycle
         self.transition = Transition(self.reset, self.finish_reset)
         self.day_transition = False
         self.current_day = 0
@@ -57,7 +83,7 @@ class Level:
         self.sky = Sky()
         self.rain = Rain(
             self.all_sprites,
-            level_frames,
+            frames["level"],
             (tmx_maps['main'].width *
              TILE_SIZE *
              SCALE_FACTOR,
@@ -66,129 +92,162 @@ class Level:
              SCALE_FACTOR))
 
         # overlays
-        self.overlay = Overlay(self.entities['Player'], overlay_frames)
-        self.menu = Menu(self.entities['Player'], self.toggle_shop, font)
+        self.overlay = Overlay(self.player, frames['overlay'])
+        self.shop = Menu(self.player, self.toggle_shop, self.font)
         self.shop_active = False
 
-    def setup(self, tmx_maps: MapDict, character_frames, level_frames):
-        self.sounds["music"].set_volume(0.1)
+
+    # setup
+    def setup(self):
+        self.activate_music()
+
+        self.setup_layer_tiles('Lower ground', self.setup_environment)
+        self.setup_layer_tiles('Upper ground', self.setup_environment)
+        self.setup_layer_tiles('Water', self.setup_water)
+
+        self.setup_layer_objects('Collidable objects', self.setup_objects)
+        self.setup_layer_objects('Collisions', self.setup_collisions)
+        self.setup_layer_objects('Interactions', self.setup_interactions)
+        self.setup_layer_objects('Entities', self.setup_entities)
+
+    def setup_layer_tiles(self, layer, setup_func):
+        for  x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
+            x = x * TILE_SIZE * SCALE_FACTOR
+            y = y * TILE_SIZE * SCALE_FACTOR
+            pos = (x, y)
+            setup_func(pos, surf)
+
+    def setup_environment(self, pos, surf):
+        image = pygame.transform.scale_by(surf, SCALE_FACTOR)
+        Sprite(pos, image, self.all_sprites, LAYERS['lower ground'])
+
+    def setup_water(self, pos, surf):
+        image = self.frames['level']['animations']['water']
+        AnimatedSprite(pos, image, self.all_sprites, LAYERS['water'])
+
+    def setup_layer_objects(self, layer, setup_func):
+        for obj in self.tmx_maps['main'].get_layer_by_name(layer):
+            x = obj.x * SCALE_FACTOR
+            y = obj.y * SCALE_FACTOR
+            pos = (x, y)
+            setup_func(pos, obj)
+
+    def setup_objects(self, pos, obj):
+        image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
+
+        if obj.name == 'Tree':
+            apple_frames = self.frames['level']['objects']['apple']
+            stump_frames = self.frames['level']['objects']['stump']
+
+            Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
+        else:
+            Sprite(pos, image, (self.all_sprites, self.collision_sprites))
+
+    def setup_collisions(self, pos, obj):
+        size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
+        image = pygame.Surface(size)
+        Sprite(pos, image, self.collision_sprites)
+
+    def setup_interactions(self, pos, obj):
+        size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
+        image = pygame.Surface(size)
+        Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
+
+    def setup_entities(self, pos, obj):
+        self.entities[obj.name] = Player(game=self.game,
+            pos=pos,
+            frames=self.frames['character']['rabbit'],
+            groups=self.all_sprites,
+            collision_sprites=self.collision_sprites,
+            apply_tool=self.apply_tool,
+            interact=self.interact,
+            sounds=self.sounds,
+            font=self.font
+        )
+
+    def get_map_size(self):
+        return self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR
+
+    def activate_music(self):
+        volume = 0.1
+        try:
+            volume = load_data('volume.json') / 1000
+        except FileNotFoundError:
+            pass
+        self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
-        # environment
-        for layer in ['Lower ground', 'Upper ground']:
-            for x, y, surf in tmx_maps['main'].get_layer_by_name(
-                    layer).tiles():
-                Sprite((x * TILE_SIZE * SCALE_FACTOR,
-                        y * TILE_SIZE * SCALE_FACTOR),
-                       pygame.transform.scale_by(surf,
-                                                 SCALE_FACTOR),
-                       self.all_sprites,
-                       LAYERS['lower ground'])
 
-        # water
-        for x, y, surf in tmx_maps['main'].get_layer_by_name('Water').tiles():
-            AnimatedSprite((x * TILE_SIZE * SCALE_FACTOR,
-                            y * TILE_SIZE * SCALE_FACTOR),
-                           level_frames['animations']['water'],
-                           self.all_sprites,
-                           LAYERS['water'])
 
-        # objects
-        for obj in tmx_maps['main'].get_layer_by_name('Collidable objects'):
-            if obj.name == 'Tree':
-                Tree((obj.x * SCALE_FACTOR,
-                      obj.y * SCALE_FACTOR),
-                     pygame.transform.scale_by(obj.image,
-                                               SCALE_FACTOR),
-                     (self.all_sprites,
-                      self.collision_sprites,
-                      self.tree_sprites),
-                     obj.name,
-                     level_frames['objects']['apple'],
-                     level_frames['objects']['stump'])
-            else:
-                Sprite((obj.x * SCALE_FACTOR,
-                        obj.y * SCALE_FACTOR),
-                       pygame.transform.scale_by(obj.image,
-                                                 SCALE_FACTOR),
-                       (self.all_sprites,
-                        self.collision_sprites))
-
-        # collisions
-        for obj in tmx_maps['main'].get_layer_by_name('Collisions'):
-            Sprite(
-                (obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
-                pygame.Surface((
-                    obj.width * SCALE_FACTOR,
-                    obj.height * SCALE_FACTOR,
-                )),
-                (self.collision_sprites,),
-            )
-
-        # interactions
-        for obj in tmx_maps['main'].get_layer_by_name('Interactions'):
-            Sprite((obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
-                   pygame.Surface((obj.width * SCALE_FACTOR, obj.height *
-                                  SCALE_FACTOR)), (self.interaction_sprites,),
-                   LAYERS['main'], obj.name)
-
-        # playable entities
-        self.entities = {}
-        for obj in tmx_maps['main'].get_layer_by_name('Entities'):
-            self.entities[obj.name] = Player(game=self.game,
-                                             pos=(obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR),
-                                             frames=character_frames['rabbit'],
-                                             groups=self.all_sprites,
-                                             collision_sprites=self.collision_sprites,
-                                             apply_tool=self.apply_tool,
-                                             interact=self.interact,
-                                             sounds=self.sounds, 
-                                             font=self.font,
-                                             switch = self.switch_screen)
-
+    # events
     def event_loop(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.switch_screen(GameState.PAUSE)
-                    self.entities['Player'].direction.y = 0
-                    self.entities['Player'].direction.x = 0
+            self.echap(event)
+
+    def echap(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.switch_screen(GameState.PAUSE)
+                self.player.direction.xy = (0, 0)
 
 
-    def apply_tool(self, tool, pos, entity):
-        if tool == 'axe':
-            for tree in self.tree_sprites:
-                if tree.rect.collidepoint(pos):
-                    tree.hit(entity)
-                    self.sounds['axe'].play()
+    # plant collision
+    def plant_collision(self):
+        if self.soil_layer.plant_sprites:
+            for plant in self.soil_layer.plant_sprites
 
-        if tool == 'hoe':
-            self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+                is_player_near = plant.rect.colliderect(self.player.plant_collide_rect)
 
-        if tool == 'water':
-            self.soil_layer.water(pos)
-            self.sounds['water'].play()
+                if plant.harvestable and is_player_near:
 
-        if tool in ('corn', 'tomato'):
-            self.soil_layer.plant_seed(
-                pos, tool, entity.inventory, plant_sounds=[
-                    self.sounds['plant'], self.sounds['cant_plant']])
+                    # add resource
+                    ressource = plant.seed_type
+                    quantity = 3
+                    self.player.add_resource(ressource, quantity)
+
+                    # update grid
+                    x, y = map_coords_to_tile(plant.rect.center)
+                    self.soil_layer.grid[y][x].remove('P')
+
+                    # remove plant
+                    plant.kill()
+                    self.create_particle(plant)
 
     def create_particle(self, sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
-    def interact(self, pos):
-        collided_interaction_sprite = pygame.sprite.spritecollide(
-            self.entities['Player'], self.interaction_sprites, False)
-        if collided_interaction_sprite:
-            if collided_interaction_sprite[0].name == 'Bed':
+    def apply_tool(self, tool: FarmingTool, pos, entity):
+        match tool:
+            case FarmingTool.AXE:
+                for tree in self.tree_sprites:
+                    if tree.rect.collidepoint(pos):
+                        tree.hit(entity)
+                        self.sounds['axe'].play()
+            case FarmingTool.HOE:
+                self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+            case FarmingTool.WATERING_CAN:
+                self.soil_layer.water(pos)
+                self.sounds['water'].play()
+            case _:  # All seeds
+                self.soil_layer.plant_seed(pos, tool,
+                                           entity.inventory, plant_sounds=[self.sounds['plant'],
+                                                                           self.sounds['cant_plant']])
+
+    def interact(self):
+        collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)
+        if collided_interactions:
+            if collided_interactions[0].name == 'Bed':
                 self.start_reset()
-            if collided_interaction_sprite[0].name == 'Trader':
+            if collided_interactions[0].name == 'Trader':
                 self.toggle_shop()
 
+    def toggle_shop(self):
+        self.shop_active = not self.shop_active
+
+    # reset
     def reset(self):
         self.current_day += 1
 
@@ -205,6 +264,7 @@ class Level:
             self.soil_layer.water_all()
 
         # apples on the trees
+
         # No need to iterate using explicit sprites() call.
         # Iterating over a sprite group normally will do the same thing
         for tree in self.tree_sprites:
@@ -226,42 +286,41 @@ class Level:
             entity.blocked = True
             entity.direction = pygame.Vector2(0, 0)
 
-    def plant_collision(self):
-        if self.soil_layer.plant_sprites:
-            for plant in self.soil_layer.plant_sprites.sprites():
-                if plant.harvestable and plant.rect.colliderect(
-                        self.entities['Player'].plant_collide_rect):
-                    plant.kill()
-                    self.entities['Player'].add_resource(plant.seed_type, 3)
-                    self.create_particle(plant)
-                    self.soil_layer.grid[
-                        int(plant.rect.centery / (TILE_SIZE * SCALE_FACTOR))
-                    ][
-                        int(plant.rect.centerx / (TILE_SIZE * SCALE_FACTOR))
-                    ].remove('P')
 
-    def toggle_shop(self):
-        self.shop_active = not self.shop_active
+    # draw
+    def draw_overlay(self):
+        current_time = self.sky.get_time()
+        self.overlay.display(current_time)
 
-    def update(self, dt):
+    def draw(self, dt):
         self.display_surface.fill('gray')
-        self.event_loop()
-
-        if not self.shop_active:
-            self.all_sprites.update(dt)
-
-        self.all_sprites.draw(self.entities['Player'].rect.center)
-        self.plant_collision()
-
-        self.overlay.display(self.sky.get_time())
+        self.all_sprites.draw(self.player.rect.center)
+        self.draw_overlay()
         self.sky.display(dt)
 
-        if self.shop_active:
-            self.menu.update()
 
+    # update
+    def update_rain(self):
         if self.raining and not self.shop_active:
             self.rain.update()
 
+    def update_day(self):
         if self.day_transition:
             self.transition.play()
+            self.sky.set_time(6, 0)   # set to 0600 hours upon sleeping
 
+    def update(self, dt):
+        # update
+        self.event_loop()
+        self.plant_collision()
+        self.update_rain()
+        self.update_day()
+
+        if not self.shop_active:            # temporary because shop will be a separate screen
+            self.all_sprites.update(dt)
+
+        if self.shop_active:                # temporary because shop will be a separate screen
+            self.shop.update()
+
+        # draw
+        self.draw(dt)
