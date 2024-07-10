@@ -1,21 +1,31 @@
-from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, LAYERS
-import pygame
-from pygame import Vector2 as vector
+import pygame  # noqa
+from src.settings import (
+    LAYERS,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    Coordinate,
+)
+from src.dialog import TextBox
 
 
+# TODO : we could replace this with pygame.sprite.LayeredUpdates, as that
+# is a subclass of pygame.sprite.Group that natively supports layers
 class AllSprites(pygame.sprite.Group):
     def __init__(self):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
-        self.offset = vector()
-        self.cam_surf = self.display_surface.copy()
+        self.offset = pygame.Vector2()
+        self.cam_surf = pygame.Surface(self.display_surface.get_size())
 
-    def draw(self, target_pos):
-        self.offset.x = - (target_pos[0] - SCREEN_WIDTH//2)
-        self.offset.y = - (target_pos[1] - SCREEN_HEIGHT//2)
+    def draw(self, target_pos: Coordinate):
+        self.offset.x = -(target_pos[0] - SCREEN_WIDTH / 2)
+        self.offset.y = -(target_pos[1] - SCREEN_HEIGHT / 2)
 
         for layer in LAYERS.values():
 
-            for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
+            for sprite in sorted(
+                    self.sprites(),
+                    key=lambda spr: spr.rect.centery):
                 if sprite.z == layer:
-                    self.display_surface.blit(sprite.image, sprite.rect.topleft + self.offset)
+                    self.display_surface.blit(
+                        sprite.image, sprite.rect.topleft + (self.offset if not isinstance(sprite, TextBox) else (0, 0)))

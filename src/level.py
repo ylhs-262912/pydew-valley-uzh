@@ -1,46 +1,76 @@
-import pygame, sys
+import math
+import sys
 
+import pygame  # noqa
+
+from pathfinding.core.grid import Grid as PF_Grid
+from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
+
+from src import settings
+from src.support import map_coords_to_tile, load_data, resource_path
+from src.groups import AllSprites
+from src.soil import SoilLayer
+from src.transition import Transition
 from random import randint
-
-from .settings import TILE_SIZE, SCALE_FACTOR, LAYERS, GameState
-from .sprites import Sprite, Player, Tree, ParticleSprite, AnimatedSprite
-from .support import map_coords_to_tile, load_data
-from .transition import Transition
-from .groups import AllSprites
-from .overlay import Overlay
-from .soil import SoilLayer
-from .sky import Sky, Rain
-from .shop import Menu
+from src.sky import Sky, Rain
+from src.overlay import Overlay
+from src.shop import Menu
+from src.sprites import (
+    AnimatedSprite,
+    ParticleSprite,
+    Tree,
+    Sprite,
+    Player,
+    NPC, NPCBehaviourMethods,
+)
+from src.enums import FarmingTool, GameState
+from src.settings import (
+    TILE_SIZE,
+    SCALE_FACTOR,
+    LAYERS,
+    MapDict,
+)
 
 
 class Level:
-    def __init__(self, switch, tmx_maps, frames, sounds):
+    def __init__(self, game, switch, tmx_maps: MapDict, frames, sounds):
         # main setup
         self.display_surface = pygame.display.get_surface()
+        self.game = game
         self.switch_screen = switch
-        self.entities = {}
 
-        # groups
+        # pathfinding
+        self.pf_matrix = []
+        self.pf_grid: PF_Grid
+        self.pf_finder = PF_AStarFinder()
+
+        # sprite groups
+        self.entities = {}
+        self.npcs = {}
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
 
         # assets
-        self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
         self.frames = frames
         self.sounds = sounds
         self.tmx_maps = tmx_maps
 
-        # soil 
-        self.soil_layer = SoilLayer(self.all_sprites, self.collision_sprites, tmx_maps['main'], frames['level'])
+        # soil
+        self.soil_layer = SoilLayer(
+            self.all_sprites,
+            self.collision_sprites,
+            tmx_maps['main'],
+            frames["level"])
 
-        # weather 
+        # weather
         self.sky = Sky()
         self.rain = Rain(self.all_sprites, frames['level'], self.get_map_size())
         self.raining = False
 
-        # setup map 
+        # setup map
         self.setup()
         self.player = self.entities['Player']
 
@@ -48,6 +78,18 @@ class Level:
         self.transition = Transition(self.reset, self.finish_reset)
         self.day_transition = False
         self.current_day = 0
+
+        # weather
+        self.sky = Sky()
+        self.rain = Rain(
+            self.all_sprites,
+            frames["level"],
+            (tmx_maps['main'].width *
+             TILE_SIZE *
+             SCALE_FACTOR,
+             tmx_maps['main'].height *
+             TILE_SIZE *
+             SCALE_FACTOR))
 
         # overlays
         self.overlay = Overlay(self.player, frames['overlay'])
@@ -74,15 +116,15 @@ class Level:
             y = y * TILE_SIZE * SCALE_FACTOR
             pos = (x, y)
             setup_func(pos, surf)
-            
+
     def setup_environment(self, pos, surf):
         image = pygame.transform.scale_by(surf, SCALE_FACTOR)
         Sprite(pos, image, self.all_sprites, LAYERS['lower ground'])
-    
+
     def setup_water(self, pos, surf):
         image = self.frames['level']['animations']['water']
         AnimatedSprite(pos, image, self.all_sprites, LAYERS['water'])
-    
+
     def setup_layer_objects(self, layer, setup_func):
         for obj in self.tmx_maps['main'].get_layer_by_name(layer):
             x = obj.x * SCALE_FACTOR
@@ -92,7 +134,7 @@ class Level:
 
     def setup_objects(self, pos, obj):
         image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
-        
+
         if obj.name == 'Tree':
             apple_frames = self.frames['level']['objects']['apple']
             stump_frames = self.frames['level']['objects']['stump']
@@ -100,17 +142,17 @@ class Level:
             Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
-    
+
     def setup_collisions(self, pos, obj):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.collision_sprites)
-        
+
     def setup_interactions(self, pos, obj):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
-        
+
     def setup_entities(self, pos, obj):
         self.entities[obj.name] = Player(
             pos=pos,
@@ -119,12 +161,12 @@ class Level:
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             interact=self.interact,
-            sounds=self.sounds, 
+            sounds=self.sounds,
             font=self.font
         )
 
     def get_map_size(self):
-        return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
+        return self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR
 
     def activate_music(self):
         volume = 0.1
@@ -135,7 +177,7 @@ class Level:
         self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
 
-        
+
     # events
     def event_loop(self):
         for event in pygame.event.get():
@@ -176,25 +218,22 @@ class Level:
     def create_particle(self, sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
-
-    # player actions
-    def apply_tool(self, tool, pos, entity):
-        if tool == 'axe':
-            collided_trees = [tree for tree in self.tree_sprites if tree.rect.collidepoint(pos)]
-            for tree in collided_trees:
-                tree.hit(entity)
-                self.create_particle(tree)
-                self.sounds['axe'].play()
-
-        if tool == 'hoe':
-            self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
-
-        if tool == 'water':
-            self.soil_layer.water(pos)
-            self.sounds['water'].play()
-
-        if tool in ('corn', 'tomato'):
-            self.soil_layer.plant_seed(pos, tool, entity.inventory, plant_sounds=[self.sounds['plant'], self.sounds['cant_plant']])
+    def apply_tool(self, tool: FarmingTool, pos, entity):
+        match tool:
+            case FarmingTool.AXE:
+                for tree in self.tree_sprites:
+                    if tree.rect.collidepoint(pos):
+                        tree.hit(entity)
+                        self.sounds['axe'].play()
+            case FarmingTool.HOE:
+                self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+            case FarmingTool.WATERING_CAN:
+                self.soil_layer.water(pos)
+                self.sounds['water'].play()
+            case _:  # All seeds
+                self.soil_layer.plant_seed(pos, tool,
+                                           entity.inventory, plant_sounds=[self.sounds['plant'],
+                                                                           self.sounds['cant_plant']])
 
     def interact(self):
         collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)
@@ -207,13 +246,14 @@ class Level:
     def toggle_shop(self):
         self.shop_active = not self.shop_active
 
-
     # reset
     def reset(self):
         self.current_day += 1
 
         # plants
         self.soil_layer.update_plants()
+
+        self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
 
         # soil
         self.soil_layer.remove_water()
@@ -223,8 +263,11 @@ class Level:
             self.soil_layer.water_all()
 
         # apples on the trees
-        for tree in self.tree_sprites.sprites():
-            for apple in tree.apple_sprites.sprites():
+
+        # No need to iterate using explicit sprites() call.
+        # Iterating over a sprite group normally will do the same thing
+        for tree in self.tree_sprites:
+            for apple in tree.apple_sprites:
                 apple.kill()
             tree.create_fruit()
 

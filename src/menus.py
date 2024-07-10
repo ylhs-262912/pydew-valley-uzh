@@ -4,8 +4,9 @@ import sys
 from pygame import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
 
-from .settings import SCREEN_WIDTH, SCREEN_HEIGHT, GameState, KEYBINDS
-from .support import save_data, load_data
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, KEYBINDS
+from src.enums import GameState
+from src.support import save_data, load_data, resource_path
 
 
 # -------  Menu ------- #
@@ -16,7 +17,7 @@ class GeneralMenu:
         self.display_surface = pygame.display.get_surface()
         self.buttons_surface = pygame.Surface(size)
         self.buttons_surface.set_colorkey('green')
-        self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
         screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
         self.background = pygame.transform.scale(background, screen_size)
         self.title = title
@@ -40,7 +41,7 @@ class GeneralMenu:
     def rect_setup(self):
         self.rect = pygame.Rect((0, 0), self.size)
         screen_center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        self.rect.center = self.center if self.center else screen_center
+        self.rect.center = self.center or screen_center
 
     def button_setup(self):
         # button setup
@@ -150,14 +151,13 @@ class GeneralMenu:
     def update(self, dt):
         self.event_loop()
         self.update_buttons(dt)
-
         self.draw()
 
 
 class MainMenu(GeneralMenu):
     def __init__(self, switch_screen):
         options = ['Play', 'Quit']
-        background = pygame.image.load('images/menu_background/bg.png')
+        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Main Menu'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size, background)
@@ -179,7 +179,7 @@ class MainMenu(GeneralMenu):
 class PauseMenu(GeneralMenu):
     def __init__(self, switch_screen):
         options = ['Resume', 'Options', 'Quit']
-        background = pygame.image.load('images/menu_background/bg.png')
+        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Pause Menu'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size, background)
@@ -201,7 +201,7 @@ class PauseMenu(GeneralMenu):
 class SettingsMenu(GeneralMenu):
     def __init__(self, switch_screen, sounds, level):
         options = ['Keybinds', 'Volume', 'Back']
-        background = pygame.image.load('images/menu_background/bg.png')
+        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Settings'
         size = (400, 400)
         switch = switch_screen
@@ -257,7 +257,7 @@ class SettingsMenu(GeneralMenu):
 class ShopMenu(GeneralMenu):
     def __init__(self, player, switch_screen):
         options = ['wood', 'apple', 'hoe', 'water', 'corn', 'tomato', 'seed']
-        background = pygame.image.load('images/menu_background/bg.png')
+        background = pygame.image.load(resource_path('images/menu_background/bg.png'))
         title = 'Shop'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size, background)
@@ -403,7 +403,7 @@ class KeySetup(Component):
         self.unicode = unicode
 
         # design
-        self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
         self.hover_active = False
         self.bg_color = 'grey'
 
@@ -460,7 +460,7 @@ class Slider:
 
         # sounds
         self.sounds = sounds
-        self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
 
         # knob
         self.knob_radius = 10
@@ -538,7 +538,7 @@ class Description:
         self.setup()
 
         # font
-        self.font = pygame.font.Font('font/LycheeSoda.ttf', 30)
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
 
     # setup
     def setup(self):
@@ -600,6 +600,7 @@ class Description:
 class KeybindsDescription(Description):
     def __init__(self, pos):
         super().__init__(pos)
+        self.default_keybinds = None
         self.keybinds = {}
         self.keys_group = []
         self.selection_key = None
@@ -694,8 +695,8 @@ class KeybindsDescription(Description):
             offset = vector(s1_pos) + vector(s2_pos)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1, 3]:
                 if self.selection_key.hover(offset):
-                    rpath = 'images/keys/rclick.png'
-                    lpath = 'images/keys/lclick.png'
+                    rpath = resource_path('images/keys/rclick.png')
+                    lpath = resource_path('images/keys/lclick.png')
                     path = lpath if event.button == 1 else rpath
                     value = 0 if event.button == 1 else 2
                     k_type = 'mouse'
@@ -745,9 +746,9 @@ class KeybindsDescription(Description):
 
     def get_path(self, keydown):
         if keydown == 0:
-            return "images/keys/lclick.png"
+            return resource_path("images/keys/lclick.png")
         if keydown == 2:
-            return "images/keys/rclick.png"
+            return resource_path("images/keys/rclick.png")
 
         special_keys = {
             pygame.K_SPACE: "images/keys/space.png",
@@ -766,9 +767,9 @@ class KeybindsDescription(Description):
         }
 
         if keydown in special_keys:
-            return special_keys[keydown]
+            return resource_path(special_keys[keydown])
 
-        return "images/keys/generic.png"
+        return resource_path("images/keys/generic.png")
 
     def value_to_unicode(self, value):
         if value is None:
