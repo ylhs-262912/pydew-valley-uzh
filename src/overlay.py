@@ -29,15 +29,6 @@ class Overlay:
 
         hours = str(time[0]).rjust(2, "0")  # if hours are less than 10, add a 0 to stay in the hh:mm format
         minutes = str(time[1]).rjust(2, "0")  # if minutes are less than 10, add a 0 to stay in the hh:mm format
-        # if time[0] < 10:
-        #     hours = f"0{time[0]}"
-        # else:
-        #     hours = f"{time[0]}"
-
-        # if (time[1] < 10):
-        #     minutes = f"0{time[1]}"  # if minutes are less than 10, add a 0 to stay in the hh:mm format
-        # else:
-        #     minutes = f"{time[1]}"
 
         text_surface = font.render(f"{hours}:{minutes}", False, (255, 255, 255))
         self.display_surface.blit(text_surface, (10, 10))

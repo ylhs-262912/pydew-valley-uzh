@@ -61,3 +61,15 @@ APPLE_POS = {
 
 CHARS_PER_LINE = 45
 TB_SIZE = (493, 264)
+
+KEYBINDS = {
+    'up': {'type': "key", 'value': pygame.K_UP, 'text': "Up"},
+    'down': {'type': "key", 'value': pygame.K_DOWN, 'text': "Down"},
+    'left': {'type': "key", 'value': pygame.K_LEFT, 'text': "Left"},
+    'right': {'type': "key", 'value': pygame.K_RIGHT, 'text': "Right"},
+    'use': {'type': "key", 'value': pygame.K_SPACE, 'text': "Use"},
+    'next tool': {'type': "key", 'value': pygame.K_TAB, 'text': "Cycle Tools"},
+    'next seed': {'type': "key", 'value': pygame.K_LSHIFT, 'text': "Cycle Seeds"},
+    'plant': {'type': "key", 'value': pygame.K_RETURN, 'text': "Plant Current Seed"},
+    'interact': {'type': "key", 'value': pygame.K_i, 'text': "Interact"},
+}
