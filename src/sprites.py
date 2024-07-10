@@ -378,8 +378,6 @@ class Player(Entity):
         self.sounds = sounds
 
         # menus
-        self.pause_menu = PauseMenu(self.font)
-        self.settings_menu = SettingsMenu(self.font, self.sounds)
 
         self.current_tool = save_data.get("current_tool", FarmingTool.get_first_tool_id())
         self.tool_index = self.current_tool.value - 1
@@ -415,7 +413,7 @@ class Player(Entity):
         savefile.save(self.current_tool, self.current_seed, self.money, compacted_inv)
 
     @staticmethod
-    def import_controls(self):
+    def import_controls():
         try:
             data = support.load_data('keybinds.json')
             if len(data) == len(settings.KEYBINDS):

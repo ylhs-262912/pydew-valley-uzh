@@ -154,7 +154,7 @@ class Level:
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
     def setup_entities(self, pos, obj):
-        self.entities[obj.name] = Player(
+        self.entities[obj.name] = Player(game=self.game,
             pos=pos,
             frames=self.frames['character']['rabbit'],
             groups=self.all_sprites,
