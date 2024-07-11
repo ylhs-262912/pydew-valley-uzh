@@ -1,4 +1,4 @@
-from src.enums import InventoryResource
+from src.enums import InventoryResource, SeedType
 from src.settings import TILE_SIZE, SCALE_FACTOR, LAYERS
 import pygame
 from src.sprites import Sprite, Plant
@@ -82,29 +82,28 @@ class SoilLayer:
                     cell.remove('W')
 
     def plant_seed(self, pos, seed, inventory, plant_sounds):
+        seed_tp = SeedType.from_farming_tool(seed)
         for soil_sprite in self.soil_sprites.sprites():
             if soil_sprite.rect.collidepoint(pos):
 
                 x = int(soil_sprite.rect.x / (TILE_SIZE * SCALE_FACTOR))
                 y = int(soil_sprite.rect.y / (TILE_SIZE * SCALE_FACTOR))
 
-                # FIXME: Should be changed to a better method to refer from the "old" resource strings to the new enum values
-                inventory_resource = {"corn": InventoryResource.CORN_SEED,
-                                      "tomato": InventoryResource.TOMATO_SEED}[seed]
+                inventory_resource = seed_tp.as_ir()
 
                 if ('P' not in self.grid[y][x]
                         and inventory[inventory_resource] > 0):
                     self.grid[y][x].append('P')
-                    Plant(seed,
+                    Plant(seed_tp,
                           [self.all_sprites,
                            self.plant_sprites],
                           soil_sprite,
-                          self.level_frames[seed],
+                          self.level_frames[seed_tp.as_plant_name()],
                           self.check_watered)
                     inventory[inventory_resource] -= 1
                     plant_sounds[0].play()
                 else:
-                    # play a sound that indecates u cant plant a seed
+                    # play a sound that indicates you can't plant a seed
                     plant_sounds[1].play()
 
     def update_plants(self):
