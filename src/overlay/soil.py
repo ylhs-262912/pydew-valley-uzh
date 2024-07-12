@@ -1,6 +1,7 @@
 import pygame
 from random import choice
 
+from src.enums import SeedType
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
 from src.sprites.plant import Plant
@@ -83,12 +84,14 @@ class SoilLayer:
     def plant(self, pos, seed, inventory):
         tile = self.map.get(pos)
         seed_amount = inventory.get(seed)
+        seed_type = SeedType.from_farming_tool(seed)
 
         if tile and tile.hoed and not tile.planted and seed_amount > 0:
             tile.planted = True
-            frames = self.level_frames[seed]
+            seed_name = seed_type.as_plant_name()
+            frames = self.level_frames[seed_name]
             groups = [self.all_sprites, self.plant_sprites]
-            tile.plant = Plant(seed, groups, tile, frames)
+            tile.plant = Plant(seed_type, groups, tile, frames)
             inventory[seed] -= 1
             self.sounds["plant"].play()
             # self.sounds['cant plant'].play()

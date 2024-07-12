@@ -4,13 +4,12 @@ from pygame.math import Vector2 as vector
 
 
 class Plant(CollideableSprite):
-    def __init__(self, seed_type, groups, soil_sprite, frames, check_watered):
-        super().__init__(soil_sprite.rect.center,
+    def __init__(self, seed_type, groups, tile, frames):
+        super().__init__(tile.rect.center,
                          frames[0], groups, (0, 0), LAYERS['plant'])
-        self.rect.center = soil_sprite.rect.center + \
+        self.rect.center = tile.rect.center + \
             vector(0.5, -3) * SCALE_FACTOR
-        self.soil = soil_sprite
-        self.check_watered = check_watered
+        self.tile = tile
         self.frames = frames
         self.hitbox = None
 
@@ -21,7 +20,7 @@ class Plant(CollideableSprite):
         self.harvestable = False
 
     def grow(self):
-        if self.check_watered(self.rect.center):
+        if self.tile.watered:
             self.age += self.grow_speed
 
             if int(self.age) > 0:
