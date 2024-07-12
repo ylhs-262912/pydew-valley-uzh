@@ -1,178 +1,136 @@
-from src.enums import InventoryResource, SeedType
-from src.settings import TILE_SIZE, SCALE_FACTOR, LAYERS
 import pygame
+from random import choice
+
+from src.support import tile_to_screen
 from src.sprites.base import Sprite
 from src.sprites.plant import Plant
-from random import choice
+from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR
+
+
+class Tile(Sprite):
+    def __init__(self, pos, group):
+        size = TILE_SIZE * SCALE_FACTOR
+        surf = pygame.Surface((size, size))
+        surf.fill("green")
+        surf.set_colorkey("green")
+        super().__init__(tile_to_screen(pos), surf, group, LAYERS["soil"])
+
+        self.pos = pos
+        self.hoed = False
+        self.watered = False
+        self.planted = False
+        self.farmable = False
+        self.plant = None
 
 
 class SoilLayer:
-    def __init__(self, all_sprites, collision_sprites, tmx_map, level_frames):
-        # sprite groups
-        self.grid = []
+    def __init__(self, all_sprites, tmx_map, frames, sounds):
         self.all_sprites = all_sprites
-        self.collision_sprites = collision_sprites
+        self.level_frames = frames
+
         self.soil_sprites = pygame.sprite.Group()
         self.water_sprites = pygame.sprite.Group()
         self.plant_sprites = pygame.sprite.Group()
 
-        self.level_frames = level_frames
-        self.create_soil_grid(tmx_map)
+        self.map = {}
+        self.create_soil_map(tmx_map)
+        self.sounds = sounds
+        self.neighbor_directions = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
 
-    def create_soil_grid(self, tmx_map):
-        self.grid = [[[] for col in range(tmx_map.width)]
-                     for row in range(tmx_map.height)]
-        for x, y, _ in tmx_map.get_layer_by_name('Farmable').tiles():
-            self.grid[y][x].append('F')
+    def create_soil_map(self, tmx_map):
+        farmable_layer = tmx_map.get_layer_by_name("Farmable")
+        for x, y, _ in farmable_layer.tiles():
+            tile = Tile((x, y), [self.all_sprites, self.soil_sprites])
+            tile.farmable = True
+            self.map[(x, y)] = tile
 
-    def hoe(self, pos, hoe_sound):
-        x, y = int(pos[0] / (TILE_SIZE * SCALE_FACTOR)
-                   ), int(pos[1] / (TILE_SIZE * SCALE_FACTOR))
-        if 'F' in self.grid[y][x]:
-            self.grid[y][x].append('X')
-            self.create_soil_tiles()
-            hoe_sound.play()
+    def update_tile_image(self, tile, pos):
+        for dx, dy in self.neighbor_directions:
+            neighbor = self.map.get((pos[0] + dx, pos[1] + dy))
+            if neighbor and neighbor.hoed:
+                neighbor_pos = (pos[0] + dx, pos[1] + dy)
+                neighbor_type = self.determine_tile_type(neighbor_pos)
+                neighbor.image = self.level_frames["soil"][neighbor_type]
+
+        tile_type = self.determine_tile_type(pos)
+        tile.image = self.level_frames["soil"][tile_type]
+
+    def hoe(self, pos):
+        tile = self.map.get(pos)
+        if tile and tile.farmable and not tile.hoed:
+            tile.hoed = True
+            self.sounds["hoe"].play()
+            self.update_tile_image(tile, pos)
 
     def water(self, pos):
-        for soil_sprite in self.soil_sprites.sprites():
-            if soil_sprite.rect.collidepoint(pos):
+        tile = self.map.get(pos)
+        if tile and tile.hoed and not tile.watered:
+            tile.watered = True
+            self.sounds["water"].play()
 
-                x = int(soil_sprite.rect.x / (TILE_SIZE * SCALE_FACTOR))
-                y = int(soil_sprite.rect.y / (TILE_SIZE * SCALE_FACTOR))
-                self.grid[y][x].append('W')
+            water_frames = list(self.level_frames["soil water"].values())
+            water_frame = choice(water_frames)
+            Sprite(
+                tile_to_screen(pos),
+                water_frame,
+                [self.all_sprites, self.water_sprites],
+                LAYERS["soil water"],
+            )
 
-                pos = soil_sprite.rect.topleft
-                surf = choice(
-                    list(self.level_frames['soil water'].values())
-                )
-                Sprite(pos, surf, [self.all_sprites,
-                       self.water_sprites], LAYERS['soil water'])
+    def plant(self, pos, seed, inventory):
+        tile = self.map.get(pos)
+        seed_name = seed + " seed"
+        seed_amount = inventory.get(seed_name)
 
-    def water_all(self):
-        for index_row, row in enumerate(self.grid):
-            for index_col, cell in enumerate(row):
-                if 'X' in cell and 'W' not in cell:
-                    cell.append('W')
-                    x = index_col * TILE_SIZE * SCALE_FACTOR
-                    y = index_row * TILE_SIZE * SCALE_FACTOR
-                    surf = choice(
-                        list(self.level_frames['soil water'].values())
-                    )
-                    Sprite(
-                        (x, y),
-                        surf,
-                        [self.all_sprites, self.water_sprites],
-                        LAYERS['soil water'],
-                    )
+        if tile and tile.hoed and not tile.planted and seed_amount > 0:
+            tile.planted = True
+            frames = self.level_frames[seed]
+            groups = [self.all_sprites, self.plant_sprites]
+            tile.plant = Plant(seed, groups, tile, frames)
+            inventory[seed_name] -= 1
+            self.sounds["plant"].play()
+            # self.sounds['cant plant'].play()
 
-    def check_watered(self, pos):
-        x = int(pos[0] / (TILE_SIZE * SCALE_FACTOR))
-        y = int(pos[1] / (TILE_SIZE * SCALE_FACTOR))
-        cell = self.grid[y][x]
-        return 'W' in cell
+    def determine_tile_type(self, pos):
+        x, y = pos
+        tile_above = self.map.get((x, y - 1))
+        tile_below = self.map.get((x, y + 1))
+        tile_right = self.map.get((x + 1, y))
+        tile_left = self.map.get((x - 1, y))
 
-    def remove_water(self):
-        # destroy all water sprites
-        for sprite in self.water_sprites.sprites():
-            sprite.kill()
+        hoed_above = tile_above.hoed if tile_above else False
+        hoed_below = tile_below.hoed if tile_below else False
+        hoed_right = tile_right.hoed if tile_right else False
+        hoed_left = tile_left.hoed if tile_left else False
 
-        # clean up the grid
-        for row in self.grid:
-            for cell in row:
-                if 'W' in cell:
-                    cell.remove('W')
-
-    def plant_seed(self, pos, seed, inventory, plant_sounds):
-        seed_tp = SeedType.from_farming_tool(seed)
-        for soil_sprite in self.soil_sprites.sprites():
-            if soil_sprite.rect.collidepoint(pos):
-
-                x = int(soil_sprite.rect.x / (TILE_SIZE * SCALE_FACTOR))
-                y = int(soil_sprite.rect.y / (TILE_SIZE * SCALE_FACTOR))
-
-                inventory_resource = seed_tp.as_ir()
-
-                if ('P' not in self.grid[y][x]
-                        and inventory[inventory_resource] > 0):
-                    self.grid[y][x].append('P')
-                    Plant(seed_tp,
-                          [self.all_sprites,
-                           self.plant_sprites],
-                          soil_sprite,
-                          self.level_frames[seed_tp.as_plant_name()],
-                          self.check_watered)
-                    inventory[inventory_resource] -= 1
-                    plant_sounds[0].play()
-                else:
-                    # play a sound that indicates you can't plant a seed
-                    plant_sounds[1].play()
-
-    def update_plants(self):
-        for plant in self.plant_sprites.sprites():
-            plant.grow()
-
-    def create_soil_tiles(self):
-        self.soil_sprites.empty()
-        for index_row, row in enumerate(self.grid):
-            for index_col, cell in enumerate(row):
-                if 'X' in cell:
-
-                    # tile options
-                    t = 'X' in self.grid[index_row - 1][index_col]
-                    b = 'X' in self.grid[index_row + 1][index_col]
-                    r = 'X' in row[index_col + 1]
-                    # FIXME(larsbutler): What is "l"?
-                    # Consider using a different var name?
-                    # flake8 doesn't like "l" because it is
-                    # an "ambiguous variable name"
-                    l = 'X' in row[index_col - 1]  # noqa: E741
-
-                    tile_type = 'o'
-
-                    # all sides
-                    if all((t, r, b, l)):
-                        tile_type = 'x'
-
-                    # horizontal tiles only
-                    if l and not any((t, r, b)):
-                        tile_type = 'r'
-                    if r and not any((t, l, b)):
-                        tile_type = 'l'
-                    if r and l and not any((t, b)):
-                        tile_type = 'lr'
-
-                    # vertical only
-                    if t and not any((r, l, b)):
-                        tile_type = 'b'
-                    if b and not any((r, l, t)):
-                        tile_type = 't'
-                    if b and t and not any((r, l)):
-                        tile_type = 'tb'
-
-                    # corners
-                    if l and b and not any((t, r)):
-                        tile_type = 'tr'
-                    if r and b and not any((t, l)):
-                        tile_type = 'tl'
-                    if l and t and not any((b, r)):
-                        tile_type = 'br'
-                    if r and t and not any((b, l)):
-                        tile_type = 'bl'
-
-                    # T shapes
-                    if all((t, b, r)) and not l:
-                        tile_type = 'tbr'
-                    if all((t, b, l)) and not r:
-                        tile_type = 'tbl'
-                    if all((l, r, t)) and not b:
-                        tile_type = 'lrb'
-                    if all((l, r, b)) and not t:
-                        tile_type = 'lrt'
-
-                    Sprite(
-                        pos=(index_col * TILE_SIZE * SCALE_FACTOR,
-                             index_row * TILE_SIZE * SCALE_FACTOR),
-                        surf=self.level_frames['soil'][tile_type],
-                        groups=(self.all_sprites, self.soil_sprites),
-                        z=LAYERS['soil']
-                    )
+        if all((hoed_above, hoed_right, hoed_below, hoed_left)):
+            return "x"
+        if hoed_left and not any((hoed_above, hoed_right, hoed_below)):
+            return "r"
+        if hoed_right and not any((hoed_above, hoed_left, hoed_below)):
+            return "l"
+        if hoed_right and hoed_left and not any((hoed_above, hoed_below)):
+            return "lr"
+        if hoed_above and not any((hoed_right, hoed_left, hoed_below)):
+            return "b"
+        if hoed_below and not any((hoed_right, hoed_left, hoed_above)):
+            return "t"
+        if hoed_below and hoed_above and not any((hoed_right, hoed_left)):
+            return "tb"
+        if hoed_left and hoed_below and not any((hoed_above, hoed_right)):
+            return "tr"
+        if hoed_right and hoed_below and not any((hoed_above, hoed_left)):
+            return "tl"
+        if hoed_left and hoed_above and not any((hoed_below, hoed_right)):
+            return "br"
+        if hoed_right and hoed_above and not any((hoed_below, hoed_left)):
+            return "bl"
+        if all((hoed_above, hoed_below, hoed_right)) and not hoed_left:
+            return "tbr"
+        if all((hoed_above, hoed_below, hoed_left)) and not hoed_right:
+            return "tbl"
+        if all((hoed_left, hoed_right, hoed_above)) and not hoed_below:
+            return "lrb"
+        if all((hoed_left, hoed_right, hoed_below)) and not hoed_above:
+            return "lrt"
+        return "o"

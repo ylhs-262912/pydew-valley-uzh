@@ -55,9 +55,10 @@ class Level:
         # soil
         self.soil_layer = SoilLayer(
             self.all_sprites,
-            self.collision_sprites,
             tmx_maps['main'],
-            frames["level"])
+            frames["level"],
+            sounds
+        )
 
         # weather
         self.sky = Sky()
@@ -216,19 +217,17 @@ class Level:
     def apply_tool(self, tool: FarmingTool, pos, entity):
         match tool:
             case FarmingTool.AXE:
-                for tree in self.tree_sprites:
-                    if tree.rect.collidepoint(pos):
-                        tree.hit(entity)
-                        self.sounds['axe'].play()
+                trees_collided = pygame.sprite.spritecollide(entity, self.tree_sprites, False)
+                for tree in trees_collided:
+                    tree.hit(entity)
+                    self.sounds['axe'].play()
             case FarmingTool.HOE:
-                self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+                self.soil_layer.hoe(pos)
             case FarmingTool.WATERING_CAN:
                 self.soil_layer.water(pos)
                 self.sounds['water'].play()
             case _:  # All seeds
-                self.soil_layer.plant_seed(pos, tool,
-                                           entity.inventory, plant_sounds=[self.sounds['plant'],
-                                                                           self.sounds['cant_plant']])
+                self.soil_layer.plant(pos, tool, entity.inventory)
 
     def interact(self):
         collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)

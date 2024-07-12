@@ -1,11 +1,12 @@
 
 import pygame
 from typing import Callable
+from pygame.math import Vector2 as vector
 from src import settings, savefile, support
 from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.settings import SCALE_FACTOR
-from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
+from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT    # wtf
 
 
 
@@ -53,7 +54,7 @@ class Player(Entity):
         self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
 
         # inventory
-        self.inventory = {
+        self.inventory = {                                             # wtf +++++
             res: save_data["inventory"].get(
                 res.as_serialised_string(),
                 _SEED_INVENTORY_DEFAULT_AMOUNT if res >= InventoryResource.CORN_SEED else
@@ -127,7 +128,7 @@ class Player(Entity):
             if self.controls['use']:
                 self.tool_active = True
                 self.frame_index = 0
-                self.direction = pygame.Vector2()
+                self.direction = vector()
                 if self.current_tool.is_swinging_tool():
                     self.sounds['swing'].play()
 
