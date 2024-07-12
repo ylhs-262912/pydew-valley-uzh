@@ -14,15 +14,6 @@ import pygame
 import random
 
 
-
-_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
-_SEED_INVENTORY_DEFAULT_AMOUNT = 5
-_INV_DEFAULT_AMOUNTS = (
-    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
-    _SEED_INVENTORY_DEFAULT_AMOUNT
-)
-
-
 # <editor-fold desc="NPC">
 # @dataclass
 class NPCBehaviourContext:
@@ -168,7 +159,6 @@ class NPCBehaviourMethods:
             context, random.choice(possible_coordinates), on_path_completion
         )
 
-    # FIXME: When NPCs water the plants, the hoe is displayed as the item used instead of the watering can
     # FIXME: When NPCs water the plants, the axe is displayed as the item used instead of the watering can
     @staticmethod
     def water_farmland(context: NPCBehaviourContext) -> bool:
