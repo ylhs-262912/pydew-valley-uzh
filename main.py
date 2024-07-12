@@ -60,6 +60,7 @@ class Game:
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
+            GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -105,10 +106,12 @@ class Game:
         while self.running:
             dt = self.clock.tick() / 1000
 
-            self.level.update(dt)
 
-            if self.game_paused():
-                self.menus[self.current_state].update(dt)
+            # removing level update because it makes two times for event in pygame.event.get() so it makes the game laggy
+            # self.level.update(dt)
+
+            # if self.game_paused():
+            self.menus[self.current_state].update(dt)
 
             pygame.display.update()
 
