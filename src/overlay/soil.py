@@ -35,7 +35,10 @@ class SoilLayer:
         self.map = {}
         self.create_soil_map(tmx_map)
         self.sounds = sounds
-        self.neighbor_directions = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)]
+        self.neighbor_directions = [
+            (0, -1), (1, -1), (1, 0), (1, 1),
+            (0, 1), (-1, 1), (-1, 0), (-1, -1)
+        ]
 
     def create_soil_map(self, tmx_map):
         farmable_layer = tmx_map.get_layer_by_name("Farmable")
@@ -79,15 +82,14 @@ class SoilLayer:
 
     def plant(self, pos, seed, inventory):
         tile = self.map.get(pos)
-        seed_name = seed + " seed"
-        seed_amount = inventory.get(seed_name)
+        seed_amount = inventory.get(seed)
 
         if tile and tile.hoed and not tile.planted and seed_amount > 0:
             tile.planted = True
             frames = self.level_frames[seed]
             groups = [self.all_sprites, self.plant_sprites]
             tile.plant = Plant(seed, groups, tile, frames)
-            inventory[seed_name] -= 1
+            inventory[seed] -= 1
             self.sounds["plant"].play()
             # self.sounds['cant plant'].play()
 

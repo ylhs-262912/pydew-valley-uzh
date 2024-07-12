@@ -1,5 +1,5 @@
 import sys
-import pygame 
+import pygame
 
 
 from random import randint
@@ -106,7 +106,7 @@ class Level:
         self.setup_layer_objects('Entities', self.setup_entities)
 
     def setup_layer_tiles(self, layer, setup_func):
-        for  x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
+        for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
             pos = (x, y)
@@ -149,7 +149,8 @@ class Level:
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
     def setup_entities(self, pos, obj):
-        self.entities[obj.name] = Player(game=self.game,
+        self.entities[obj.name] = Player(
+            game=self.game,
             pos=pos,
             frames=self.frames['character']['rabbit'],
             groups=self.all_sprites,
@@ -187,7 +188,6 @@ class Level:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
                 self.player.direction.xy = (0, 0)
-
 
     # plant collision
     def plant_collision(self):
@@ -279,7 +279,6 @@ class Level:
             entity.blocked = True
             entity.direction = pygame.Vector2(0, 0)
 
-
     # draw
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -290,7 +289,6 @@ class Level:
         self.all_sprites.draw(self.player.rect.center)
         self.draw_overlay()
         self.sky.display(dt)
-
 
     # update
     def update_rain(self):

@@ -9,7 +9,6 @@ from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.support import screen_to_tile
 
 
-
 class Entity(CollideableSprite, ABC):
     def __init__(
             self,
@@ -80,7 +79,6 @@ class Entity(CollideableSprite, ABC):
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
-
 
     @abstractmethod
     def move(self, dt):

@@ -1,6 +1,5 @@
 
 import pygame
-from src.support import resource_path
 from src.gui.general_menu import GeneralMenu
 from src.enums import GameState
 
