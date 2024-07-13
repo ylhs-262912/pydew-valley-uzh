@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 import pygame
 from typing import Callable
@@ -5,8 +6,14 @@ from src import settings, savefile, support
 from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.settings import SCALE_FACTOR
-from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
 
+
+_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
+_SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_INV_DEFAULT_AMOUNTS = (
+    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
+    _SEED_INVENTORY_DEFAULT_AMOUNT
+)
 
 
 class Player(Entity):
