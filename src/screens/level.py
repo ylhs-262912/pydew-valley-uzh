@@ -217,10 +217,10 @@ class Level:
     def apply_tool(self, tool: FarmingTool, pos, entity):
         match tool:
             case FarmingTool.AXE:
-                trees_collided = pygame.sprite.spritecollide(entity, self.tree_sprites, False)
-                for tree in trees_collided:
-                    tree.hit(entity)
-                    self.sounds['axe'].play()
+                for tree in self.tree_sprites:
+                    if tree.rect.collidepoint(pos):
+                        tree.hit(entity)
+                        self.sounds['axe'].play()
             case FarmingTool.HOE:
                 self.soil_layer.hoe(pos)
             case FarmingTool.WATERING_CAN:

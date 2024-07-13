@@ -6,7 +6,7 @@ from src import settings, savefile, support
 from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.settings import SCALE_FACTOR
-from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT    # wtf
+from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
 
 
 
@@ -54,7 +54,7 @@ class Player(Entity):
         self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
 
         # inventory
-        self.inventory = {                                             # wtf +++++
+        self.inventory = {
             res: save_data["inventory"].get(
                 res.as_serialised_string(),
                 _SEED_INVENTORY_DEFAULT_AMOUNT if res >= InventoryResource.CORN_SEED else
