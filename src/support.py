@@ -66,21 +66,37 @@ def tmx_importer(tmx_path: str) -> settings.MapDict:
     return files
 
 
-def animation_importer(*ani_path: str) -> dict[str, settings.AniFrames]:
+def animation_importer(*ani_path: str, frame_size: int = None, resize: int = None) -> settings.AniFrames:
+    if frame_size is None:
+        frame_size = TILE_SIZE
+
+    if resize is not None:
+        resize = resize * SCALE_FACTOR
+
     animation_dict = {}
     for folder_path, _, file_names in os.walk(os.path.join(*ani_path)):
         for file_name in file_names:
             full_path = os.path.join(folder_path, file_name)
             surf = pygame.image.load(full_path).convert_alpha()
-            animation_dict[file_name.split('.')[0]] = []
-            for col in range(surf.get_width() // TILE_SIZE):
+            animation_dict[str(file_name.split('.')[0])] = []
+            for col in range(surf.get_width() // frame_size):
                 cutout_surf = pygame.Surface(
-                    (TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                    (frame_size, frame_size), pygame.SRCALPHA)
                 cutout_rect = pygame.Rect(
-                    col * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE)
+                    col * frame_size, 0, frame_size, frame_size)
                 cutout_surf.blit(surf, (0, 0), cutout_rect)
-                animation_dict[file_name.split('.')[0]].append(
-                    pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
+
+                cutout_surf = pygame.transform.scale_by(cutout_surf, SCALE_FACTOR)
+
+                if resize:
+                    animation_dict[str(file_name.split('.')[0])].append(
+                        pygame.transform.scale(cutout_surf, (resize, resize))
+                    )
+                else:
+                    animation_dict[str(file_name.split('.')[0])].append(
+                        cutout_surf
+                    )
+
     return animation_dict
 
 

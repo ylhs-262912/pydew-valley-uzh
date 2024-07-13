@@ -1,4 +1,3 @@
-
 import pygame
 from typing import Callable
 from src import settings, savefile, support
@@ -6,7 +5,6 @@ from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.settings import SCALE_FACTOR
 from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
-
 
 
 class Player(Entity):
@@ -113,7 +111,7 @@ class Player(Entity):
         self.controls = self.update_controls()
 
         # movement
-        if not self.tool_active and not self.blocked:
+        if not self.tool_active and not self.blocked and not self.game.emote_manager._show_emote_wheel:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
             self.direction = self.direction.normalize() if self.direction else self.direction
@@ -144,6 +142,24 @@ class Player(Entity):
             if self.controls['interact']:
                 self.interact()
 
+        # emotes
+        if not self.blocked:
+            if self.controls["emote wheel"]:
+                self.game.emote_manager.toggle_emote_wheel(self.rect.center)
+                if self.game.emote_manager._show_emote_wheel:
+                    self.direction = pygame.Vector2()
+
+            if self.game.emote_manager._show_emote_wheel:
+                if self.controls["key_right"]:
+                    self.game.emote_manager._emote_wheel.emote_index += 1
+
+                if self.controls["key_left"]:
+                    self.game.emote_manager._emote_wheel.emote_index -= 1
+
+                if self.controls["use"]:
+                    self.game.emote_manager.show_emote(self, self.game.emote_manager._emote_wheel.current_emote)
+                    self.game.emote_manager.toggle_emote_wheel(self.rect.center)
+
     def move(self, dt):
         self.hitbox_rect.x += self.direction.x * self.speed * dt
         self.collision('horizontal')
@@ -167,4 +183,8 @@ class Player(Entity):
 
     def update(self, dt):
         self.input()
+
         super().update(dt)
+
+        self.game.emote_manager.update_obj(self, (self.rect.centerx - 64, self.rect.centery - 176))
+        self.game.emote_manager.update_emote_wheel(self.rect.center)

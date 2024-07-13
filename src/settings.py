@@ -1,4 +1,3 @@
-import pygame
 import pygame.freetype
 import pytmx
 from src.warnings import *
@@ -12,7 +11,9 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
-TB_LAYER = 11
+
+EMOTE_LAYER = 11
+TB_LAYER = 12
 
 LAYERS = {
     'water': 0,
@@ -26,7 +27,8 @@ LAYERS = {
     'fruit': 8,
     'rain drops': 9,
     'particles': 10,
-    "TextBox": TB_LAYER
+    "emotes": EMOTE_LAYER,
+    "TextBox": TB_LAYER,
 }
 
 ENABLE_NPCS = False
@@ -50,9 +52,18 @@ KEYBINDS = {
     'down': {'type': "key", 'value': pygame.K_DOWN, 'text': "Down"},
     'left': {'type': "key", 'value': pygame.K_LEFT, 'text': "Left"},
     'right': {'type': "key", 'value': pygame.K_RIGHT, 'text': "Right"},
+
+    # References to the arrow keys that will only be True in Player.update_controls() when they are first pressed,
+    #  contrary to the first reference which is True as long as the buttons are being held down
+    'key_up': {'type': "key", 'value': pygame.K_UP, 'text': "Up"},
+    'key_down': {'type': "key", 'value': pygame.K_DOWN, 'text': "Down"},
+    'key_left': {'type': "key", 'value': pygame.K_LEFT, 'text': "Left"},
+    'key_right': {'type': "key", 'value': pygame.K_RIGHT, 'text': "Right"},
+
     'use': {'type': "key", 'value': pygame.K_SPACE, 'text': "Use"},
     'next tool': {'type': "key", 'value': pygame.K_TAB, 'text': "Cycle Tools"},
     'next seed': {'type': "key", 'value': pygame.K_LSHIFT, 'text': "Cycle Seeds"},
     'plant': {'type': "key", 'value': pygame.K_RETURN, 'text': "Plant Current Seed"},
     'interact': {'type': "key", 'value': pygame.K_i, 'text': "Interact"},
+    "emote wheel": {"type": "key", "value": pygame.K_e, 'text': "Open Emote Wheel"}
 }
