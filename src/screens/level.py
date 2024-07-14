@@ -10,7 +10,6 @@ from src.overlay.overlay import Overlay
 from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
-from src.screens.shop import ShopMenu
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -85,7 +84,6 @@ class Level:
 
         # overlays
         self.overlay = Overlay(self.player, frames['overlay'])
-        self.shop = ShopMenu(self.player, self.toggle_shop, self.font)
         self.shop_active = False
 
 
@@ -219,19 +217,12 @@ class Level:
             if collided_interactions[0].name == 'Bed':
                 self.start_reset()
             if collided_interactions[0].name == 'Trader':
-                self.toggle_shop()
-
-    def toggle_shop(self):
-        self.shop_active = not self.shop_active
-        self.player.blocked = self.shop_active
-        if self.shop_active:
-            self.switch_screen(GameState.SHOP)
+                self.switch_screen(GameState.SHOP)
 
     def handle_event(self, event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
-                self.player.direction.xy = (0, 0)
                 return True
 
         return False

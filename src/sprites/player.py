@@ -1,12 +1,13 @@
+from typing import Callable
 
 import pygame
-from typing import Callable
-from src import settings, savefile, support
-from src.sprites.entity import Entity
-from src.enums import InventoryResource, FarmingTool, ItemToUse
-from src.settings import SCALE_FACTOR
-from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
 
+from src import settings, savefile, support
+from src.controls import Controls, ControlType
+from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
+from src.settings import SCALE_FACTOR
+from src.sprites.entity import Entity
 
 
 class Player(Entity):
@@ -35,8 +36,8 @@ class Player(Entity):
         )
 
         # movement
-        self.keybinds = self.import_controls()
-        self.controls = {}
+        self.controls = Controls()
+        self.load_controls()
         self.speed = 250
         self.blocked = False
         self.paused = False
@@ -79,52 +80,50 @@ class Player(Entity):
                 del compacted_inv[k]
         savefile.save(self.current_tool, self.current_seed, self.money, compacted_inv)
 
-    @staticmethod
-    def import_controls():
+    def load_controls(self):
+        self.controls.load_default_keybinds()
         try:
             data = support.load_data('keybinds.json')
-            if len(data) == len(settings.KEYBINDS):
-                return data
+            self.controls.from_dict(data)
         except FileNotFoundError:
+            support.save_data(self.controls.as_dict(), 'keybinds.json')
+
+    def handle_event(self, event: pygame.event.Event):
+        if event.type == pygame.KEYDOWN:
             pass
-        support.save_data(settings.KEYBINDS, 'keybinds.json')
-        return settings.KEYBINDS
+        elif event.type == pygame.KEYUP:
+            pass
 
-        # controls
-
+    # controls
     def update_controls(self):
-        controls = {}
-        keys = pygame.key.get_just_pressed()
-        linear_keys = pygame.key.get_pressed()
-        mouse_buttons = pygame.mouse.get_pressed()
+        keys_just_pressed = pygame.key.get_just_pressed()
+        keys_pressed = pygame.key.get_pressed()
+        mouse_pressed = pygame.mouse.get_pressed()
 
-        for control_name, control in self.keybinds.items():
-            control_type = control['type']
-            value = control['value']
-            if control_type == 'key':
-                controls[control_name] = keys[value]
-            if control_type == 'mouse':
-                controls[control_name] = mouse_buttons[value]
-            if control_name in ('up', 'down', 'left', 'right'):
-                controls[control_name] = linear_keys[value]
-        return controls
+        for control in self.controls.__dict__.values():
+            if control.type == ControlType.key:
+                control.just_pressed = keys_just_pressed[control.value]
+                control.pressed = keys_pressed[control.value]
 
-    def input(self):
-        self.controls = self.update_controls()
+            if control.type == ControlType.mouse:
+                control.pressed = mouse_pressed[control.value]
+
+    def handle_controls(self):
+        self.update_controls()
 
         # movement
         if not self.tool_active and not self.blocked:
-            self.direction.x = int(self.controls['right']) - int(self.controls['left'])
-            self.direction.y = int(self.controls['down']) - int(self.controls['up'])
+            self.direction.x = int(self.controls.RIGHT.pressed) - int(self.controls.LEFT.pressed)
+            self.direction.y = int(self.controls.DOWN.pressed) - int(self.controls.UP.pressed)
             self.direction = self.direction.normalize() if self.direction else self.direction
 
             # tool switch
-            if self.controls['next tool']:
+            if self.controls.NEXT_TOOL.just_pressed:
                 self.tool_index = (self.tool_index + 1) % len(self.available_tools)
                 self.current_tool = FarmingTool(self.tool_index + FarmingTool.get_first_tool_id())
 
             # tool use
-            if self.controls['use']:
+            if self.controls.USE.just_pressed:
                 self.tool_active = True
                 self.frame_index = 0
                 self.direction = pygame.Vector2()
@@ -132,16 +131,16 @@ class Player(Entity):
                     self.sounds['swing'].play()
 
             # seed switch
-            if self.controls['next seed']:
+            if self.controls.NEXT_SEED.just_pressed:
                 self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
                 self.current_seed = FarmingTool(self.seed_index + FarmingTool.get_first_seed_id())
 
             # seed used
-            if self.controls['plant']:
+            if self.controls.PLANT.just_pressed:
                 self.use_tool(ItemToUse.SEED)
 
             # interact
-            if self.controls['interact']:
+            if self.controls.INTERACT.just_pressed:
                 self.interact()
 
     def move(self, dt):
@@ -163,8 +162,8 @@ class Player(Entity):
         self.sounds['success'].play()
     
     def update_keybinds(self):
-        self.keybinds = self.import_controls()
+        self.load_controls()
 
     def update(self, dt):
-        self.input()
+        self.handle_controls()
         super().update(dt)

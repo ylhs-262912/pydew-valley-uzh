@@ -19,7 +19,7 @@ class PauseMenu(GeneralMenu):
         if text == 'Quit':
             self.quit_game()
 
-    def handle_events(self, event) -> bool:
+    def handle_event(self, event) -> bool:
         if super().handle_event(event):
             return True
 

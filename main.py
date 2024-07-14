@@ -65,6 +65,11 @@ class Game:
 
     def switch_state(self, state):
         self.current_state = state
+        if self.game_paused():
+            self.level.player.blocked = True
+            self.level.player.direction.update((0, 0))
+        else:
+            self.level.player.blocked = False
 
     def load_assets(self):
         self.tmx_maps = support.tmx_importer('data/maps')
@@ -107,11 +112,12 @@ class Game:
             if self.handle_event(event):
                 continue
 
+            if self.game_paused():
+                if self.menus[self.current_state].handle_event(event):
+                    continue
+
             if self.level.handle_event(event):
                 continue
-
-            if self.game_paused():
-                self.menus[self.current_state].handle_event(event)
 
     def handle_event(self, event) -> bool:
         if event.type == pygame.QUIT:
