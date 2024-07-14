@@ -14,20 +14,32 @@ class _EventDefinition:
     aren't given)."""
 
     _EDEF_CACHE = {}  # INTERNAL USAGE!
-    __slots__ = ("name", "__name__", "code", "attrs", "default_values_for_attrs")
+    _EDEF_NAMES = set()
+    __slots__ = ("name", "__name__", "code", "_attrs", "default_values_for_attrs")
 
     @classmethod
     def from_code(cls, code: int) -> "_EventDefinition":
         """Return the corresponding event definition for a given code."""
         try:
             return cls._EDEF_CACHE[code]
-        except LookupError:
-            raise ValueError(f"given code ({code}) is not linked to a registered event type")
+        except LookupError as exc:
+            raise ValueError(f"given code ({code}) is not linked to a registered event type") from exc
 
     @classmethod
     def add_to_edef_cache(cls, edef: "_EventDefinition"):
         """Add the given event definition to the cache."""
         cls._EDEF_CACHE[edef.code] = edef
+        cls._EDEF_NAMES.add(edef.__name__)
+
+    @classmethod
+    def _check_not_registered(cls, name: str):
+        """Checks that an event type name is available for registration,
+        and raises an error if it isn't.
+
+        :param name: The name to check for.
+        :raise ValueError: if the given name is not available for registering."""
+        if name in cls._EDEF_NAMES:
+            raise ValueError(f"event type '{name}' already exists")
 
     def __init__(
         self,
@@ -36,7 +48,7 @@ class _EventDefinition:
         **attrs: Union[Type, SpecialForm],
     ):
         self.__name__ = self.name = name
-        self.attrs = attrs
+        self._attrs = attrs
         self.default_values_for_attrs = {}
         self.code = code
 
@@ -48,7 +60,12 @@ class _EventDefinition:
             (self.__name__, self.code) + tuple(itm for itm in self.attrs.items())
         )
 
+    @property
+    def attrs(self):
+        return self._attrs
+
     def set_default_for_attr(self, attr: str, value):
+        """Set the default value for an attribute required by this event type."""
         if attr not in self.attrs:
             raise ValueError(
                 f"invalid attribute for event type {self.__name__} : '{attr}'"
@@ -67,6 +84,32 @@ class _EventDefinition:
                     ) from err
             for attr, attr_type in self.attrs.items():
                 if attr in attrs:
+                    # Raise an error if argument is given, but not an instance of
+                    # the expected type(s)
+                    if not isinstance(
+                            attrs[attr],
+                            getattr(
+                                attr_type,
+                                "__args__",
+                                attr_type
+                            )
+                    ):
+                        typenames = ",".join(
+                            map(
+                                lambda tp: tp.__name__,
+                                getattr(
+                                    attr_type,
+                                    "__args__",
+                                    (attr_type,)
+                                )
+                            )
+                        )
+                        raise TypeError(
+                            f"given value ({attrs[attr]}) for attribute {attr}"
+                            f" in event type '{self.__name__}' is an instance of"
+                            f"{type(attrs[attr]).__name__}, expected "
+                            f"one of these types: {typenames}"
+                        )
                     continue
                 else:
                     if "Optional" in repr(attr_type):
@@ -95,15 +138,34 @@ def get_event_def(code: int) -> _EventDefinition:
     return _EventDefinition.from_code(code)
 
 
-def create_custom_event_type(name: str, **attributes: Union[Type, SpecialForm]) -> int:
+def create_custom_event_type(name: str, **attributes: Union[Type, SpecialForm, UnionType]) -> int:
     """Register a new event type and its specifications.
 
     :param name: The definition name (will be used in mostly error messages).
     :param attributes: The event's required attributes. If empty,
     trying to add any attributes to an event of this type will result in
-    a TypeError being raised."""
+    a TypeError being raised.
+    :raise pygame.error: if no more event types can be registered.
+    :raise ValueError: if the given name is already associated
+    to an existing event type."""
+    _EventDefinition._check_not_registered(name)
     created_code = pygame.event.custom_type()
     edef = _EventDefinition(name, created_code, **attributes)
     _EventDefinition.add_to_edef_cache(edef)
     return created_code
+
+
+def post_event(code: int, **attrs: Type | SpecialForm):
+    """Create and post an event of the given type with attributes listed
+    as keyword arguments.
+
+    :param code: The event code to give.
+    :param attrs: The attributes the event will have.
+    :raise TypeError: if required attributes are missing,
+    have been provided a value of the wrong type, or if
+    some attributes that don't exist in the current event type
+    have been given.
+    :raise ValueError: if the given code is not a valid event type."""
+    edef = _EventDefinition.from_code(code)
+    pygame.event.post(edef(**attrs))
 
