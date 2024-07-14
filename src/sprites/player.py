@@ -186,5 +186,5 @@ class Player(Entity):
 
         super().update(dt)
 
-        self.game.emote_manager.update_obj(self, (self.rect.centerx - 64, self.rect.centery - 176))
+        self.game.emote_manager.update_obj(self, (self.rect.centerx - 47, self.rect.centery - 128))
         self.game.emote_manager.update_emote_wheel(self.rect.center)

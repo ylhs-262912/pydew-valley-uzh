@@ -3,7 +3,7 @@ import math
 import pygame
 import pygame.gfxdraw
 
-from src.settings import EMOTE_LAYER, TB_LAYER
+from src.settings import EMOTE_LAYER, TB_LAYER, EMOTE_SIZE
 from src.timer import Timer
 
 
@@ -114,7 +114,7 @@ class EmoteWheel(pygame.sprite.Sprite):
 
         # TODO: The emote wheel should be scaled down to not cover too much gameplay
         self.inner_radius = 48
-        self.outer_radius = 178  # 160
+        self.outer_radius = 128
         self.center = (self.outer_radius + self.inner_radius) / 2
 
         background_surface = pygame.Surface((self.outer_radius * 2, self.outer_radius * 2),
@@ -159,8 +159,8 @@ class EmoteWheel(pygame.sprite.Sprite):
 
             # blit first image of the emote as preview onto the selector wheel
             self._image.blit(self.emote_manager.emotes[self.emotes[i]][0],
-                             (self.outer_radius - 18 * 2 + math.cos(deg) * self.center,
-                              self.outer_radius - 18 * 2 + math.sin(deg) * self.center))
+                             (self.outer_radius - EMOTE_SIZE / 2 + math.cos(deg) * self.center,
+                              self.outer_radius - EMOTE_SIZE / 2 + math.sin(deg) * self.center))
 
         # draw emote wheel outlines
         pygame.draw.aacircle(self._image, (170, 121, 89), (self.outer_radius, self.outer_radius),

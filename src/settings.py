@@ -33,6 +33,8 @@ LAYERS = {
 
 ENABLE_NPCS = False
 
+EMOTE_SIZE = 48
+
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 
 OVERLAY_POSITIONS = {

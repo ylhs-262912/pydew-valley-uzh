@@ -1,17 +1,16 @@
 import pygame
 from pytmx import TiledMap
 
-from src.npc.emotes import EmoteManager
-from src.screens.shop import ShopMenu
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, AniFrames, MapDict, SoundDict, SCALE_FACTOR
-from src.enums import GameState
 from src import support
-
-from src.screens.level import Level
+from src.enums import GameState
 from src.npc.dialog import DialogueManager, prepare_tb_image
+from src.npc.emotes import EmoteManager
+from src.screens.level import Level
 from src.screens.menu import MainMenu
 from src.screens.pause import PauseMenu
 from src.screens.settings import SettingsMenu
+from src.screens.shop import ShopMenu
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, AniFrames, MapDict, SoundDict, EMOTE_SIZE
 
 
 class Game:
@@ -99,14 +98,13 @@ class Game:
         self.tb_main_text_base_surf = self._tb_base.subsurface(pygame.Rect(0, 74, 391, 202))
         prepare_tb_image(self.tb_cname_base_surf, self.tb_main_text_base_surf)
 
-        self.emotes = support.animation_importer("images/ui/emotes/sprout_lands", frame_size=32, resize=18)
+        self.emotes = support.animation_importer("images/ui/emotes/sprout_lands",
+                                                 frame_size=EMOTE_SIZE, resize=EMOTE_SIZE)
         self.emote_dialog_box = pygame.image.load(
             support.resource_path("images/ui/dialog_boxes/tiny_down.png")
         ).convert_alpha()
         self.emote_dialog_box = self.emote_dialog_box.subsurface(pygame.Rect(8, 8, 32, 32))
-        self.emote_dialog_box = pygame.transform.scale_by(self.emote_dialog_box, SCALE_FACTOR)
-        # TODO: The emotes and the emote box should be further scaled down to not cover too much gameplay
-        # self.emote_box = pygame.transform.scale(self.emote_box, (96, 96))
+        self.emote_dialog_box = pygame.transform.scale(self.emote_dialog_box, (32 * 3, 32 * 3))
 
         # sounds
         self.sounds = support.sound_importer('audio', default_volume=0.25)

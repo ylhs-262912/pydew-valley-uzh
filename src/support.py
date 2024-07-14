@@ -70,9 +70,6 @@ def animation_importer(*ani_path: str, frame_size: int = None, resize: int = Non
     if frame_size is None:
         frame_size = TILE_SIZE
 
-    if resize is not None:
-        resize = resize * SCALE_FACTOR
-
     animation_dict = {}
     for folder_path, _, file_names in os.walk(os.path.join(*ani_path)):
         for file_name in file_names:
@@ -86,15 +83,13 @@ def animation_importer(*ani_path: str, frame_size: int = None, resize: int = Non
                     col * frame_size, 0, frame_size, frame_size)
                 cutout_surf.blit(surf, (0, 0), cutout_rect)
 
-                cutout_surf = pygame.transform.scale_by(cutout_surf, SCALE_FACTOR)
-
                 if resize:
                     animation_dict[str(file_name.split('.')[0])].append(
                         pygame.transform.scale(cutout_surf, (resize, resize))
                     )
                 else:
                     animation_dict[str(file_name.split('.')[0])].append(
-                        cutout_surf
+                        pygame.transform.scale_by(cutout_surf, SCALE_FACTOR)
                     )
 
     return animation_dict
