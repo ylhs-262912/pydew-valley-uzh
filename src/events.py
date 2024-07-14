@@ -1,6 +1,6 @@
 """Expansion over Pygame's event management system."""
 import pygame
-from typing import Union, Type, NoReturn
+from typing import Union, Type, NoReturn, Self
 from types import UnionType, NoneType
 
 SpecialForm = type(NoReturn)
@@ -18,7 +18,7 @@ class _EventDefinition:
     __slots__ = ("name", "__name__", "code", "_attrs", "default_values_for_attrs")
 
     @classmethod
-    def from_code(cls, code: int) -> "_EventDefinition":
+    def from_code(cls, code: int) -> Self:
         """Return the corresponding event definition for a given code."""
         try:
             return cls._EDEF_CACHE[code]
@@ -26,7 +26,15 @@ class _EventDefinition:
             raise ValueError(f"given code ({code}) is not linked to a registered event type") from exc
 
     @classmethod
-    def add_to_edef_cache(cls, edef: "_EventDefinition"):
+    def from_name(cls, name: str) -> Self:
+        """Return the corresponding event definition for a given name."""
+        for edef in cls._EDEF_CACHE.values():
+            if edef.__name__ == name:
+                return edef
+        raise ValueError(f"given name '{name}' does not match an existing event type")
+
+    @classmethod
+    def add_to_edef_cache(cls, edef: Self):
         """Add the given event definition to the cache."""
         cls._EDEF_CACHE[edef.code] = edef
         cls._EDEF_NAMES.add(edef.__name__)
@@ -65,12 +73,43 @@ class _EventDefinition:
         return self._attrs
 
     def set_default_for_attr(self, attr: str, value):
-        """Set the default value for an attribute required by this event type."""
+        """Set the default value for an attribute required by this event type.
+
+        :param attr: The attribute to set a default for.
+        :param value: The corresponding default value.
+        :raise TypeError: if the value does not match the type for this attribute
+        given when creating the event type.
+        :raise ValueError: if the attribute does not exist for this event type."""
         if attr not in self.attrs:
             raise ValueError(
                 f"invalid attribute for event type {self.__name__} : '{attr}'"
             )
         else:
+            attr_type = self.attrs[attr]
+            if not isinstance(
+                    value,
+                    getattr(
+                        attr_type,
+                        "__args__",
+                        attr_type
+                    )
+            ):
+                typenames = ",".join(
+                    map(
+                        lambda tp: tp.__name__,
+                        getattr(
+                            attr_type,
+                            "__args__",
+                            (attr_type,)
+                        )
+                    )
+                )
+                raise TypeError(
+                    f"given value ({value}) for attribute {attr}"
+                    f" in event type '{self.__name__}' is an instance of"
+                    f"{type(value).__name__}, expected "
+                    f"one of these types: {typenames}"
+                )
             self.default_values_for_attrs[attr] = value
 
     def __call__(self, **attrs):
@@ -136,6 +175,14 @@ def get_event_def(code: int) -> _EventDefinition:
     :param code: The code you wish to retrive the event specs of.
     :return: The corresponding definition."""
     return _EventDefinition.from_code(code)
+
+
+def get_event_def_from_name(name: str) -> _EventDefinition:
+    """Return the corresponding event type specification for the given name.
+
+    :param name: The name to search for in the existing event types.
+    :return: The corresponding definition."""
+    return _EventDefinition.from_name(name)
 
 
 def create_custom_event_type(name: str, **attributes: Union[Type, SpecialForm, UnionType]) -> int:
