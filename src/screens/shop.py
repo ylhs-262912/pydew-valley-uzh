@@ -1,9 +1,9 @@
 import pygame  # noqa
+
 from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
-from src.enums import InventoryResource
 
 
 # TODO: Refactor this class
@@ -63,6 +63,9 @@ class ShopMenu:
 
         # buy / sell text surface
 
+    def handle_event(self, event) -> bool:
+        pass
+
     def input(self):
         keys = pygame.key.get_just_pressed()
 
@@ -115,7 +118,7 @@ class ShopMenu:
             )
             self.display_surface.blit(surf, pos_rect)
 
-    def update(self):
+    def update(self, dt):
         self.input()
         self.display_money()
 

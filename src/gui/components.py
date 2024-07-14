@@ -1,7 +1,8 @@
 import pygame
-from src.support import resource_path
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
+
+from src.support import resource_path
 
 
 class Component:
@@ -205,21 +206,28 @@ class Slider:
         return self.value
 
     # events
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(mouse_pos() - self.offset):
                 self.drag_active = True
+                return True
 
-        if event.type == pygame.MOUSEBUTTONUP:
-            self.drag_active = False
+        if self.drag_active:
 
-        if event.type == pygame.MOUSEMOTION and self.drag_active:
-            diff = self.max_value - self.min_value
-            origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
-            size = self.rect.width - 10
-            self.value = self.min_value + diff * origin_x / size
-            self.value = max(self.min_value, min(self.max_value, self.value))
-            self.update_volume()
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.drag_active = False
+                return True
+
+            if event.type == pygame.MOUSEMOTION:
+                diff = self.max_value - self.min_value
+                origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
+                size = self.rect.width - 10
+                self.value = self.min_value + diff * origin_x / size
+                self.value = max(self.min_value, min(self.max_value, self.value))
+                self.update_volume()
+                return True
+
+        return False
 
     def update_volume(self):
         self.sounds['music'].set_volume(min((self.value / 1000), 0.4))

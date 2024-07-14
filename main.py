@@ -1,17 +1,17 @@
-import pygame  
+import sys
+
+import pygame
 
 from src import settings
+from src import support
+from src.enums import GameState
+from src.npc.dialog import DialogueManager, prepare_tb_image
+from src.screens.level import Level
+from src.screens.menu_main import MainMenu
+from src.screens.menu_pause import PauseMenu
+from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.enums import GameState
-from src import support
-
-from src.screens.level import Level
-from src.npc.dialog import DialogueManager, prepare_tb_image
-from src.screens.menu import MainMenu
-from src.screens.pause import PauseMenu
-from src.screens.settings import SettingsMenu
-
 
 
 class Game:
@@ -101,9 +101,29 @@ class Game:
     def game_paused(self):
         return self.current_state != GameState.LEVEL
 
+    # events
+    def event_loop(self):
+        for event in pygame.event.get():
+            if self.handle_event(event):
+                continue
+
+            if self.level.handle_event(event):
+                continue
+
+            if self.game_paused():
+                self.menus[self.current_state].handle_event(event)
+
+    def handle_event(self, event) -> bool:
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        return False
+
     def run(self):
         while self.running:
             dt = self.clock.tick() / 1000
+
+            self.event_loop()
 
             self.level.update(dt)
 

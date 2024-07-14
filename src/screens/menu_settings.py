@@ -1,13 +1,10 @@
-
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.support import resource_path
-from src.gui.general_menu import GeneralMenu
-from src.gui.description import KeybindsDescription, VolumeDescription
-from src.enums import GameState
 from pygame.math import Vector2 as vector
 
-
+from src.enums import GameState
+from src.gui.description import KeybindsDescription, VolumeDescription
+from src.gui.general_menu import GeneralMenu
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class SettingsMenu(GeneralMenu):
@@ -45,14 +42,18 @@ class SettingsMenu(GeneralMenu):
             self.keybinds_description.reset_keybinds()
 
     # events
-    def handle_events(self, event):
-        self.current_description.handle_events(event)
-        self.echap(event)
+    def handle_event(self, event) -> bool:
+        return (super().handle_event(event) or
+                self.current_description.handle_event(event) or
+                self.echap(event))
 
-    def echap(self, event):
+    def echap(self, event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
+                return True
+
+        return False
 
     # draw
     def draw(self):

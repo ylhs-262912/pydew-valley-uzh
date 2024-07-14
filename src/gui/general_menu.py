@@ -1,12 +1,11 @@
-
-import sys
 import pygame
+from pygame.math import Vector2 as vector
+from pygame.mouse import get_pressed as mouse_buttons
+
+from src.enums import GameState
+from src.gui.components import Button
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.support import resource_path
-from src.gui.components import Button
-from src.enums import GameState
-from pygame.mouse import get_pressed as mouse_buttons
-from pygame.math import Vector2 as vector
 
 
 class GeneralMenu:
@@ -59,19 +58,8 @@ class GeneralMenu:
             self.buttons.append(button)
             generic_button_rect = rect.move(0, button_height + space)
 
-    # events
-    def event_loop(self):
-        self.mouse_hover()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.quit_game()
-
-            self.click(event)
-            self.handle_events(event)
-
-    def handle_events(self, event):
-        pass
-    
+    def handle_event(self, event) -> bool:
+        return self.handle_click_event(event)
 
     def get_hovered_button(self):
         for button in self.buttons:
@@ -79,11 +67,12 @@ class GeneralMenu:
                 return button
         return None
 
-    def click(self, event):
+    def handle_click_event(self, event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
             self.pressed_button = self.get_hovered_button()
             if self.pressed_button:
                 self.pressed_button.start_press_animation()
+                return True
 
         if event.type == pygame.MOUSEBUTTONUP:
             if self.pressed_button:
@@ -94,6 +83,9 @@ class GeneralMenu:
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
                 self.pressed_button = None
+                return True
+
+        return False
 
     def mouse_hover(self):
         for button in self.buttons:
@@ -109,8 +101,7 @@ class GeneralMenu:
             self.quit_game()
 
     def quit_game(self):
-        pygame.quit()
-        sys.exit()
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     # draw
     def draw_title(self):
@@ -140,6 +131,6 @@ class GeneralMenu:
             button.update(dt)
 
     def update(self, dt):
-        self.event_loop()
+        self.mouse_hover()
         self.update_buttons(dt)
         self.draw()

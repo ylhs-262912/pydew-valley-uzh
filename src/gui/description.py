@@ -1,10 +1,9 @@
-
 import pygame
+from pygame.math import Vector2 as vector
+
 from src.gui.components import Button, Slider, KeySetup
 from src.settings import KEYBINDS
 from src.support import load_data, save_data, resource_path
-from pygame.math import Vector2 as vector
-
 
 
 class Description:
@@ -35,10 +34,10 @@ class Description:
         self.description_slider_surface.set_colorkey('green')
 
     # events
-    def handle_events(self, event):
-        self.mouse_wheel(event)
+    def handle_event(self, event) -> bool:
+        return self.mouse_wheel(event)
 
-    def mouse_wheel(self, event):
+    def mouse_wheel(self, event) -> bool:
         if event.type == pygame.MOUSEWHEEL:
             speed = 10
             self.description_slider_rect.y += event.y * speed
@@ -52,6 +51,8 @@ class Description:
             y = self.description_slider_rect.y
             y_min = height_s1 - height_s2
             self.description_slider_rect.y = max(y_min, y)
+            return True
+        return False
 
     # draw
     def make_surface_transparent(self):
@@ -133,10 +134,10 @@ class KeybindsDescription(Description):
             index += 1
 
     # events
-    def handle_events(self, event):
-        super().handle_events(event)
-        self.set_key(event)
-        self.keysetup_selection(event)
+    def handle_event(self, event) -> bool:
+        return (super().handle_event(event) or
+                self.set_key(event) or
+                self.keysetup_selection(event))
 
     # keybinds
     def get_hovered_key(self):
@@ -148,19 +149,21 @@ class KeybindsDescription(Description):
                 return key
         return None
 
-    def keysetup_selection(self, event):
+    def keysetup_selection(self, event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.remove_selection()
             hovered_key = self.get_hovered_key()
             if hovered_key:
                 self.pressed_key = hovered_key
                 self.pressed_key.start_press_animation()
+            return True
 
         if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-            s1_pos = self.description_rect.topleft
-            s2_pos = self.description_slider_rect.topleft
-            offset = vector(s1_pos) + vector(s2_pos)
             if self.pressed_key:
+                s1_pos = self.description_rect.topleft
+                s2_pos = self.description_slider_rect.topleft
+                offset = vector(s1_pos) + vector(s2_pos)
+
                 self.pressed_key.start_release_animation()
 
                 if self.pressed_key.hover(offset):
@@ -169,7 +172,11 @@ class KeybindsDescription(Description):
                 else:
                     self.remove_selection()
 
-    def set_key(self, event):
+                return True
+
+            return False
+
+    def set_key(self, event) -> bool:
         if self.selection_key:
             s1_pos = self.description_rect.topleft
             s2_pos = self.description_slider_rect.topleft
@@ -183,6 +190,7 @@ class KeybindsDescription(Description):
                     k_type = 'mouse'
                     unicode = None
                     self.update_key_value(path, value, k_type, unicode)
+                    return True
 
             if event.type == pygame.KEYDOWN:
                 path = self.get_path(event.key)
@@ -190,6 +198,9 @@ class KeybindsDescription(Description):
                 k_type = 'key'
                 unicode = event.unicode.upper()
                 self.update_key_value(path, value, k_type, unicode)
+                return True
+
+        return False
 
     def update_key_value(self, path, value, k_type, unicode):
         image = pygame.image.load(path)
@@ -310,9 +321,9 @@ class VolumeDescription(Description):
             pass
 
     # events
-    def handle_events(self, event):
-        super().handle_events(event)
-        self.slider.handle_event(event)
+    def handle_event(self, event) -> bool:
+        return (super().handle_event(event) or
+                self.slider.handle_event(event))
 
     # draw
     def draw_slider(self):

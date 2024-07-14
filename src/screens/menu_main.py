@@ -1,7 +1,7 @@
-
 import pygame
-from src.gui.general_menu import GeneralMenu
+
 from src.enums import GameState
+from src.gui.general_menu import GeneralMenu
 
 
 class MainMenu(GeneralMenu):
@@ -17,9 +17,17 @@ class MainMenu(GeneralMenu):
         if text == 'Quit':
             self.quit_game()
 
-    def handle_events(self, event):
+    def handle_event(self, event) -> bool:
+        if super().handle_event(event):
+            return True
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.quit_game()
+                return True
+
             if event.key == pygame.K_RETURN:
                 self.switch_screen(GameState.LEVEL)
+                return True
+
+        return False

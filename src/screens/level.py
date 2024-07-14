@@ -1,29 +1,27 @@
-import sys
-import pygame 
-
-
 from random import randint
+
+import pygame
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.support import map_coords_to_tile, load_data, resource_path
+from src.enums import FarmingTool, GameState
 from src.groups import AllSprites
+from src.overlay.overlay import Overlay
+from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
-from src.overlay.sky import Sky, Rain
-from src.overlay.overlay import Overlay
 from src.screens.shop import ShopMenu
-from src.sprites.base import Sprite, AnimatedSprite
-from src.sprites.particle import ParticleSprite
-from src.sprites.tree import Tree
-from src.sprites.player import Player
-from src.enums import FarmingTool, GameState
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
     LAYERS,
     MapDict,
 )
+from src.sprites.base import Sprite, AnimatedSprite
+from src.sprites.particle import ParticleSprite
+from src.sprites.player import Player
+from src.sprites.tree import Tree
+from src.support import map_coords_to_tile, load_data, resource_path
 
 
 class Level:
@@ -105,7 +103,7 @@ class Level:
         self.setup_layer_objects('Entities', self.setup_entities)
 
     def setup_layer_tiles(self, layer, setup_func):
-        for  x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
+        for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
             pos = (x, y)
@@ -148,7 +146,8 @@ class Level:
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
     def setup_entities(self, pos, obj):
-        self.entities[obj.name] = Player(game=self.game,
+        self.entities[obj.name] = Player(
+            game=self.game,
             pos=pos,
             frames=self.frames['character']['rabbit'],
             groups=self.all_sprites,
@@ -170,22 +169,6 @@ class Level:
             pass
         self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
-
-
-    # events
-    def event_loop(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            self.echap(event)
-
-    def echap(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                self.switch_screen(GameState.PAUSE)
-                self.player.direction.xy = (0, 0)
 
 
     # plant collision
@@ -240,6 +223,18 @@ class Level:
 
     def toggle_shop(self):
         self.shop_active = not self.shop_active
+        self.player.blocked = self.shop_active
+        if self.shop_active:
+            self.switch_screen(GameState.SHOP)
+
+    def handle_event(self, event) -> bool:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.switch_screen(GameState.PAUSE)
+                self.player.direction.xy = (0, 0)
+                return True
+
+        return False
 
     # reset
     def reset(self):
@@ -305,7 +300,6 @@ class Level:
 
     def update(self, dt):
         # update
-        self.event_loop()
         self.plant_collision()
         self.update_rain()
         self.update_day()
