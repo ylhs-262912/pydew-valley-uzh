@@ -50,9 +50,9 @@ class ShopMenu:
     def setup(self):
 
         # create the text surfaces
-
         for item in self.options:
-            text_surf = self.font.render(item.as_serialised_string(), False, 'Black')
+            text = item.as_serialised_string()
+            text_surf = self.font.render(text, False, 'Black')
             self.text_surfs.append(text_surf)
             self.total_height += text_surf.get_height() + (self.padding * 2)
 
