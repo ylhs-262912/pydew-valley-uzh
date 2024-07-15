@@ -1,3 +1,4 @@
+import pygame
 import pygame.freetype
 import pytmx
 from src.warnings import *
@@ -11,6 +12,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
+SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
 
 EMOTE_LAYER = 11
 TB_LAYER = 12

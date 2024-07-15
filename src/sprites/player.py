@@ -1,11 +1,26 @@
-import pygame
+from __future__ import annotations
+
+import pygame  # noqa
 from typing import Callable
+from pygame.math import Vector2 as vector
 from src import settings, savefile, support
 from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.settings import SCALE_FACTOR
-from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
 
+_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
+_SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_INV_DEFAULT_AMOUNTS = (
+    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
+    _SEED_INVENTORY_DEFAULT_AMOUNT
+)
+
+_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
+_SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_INV_DEFAULT_AMOUNTS = (
+    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
+    _SEED_INVENTORY_DEFAULT_AMOUNT
+)
 
 class Player(Entity):
     def __init__(
@@ -111,7 +126,7 @@ class Player(Entity):
         self.controls = self.update_controls()
 
         # movement
-        if not self.tool_active and not self.blocked and not self.game.emote_manager._show_emote_wheel:
+        if not self.tool_active and not self.blocked:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
             self.direction = self.direction.normalize() if self.direction else self.direction
