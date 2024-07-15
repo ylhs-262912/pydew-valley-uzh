@@ -7,7 +7,7 @@ from src.enums import GameState
 
 class PauseMenu(GeneralMenu):
     def __init__(self, switch_screen):
-        options = ['Resume', 'Options', 'Quit']
+        options = ['Resume', 'Options', "Save and Resume", 'Quit']
         title = 'Pause Menu'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size)
@@ -17,6 +17,8 @@ class PauseMenu(GeneralMenu):
             self.switch_screen(GameState.LEVEL)
         if text == 'Options':
             self.switch_screen(GameState.SETTINGS)
+        if text == "Save and Resume":
+            self.switch_screen(GameState.LEVEL)
         if text == 'Quit':
             self.quit_game()
 

@@ -16,6 +16,7 @@ import random
 
 
 class NPC(NPCBase):
+
     def __init__(
             self,
             pos: Coordinate,
