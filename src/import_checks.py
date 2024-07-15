@@ -1,6 +1,6 @@
-
 import sys
 import pygame
+import warnings
 
 
 if not getattr(pygame, "IS_CE", False):
