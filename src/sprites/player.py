@@ -26,7 +26,7 @@ class Player(Entity):
             frames: dict[str, settings.AniFrames],
             groups,
             collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable[[FarmingTool, tuple[int, int], Self], None],
+            apply_tool: Callable[[FarmingTool, tuple[int, int], Entity], None],
             interact: Callable[[], None],
             sounds: settings.SoundDict,
             font: pygame.font.Font):

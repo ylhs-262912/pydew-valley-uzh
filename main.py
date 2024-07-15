@@ -60,7 +60,7 @@ class Game:
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
-            GameState.LEVEL: self.level
+            # GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -132,7 +132,10 @@ class Game:
 
             self.event_loop()
 
-            self.menus[self.current_state].update(dt)
+            self.level.update(dt)
+
+            if self.game_paused():
+                self.menus[self.current_state].update(dt)
 
             pygame.display.update()
 

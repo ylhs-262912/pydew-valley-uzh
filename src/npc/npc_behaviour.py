@@ -66,17 +66,17 @@ class NPCBehaviourMethods:
         empty_farmland_available = 0
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "F" in entry:
-                    if "X" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.map.get((x, y))
+                if entry and entry.farmable:
+                    if not entry.hoed:
                         empty_farmland_available += 1
                     else:
-                        if "P" not in entry:
+                        if not entry.planted:
                             unplanted_farmland_available += 1
                         else:
-                            if "W" not in entry:
+                            if not entry.watered:
                                 unwatered_farmland_available += 1
 
         if empty_farmland_available <= 0:
@@ -91,10 +91,10 @@ class NPCBehaviourMethods:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "F" in entry and "X" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.map.get((x, y))
+                if entry and entry.farmable and not entry.hoed:
                     possible_coordinates.append((x, y))
 
         if not possible_coordinates:
@@ -117,14 +117,14 @@ class NPCBehaviourMethods:
         """
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "X" in entry:
-                    if "P" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.map.get((x, y))
+                if entry and entry.hoed:
+                    if not entry.planted:
                         unplanted_farmland_available += 1
                     else:
-                        if "W" not in entry:
+                        if not entry.watered:
                             unwatered_farmland_available += 1
 
         if unplanted_farmland_available <= 0:
@@ -139,10 +139,10 @@ class NPCBehaviourMethods:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "X" in entry and "P" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.map.get((x, y))
+                if entry and entry.hoed and not entry.planted:
                     possible_coordinates.append((x, y))
 
         if not possible_coordinates:
@@ -164,10 +164,10 @@ class NPCBehaviourMethods:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "P" in entry and "W" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.map.get((x, y))
+                if entry and entry.planted and not entry.watered:
                     possible_coordinates.append((x, y))
 
         if not possible_coordinates:
@@ -200,10 +200,6 @@ class NPCBehaviourMethods:
                           context.npc.pf_path[-1][1] - context.npc.rect.centery / 64)
 
             facing = (facing[0], 0) if abs(facing[0]) > abs(facing[1]) else (0, facing[1])
-
-            # Deleting the final step of the path leads to the NPC always standing in reach of the tile they want to
-            #  interact with (cf. Entity.get_target_pos)
-            context.npc.pf_path.pop(-1)
 
             @context.npc.on_path_completion
             def inner():

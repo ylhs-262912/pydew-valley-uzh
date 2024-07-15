@@ -12,8 +12,6 @@ class MainMenu(GeneralMenu):
         title = 'Main Menu'
         size = (400, 400)
         super().__init__(title, options, switch_screen, size)
-        
-    def button_action(self, text: str):
 
     def button_action(self, text):
         if text == 'Play':

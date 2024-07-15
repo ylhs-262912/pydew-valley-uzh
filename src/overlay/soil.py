@@ -1,15 +1,26 @@
 import pygame
 from random import choice
 
+from pytmx import TiledMap
+
 from src.enums import SeedType
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
 from src.sprites.plant import Plant
-from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR
+from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR, SoundDict
 
 
 class Tile(Sprite):
-    def __init__(self, pos, group):
+    pos: tuple[int, int]
+
+    farmable: bool
+    hoed: bool
+    planted: bool
+    watered: bool
+
+    plant: Plant | None
+
+    def __init__(self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]):
         size = TILE_SIZE * SCALE_FACTOR
         surf = pygame.Surface((size, size))
         surf.fill("green")
@@ -25,7 +36,18 @@ class Tile(Sprite):
 
 
 class SoilLayer:
-    def __init__(self, all_sprites, tmx_map, frames, sounds):
+    all_sprites: pygame.sprite.Group
+    level_frames: dict
+
+    soil_sprites: pygame.sprite.Group
+    water_sprites: pygame.sprite.Group
+    plant_sprites: pygame.sprite.Group
+
+    map: dict[tuple[int, int], Tile]
+    sounds: SoundDict
+    neighbor_directions: list[tuple[int, int]]
+
+    def __init__(self, all_sprites: pygame.sprite.Group, tmx_map: TiledMap, frames: dict, sounds: SoundDict):
         self.all_sprites = all_sprites
         self.level_frames = frames
 
@@ -44,7 +66,7 @@ class SoilLayer:
     def create_soil_map(self, tmx_map):
         farmable_layer = tmx_map.get_layer_by_name("Farmable")
         for x, y, _ in farmable_layer.tiles():
-            tile = Tile((x, y), [self.all_sprites, self.soil_sprites])
+            tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
             tile.farmable = True
             self.map[(x, y)] = tile
 
