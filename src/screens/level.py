@@ -60,9 +60,9 @@ class Level:
         # soil
         self.soil_layer = SoilLayer(
             self.all_sprites,
-            self.collision_sprites,
             tmx_maps['main'],
             frames["level"],
+            sounds
         )
 
         # weather
@@ -116,7 +116,7 @@ class Level:
         NPCBehaviourMethods.init()
         self.setup_object_layer('NPCs', self.setup_npc)
 
-    def setup_tile_layer(self, layer, setup_func):
+    def setup_layer_tiles(self, layer, setup_func):
         for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
@@ -177,8 +177,9 @@ class Level:
         image = pygame.Surface(size)
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
-    def setup_entity(self, pos, obj):
-        self.entities[obj.name] = Player(game=self.game,
+    def setup_entities(self, pos, obj):
+        self.entities[obj.name] = Player(
+            game=self.game,
             pos=pos,
             frames=self.frames['character']['rabbit'],
             groups=(self.all_sprites, self.collision_sprites),
@@ -229,7 +230,6 @@ class Level:
                 self.switch_screen(GameState.PAUSE)
                 self.player.direction.xy = (0, 0)
 
-
     # plant collision
     def plant_collision(self):
         if self.soil_layer.plant_sprites:
@@ -263,14 +263,12 @@ class Level:
                         tree.hit(entity)
                         self.sounds['axe'].play()
             case FarmingTool.HOE:
-                self.soil_layer.hoe(pos, hoe_sound=self.sounds['hoe'])
+                self.soil_layer.hoe(pos)
             case FarmingTool.WATERING_CAN:
                 self.soil_layer.water(pos)
                 self.sounds['water'].play()
             case _:  # All seeds
-                self.soil_layer.plant_seed(pos, tool,
-                                           entity.inventory, plant_sounds=[self.sounds['plant'],
-                                                                           self.sounds['cant_plant']])
+                self.soil_layer.plant(pos, tool, entity.inventory)
 
     def interact(self):
         collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)
