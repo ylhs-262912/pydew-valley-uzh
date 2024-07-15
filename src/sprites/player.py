@@ -1,13 +1,20 @@
 from typing import Callable, Self
 
-import pygame
+import pygame  # noqa
 
 from src import settings, savefile, support
 from src.controls import Controls, ControlType
 from src.enums import InventoryResource, FarmingTool, ItemToUse
-from src.npc.npc import _INV_DEFAULT_AMOUNTS, _SEED_INVENTORY_DEFAULT_AMOUNT, _NONSEED_INVENTORY_DEFAULT_AMOUNT
 from src.settings import SCALE_FACTOR
 from src.sprites.entity import Entity
+
+
+_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
+_SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_INV_DEFAULT_AMOUNTS = (
+    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
+    _SEED_INVENTORY_DEFAULT_AMOUNT
+)
 
 
 class Player(Entity):
@@ -16,7 +23,7 @@ class Player(Entity):
             game,
             pos: settings.Coordinate,
             frames: dict[str, settings.AniFrames],
-            groups: tuple[pygame.sprite.Group],
+            groups,
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[[FarmingTool, tuple[int, int], Self], None],
             interact: Callable[[], None],
@@ -155,6 +162,6 @@ class Player(Entity):
         super().add_resource(resource, amount)
         self.sounds['success'].play()
 
-    def update(self, dt: float):
+    def update(self, dt):
         self.handle_controls()
         super().update(dt)
