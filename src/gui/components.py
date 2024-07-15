@@ -134,7 +134,7 @@ class KeySetup(Component):
     def __init__(self, name: str, control: Control, unicode: str, pos: tuple[int, int], image: pygame.Surface):
         # params
         self.name = name
-        self.type = control.type
+        self.type = control.control_type
         self.value = control.value
         self.title = control.text
         self.unicode = unicode

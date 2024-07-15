@@ -43,7 +43,7 @@ class SoilLayer:
     water_sprites: pygame.sprite.Group
     plant_sprites: pygame.sprite.Group
 
-    map: dict[tuple[int, int], Tile]
+    tiles: dict[tuple[int, int], Tile]
     sounds: SoundDict
     neighbor_directions: list[tuple[int, int]]
 
@@ -55,24 +55,24 @@ class SoilLayer:
         self.water_sprites = pygame.sprite.Group()
         self.plant_sprites = pygame.sprite.Group()
 
-        self.map = {}
-        self.create_soil_map(tmx_map)
+        self.tiles = {}
+        self.create_soil_tiles(tmx_map)
         self.sounds = sounds
         self.neighbor_directions = [
             (0, -1), (1, -1), (1, 0), (1, 1),
             (0, 1), (-1, 1), (-1, 0), (-1, -1)
         ]
 
-    def create_soil_map(self, tmx_map):
+    def create_soil_tiles(self, tmx_map):
         farmable_layer = tmx_map.get_layer_by_name("Farmable")
         for x, y, _ in farmable_layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
             tile.farmable = True
-            self.map[(x, y)] = tile
+            self.tiles[(x, y)] = tile
 
     def update_tile_image(self, tile, pos):
         for dx, dy in self.neighbor_directions:
-            neighbor = self.map.get((pos[0] + dx, pos[1] + dy))
+            neighbor = self.tiles.get((pos[0] + dx, pos[1] + dy))
             if neighbor and neighbor.hoed:
                 neighbor_pos = (pos[0] + dx, pos[1] + dy)
                 neighbor_type = self.determine_tile_type(neighbor_pos)
@@ -82,14 +82,14 @@ class SoilLayer:
         tile.image = self.level_frames["soil"][tile_type]
 
     def hoe(self, pos):
-        tile = self.map.get(pos)
+        tile = self.tiles.get(pos)
         if tile and tile.farmable and not tile.hoed:
             tile.hoed = True
             self.sounds["hoe"].play()
             self.update_tile_image(tile, pos)
 
     def water(self, pos):
-        tile = self.map.get(pos)
+        tile = self.tiles.get(pos)
         if tile and tile.hoed and not tile.watered:
             tile.watered = True
             self.sounds["water"].play()
@@ -99,12 +99,12 @@ class SoilLayer:
             Sprite(
                 tile_to_screen(pos),
                 water_frame,
-                [self.all_sprites, self.water_sprites],
+                (self.all_sprites, self.water_sprites),
                 LAYERS["soil water"],
             )
 
     def plant(self, pos, seed, inventory):
-        tile = self.map.get(pos)
+        tile = self.tiles.get(pos)
         seed_amount = inventory.get(seed)
         seed_type = SeedType.from_farming_tool(seed)
 
@@ -112,7 +112,7 @@ class SoilLayer:
             tile.planted = True
             seed_name = seed_type.as_plant_name()
             frames = self.level_frames[seed_name]
-            groups = [self.all_sprites, self.plant_sprites]
+            groups = (self.all_sprites, self.plant_sprites)
             tile.plant = Plant(seed_type, groups, tile, frames)
             inventory[seed] -= 1
             self.sounds["plant"].play()
@@ -120,10 +120,10 @@ class SoilLayer:
 
     def determine_tile_type(self, pos):
         x, y = pos
-        tile_above = self.map.get((x, y - 1))
-        tile_below = self.map.get((x, y + 1))
-        tile_right = self.map.get((x + 1, y))
-        tile_left = self.map.get((x - 1, y))
+        tile_above = self.tiles.get((x, y - 1))
+        tile_below = self.tiles.get((x, y + 1))
+        tile_right = self.tiles.get((x + 1, y))
+        tile_left = self.tiles.get((x - 1, y))
 
         hoed_above = tile_above.hoed if tile_above else False
         hoed_below = tile_below.hoed if tile_below else False

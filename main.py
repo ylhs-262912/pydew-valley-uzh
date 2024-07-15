@@ -46,10 +46,12 @@ class Game:
 
         # screens
         self.level = Level(self, self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.player = self.level.player
+
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level.player.controls)
-        self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
+        self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
 
         # dialog
         self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
@@ -67,10 +69,10 @@ class Game:
     def switch_state(self, state: GameState):
         self.current_state = state
         if self.game_paused():
-            self.level.player.blocked = True
-            self.level.player.direction.update((0, 0))
+            self.player.blocked = True
+            self.player.direction.update((0, 0))
         else:
-            self.level.player.blocked = False
+            self.player.blocked = False
 
     def load_assets(self):
         self.tmx_maps = support.tmx_importer('data/maps')

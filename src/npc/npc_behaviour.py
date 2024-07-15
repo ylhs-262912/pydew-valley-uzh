@@ -68,7 +68,7 @@ class NPCBehaviourMethods:
         unwatered_farmland_available = 0
         for y in range(context.npc.pf_grid.height):
             for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.map.get((x, y))
+                entry = context.npc.soil_layer.tiles.get((x, y))
                 if entry and entry.farmable:
                     if not entry.hoed:
                         empty_farmland_available += 1
@@ -93,7 +93,7 @@ class NPCBehaviourMethods:
         possible_coordinates = []
         for y in range(context.npc.pf_grid.height):
             for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.map.get((x, y))
+                entry = context.npc.soil_layer.tiles.get((x, y))
                 if entry and entry.farmable and not entry.hoed:
                     possible_coordinates.append((x, y))
 
@@ -119,7 +119,7 @@ class NPCBehaviourMethods:
         unwatered_farmland_available = 0
         for y in range(context.npc.pf_grid.height):
             for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.map.get((x, y))
+                entry = context.npc.soil_layer.tiles.get((x, y))
                 if entry and entry.hoed:
                     if not entry.planted:
                         unplanted_farmland_available += 1
@@ -141,7 +141,7 @@ class NPCBehaviourMethods:
         possible_coordinates = []
         for y in range(context.npc.pf_grid.height):
             for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.map.get((x, y))
+                entry = context.npc.soil_layer.tiles.get((x, y))
                 if entry and entry.hoed and not entry.planted:
                     possible_coordinates.append((x, y))
 
@@ -166,7 +166,7 @@ class NPCBehaviourMethods:
         possible_coordinates = []
         for y in range(context.npc.pf_grid.height):
             for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.map.get((x, y))
+                entry = context.npc.soil_layer.tiles.get((x, y))
                 if entry and entry.planted and not entry.watered:
                     possible_coordinates.append((x, y))
 

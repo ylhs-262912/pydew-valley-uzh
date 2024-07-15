@@ -196,7 +196,7 @@ class KeybindsDescription(Description):
 
         k_unicode = unicode if self.is_generic(unicode) else None
         self.selection_key.unicode = k_unicode
-        self.selection_key.type = k_type
+        self.selection_key.control_type = k_type
         self.selection_key.symbol_image = image
         self.selection_key.value = value
 

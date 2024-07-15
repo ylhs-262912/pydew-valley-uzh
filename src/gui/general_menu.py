@@ -67,15 +67,6 @@ class GeneralMenu:
             generic_button_rect = rect.move(0, button_height + space)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
-        return self.handle_click_event(event)
-
-    def get_hovered_button(self):
-        for button in self.buttons:
-            if button.mouse_hover():
-                return button
-        return None
-
-    def handle_click_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
             self.pressed_button = self.get_hovered_button()
             if self.pressed_button:
@@ -94,6 +85,12 @@ class GeneralMenu:
                 return True
 
         return False
+
+    def get_hovered_button(self):
+        for button in self.buttons:
+            if button.mouse_hover():
+                return button
+        return None
 
     def mouse_hover(self):
         for button in self.buttons:

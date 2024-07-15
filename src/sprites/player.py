@@ -103,11 +103,11 @@ class Player(Entity):
         mouse_pressed = pygame.mouse.get_pressed()
 
         for control in self.controls.all_controls():
-            if control.type == ControlType.key:
+            if control.control_type == ControlType.key:
                 control.just_pressed = keys_just_pressed[control.value]
                 control.pressed = keys_pressed[control.value]
 
-            if control.type == ControlType.mouse:
+            if control.control_type == ControlType.mouse:
                 control.pressed = mouse_pressed[control.value]
 
     def handle_controls(self):
