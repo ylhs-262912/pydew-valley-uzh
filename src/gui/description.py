@@ -82,7 +82,7 @@ class Description:
 
 
 class KeybindsDescription(Description):
-    def __init__(self, pos, controls: Type[Controls]):
+    def __init__(self, pos: tuple[int, int], controls: Type[Controls]):
         super().__init__(pos)
         self.controls = controls
 
@@ -98,18 +98,10 @@ class KeybindsDescription(Description):
         self.reset_button = Button('Reset', self.font, reset_btn_rect, (0, 0))
 
     def save_data(self):
-        data = {}
-
         for key in self.keys_group:
-            value = {}
-            value['type'] = key.type
-            value['value'] = key.value
-            value['text'] = key.title
             self.controls[key.name].value = key.value
 
-            data[key.name] = value
-
-        save_data(data, 'keybinds.json')
+        save_data(self.controls.as_dict(), 'keybinds.json')
 
     def create_keybinds(self):
         self.keys_group.clear()
@@ -145,7 +137,7 @@ class KeybindsDescription(Description):
                 return key
         return None
 
-    def handle_click(self, event) -> bool:
+    def handle_click(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.remove_selection()
             hovered_key = self.get_hovered_key()
@@ -172,7 +164,7 @@ class KeybindsDescription(Description):
 
             return False
 
-    def set_key(self, event) -> bool:
+    def set_key(self, event: pygame.event.Event) -> bool:
         if self.selection_key:
             s1_pos = self.description_rect.topleft
             s2_pos = self.description_slider_rect.topleft
@@ -204,7 +196,7 @@ class KeybindsDescription(Description):
 
         k_unicode = unicode if self.is_generic(unicode) else None
         self.selection_key.unicode = k_unicode
-        self.selection_key.type = k_type.value
+        self.selection_key.type = k_type
         self.selection_key.symbol_image = image
         self.selection_key.value = value
 
@@ -219,14 +211,16 @@ class KeybindsDescription(Description):
         self.controls.load_default_keybinds()
         self.create_keybinds()
 
-    def is_generic(self, symbol):
+    @staticmethod
+    def is_generic(symbol: str | None):
         if not symbol or len(symbol) != 1:
             return False
         alphanumeric = symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
         other = symbol in "!@#$%^&*()_+-=[]{}|;':,.<>/?"
         return alphanumeric or other
 
-    def get_path(self, keydown):
+    @staticmethod
+    def get_path(keydown: int):
         if keydown == 0:
             return resource_path("images/keys/lclick.png")
         if keydown == 2:
@@ -253,7 +247,8 @@ class KeybindsDescription(Description):
 
         return resource_path("images/keys/generic.png")
 
-    def value_to_unicode(self, value):
+    @staticmethod
+    def value_to_unicode(value: int | None):
         if value is None:
             return None
         if value in range(48, 58):
@@ -263,7 +258,7 @@ class KeybindsDescription(Description):
         return None
 
     # update
-    def update_keybinds(self, dt):
+    def update_keybinds(self, dt: float):
         for key in self.keys_group:
             key.update(dt)
 

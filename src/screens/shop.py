@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import pygame  # noqa
 
 from src.enums import GameState
@@ -5,12 +7,13 @@ from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
+from src.sprites.player import Player
 
 
 # TODO: Refactor this class
 
 class ShopMenu:
-    def __init__(self, player, switch_screen, font):
+    def __init__(self, player: Player, switch_screen: Callable[[GameState], None], font):
 
         # general setup
 
@@ -64,7 +67,7 @@ class ShopMenu:
 
         # buy / sell text surface
 
-    def handle_event(self, event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.LEVEL)
@@ -90,7 +93,7 @@ class ShopMenu:
 
         return False
 
-    def show_entry(self, text_surf, amount, top, index, text_index):
+    def show_entry(self, text_surf: pygame.Surface, amount: int, top: int, index: int, text_index: int):
 
         # background
         bg_rect = pygame.Rect(self.main_rect.left, top, self.width,
@@ -120,7 +123,7 @@ class ShopMenu:
             )
             self.display_surface.blit(surf, pos_rect)
 
-    def update(self, dt):
+    def update(self, dt: int):
         self.display_money()
 
         for text_index, text_surf in enumerate(self.text_surfs):

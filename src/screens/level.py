@@ -1,9 +1,12 @@
+from collections.abc import Callable
 from random import randint
 
 import pygame
+import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
+from src import settings
 from src.enums import FarmingTool, GameState
 from src.groups import AllSprites
 from src.overlay.overlay import Overlay
@@ -17,6 +20,7 @@ from src.settings import (
     MapDict,
 )
 from src.sprites.base import Sprite, AnimatedSprite
+from src.sprites.entity import Entity
 from src.sprites.particle import ParticleSprite
 from src.sprites.player import Player
 from src.sprites.tree import Tree
@@ -24,7 +28,10 @@ from src.support import map_coords_to_tile, load_data, resource_path
 
 
 class Level:
-    def __init__(self, game, switch, tmx_maps: MapDict, frames, sounds):
+    def __init__(
+            self, game, switch: Callable[[GameState], None], tmx_maps: MapDict,
+            frames: dict[str, dict], sounds: settings.SoundDict
+    ):
         # main setup
         self.display_surface = pygame.display.get_surface()
         self.game = game
@@ -86,7 +93,6 @@ class Level:
         self.overlay = Overlay(self.player, frames['overlay'])
         self.shop_active = False
 
-
     # setup
     def setup(self):
         self.activate_music()
@@ -100,29 +106,29 @@ class Level:
         self.setup_layer_objects('Interactions', self.setup_interactions)
         self.setup_layer_objects('Entities', self.setup_entities)
 
-    def setup_layer_tiles(self, layer, setup_func):
+    def setup_layer_tiles(self, layer: str, setup_func: Callable[[tuple[int, int], pygame.Surface], None]):
         for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
             pos = (x, y)
             setup_func(pos, surf)
 
-    def setup_environment(self, pos, surf):
+    def setup_environment(self, pos: tuple[int, int], surf: pygame.Surface):
         image = pygame.transform.scale_by(surf, SCALE_FACTOR)
         Sprite(pos, image, self.all_sprites, LAYERS['lower ground'])
 
-    def setup_water(self, pos, surf):
+    def setup_water(self, pos: tuple[int, int], surf: pygame.Surface):
         image = self.frames['level']['animations']['water']
         AnimatedSprite(pos, image, self.all_sprites, LAYERS['water'])
 
-    def setup_layer_objects(self, layer, setup_func):
+    def setup_layer_objects(self, layer: str, setup_func: Callable[[tuple[int, int], pytmx.TiledObject], None]):
         for obj in self.tmx_maps['main'].get_layer_by_name(layer):
             x = obj.x * SCALE_FACTOR
             y = obj.y * SCALE_FACTOR
             pos = (x, y)
             setup_func(pos, obj)
 
-    def setup_objects(self, pos, obj):
+    def setup_objects(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
 
         if obj.name == 'Tree':
@@ -133,17 +139,17 @@ class Level:
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
 
-    def setup_collisions(self, pos, obj):
+    def setup_collisions(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.collision_sprites)
 
-    def setup_interactions(self, pos, obj):
+    def setup_interactions(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
-    def setup_entities(self, pos, obj):
+    def setup_entities(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.entities[obj.name] = Player(
             game=self.game,
             pos=pos,
@@ -168,7 +174,6 @@ class Level:
         self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
 
-
     # plant collision
     def plant_collision(self):
         if self.soil_layer.plant_sprites:
@@ -191,10 +196,10 @@ class Level:
                     plant.kill()
                     self.create_particle(plant)
 
-    def create_particle(self, sprite):
+    def create_particle(self, sprite: pygame.sprite.Sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
-    def apply_tool(self, tool: FarmingTool, pos, entity):
+    def apply_tool(self, tool: FarmingTool, pos: tuple[int, int], entity: Entity):
         match tool:
             case FarmingTool.AXE:
                 for tree in self.tree_sprites:
@@ -219,7 +224,7 @@ class Level:
             if collided_interactions[0].name == 'Trader':
                 self.switch_screen(GameState.SHOP)
 
-    def handle_event(self, event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
@@ -266,7 +271,6 @@ class Level:
             entity.blocked = True
             entity.direction = pygame.Vector2(0, 0)
 
-
     # draw
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -278,7 +282,6 @@ class Level:
         self.draw_overlay()
         self.sky.display(dt)
 
-
     # update
     def update_rain(self):
         if self.raining and not self.shop_active:
@@ -289,7 +292,7 @@ class Level:
             self.transition.play()
             self.sky.set_time(6, 0)   # set to 0600 hours upon sleeping
 
-    def update(self, dt):
+    def update(self, dt: float):
         # update
         self.plant_collision()
         self.update_rain()

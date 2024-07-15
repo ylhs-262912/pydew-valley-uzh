@@ -135,8 +135,6 @@ class KeySetup(Component):
         # params
         self.name = name
         self.type = control.type
-        if isinstance(self.type, ControlType):
-            self.type = self.type.value
         self.value = control.value
         self.title = control.text
         self.unicode = unicode
@@ -158,7 +156,18 @@ class KeySetup(Component):
         midright = self.rect.midright - vector(10, 0)
         self.symbol_image_rect = self.symbol_image.get_rect(midright=midright)
 
-    def hover(self, offset):
+    @property
+    def type(self) -> str:
+        return self._type
+
+    @type.setter
+    def type(self, value: ControlType | str):
+        if isinstance(value, ControlType):
+            self._type = value.value
+        else:
+            self._type = value
+
+    def hover(self, offset: pygame.math.Vector2):
         self.offset = vector(offset)
         self.hover_active = self.rect.collidepoint(mouse_pos() - self.offset)
         return self.hover_active
@@ -178,7 +187,7 @@ class KeySetup(Component):
         self.surface.blit(self.symbol_image, self.symbol_image_rect)
         self.surface.blit(text_surf, text_rect)
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface):
         self.surface = surface
         pygame.draw.rect(self.surface, self.bg_color, self.rect, 0, 4)
         self.draw_key_name()

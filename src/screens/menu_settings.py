@@ -1,8 +1,10 @@
+from collections.abc import Callable
 from typing import Type
 
 import pygame
 from pygame.math import Vector2 as vector
 
+from src import settings
 from src.controls import Controls
 from src.enums import GameState
 from src.gui.description import KeybindsDescription, VolumeDescription
@@ -11,7 +13,9 @@ from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class SettingsMenu(GeneralMenu):
-    def __init__(self, switch_screen, sounds, controls: Type[Controls]):
+    def __init__(
+            self, switch_screen: Callable[[GameState], None], sounds: settings.SoundDict, controls: Type[Controls]
+    ):
         options = ['Keybinds', 'Volume', 'Back']
         title = 'Settings'
         size = (400, 400)
@@ -29,7 +33,7 @@ class SettingsMenu(GeneralMenu):
         self.buttons.append(self.keybinds_description.reset_button)
 
     # setup
-    def button_action(self, text):
+    def button_action(self, text: str):
         if text == 'Keybinds':
             self.current_description = self.keybinds_description
         if text == 'Volume':
@@ -42,12 +46,12 @@ class SettingsMenu(GeneralMenu):
             self.keybinds_description.reset_keybinds()
 
     # events
-    def handle_event(self, event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> bool:
         return (super().handle_event(event) or
                 self.current_description.handle_event(event) or
                 self.echap(event))
 
-    def echap(self, event) -> bool:
+    def echap(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
@@ -61,7 +65,7 @@ class SettingsMenu(GeneralMenu):
         self.current_description.draw()
 
     # update
-    def update(self, dt):
+    def update(self, dt: float):
         self.keybinds_description.update_keybinds(dt)
         super().update(dt)
 

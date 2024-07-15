@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 import pygame
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pressed as mouse_buttons
@@ -9,7 +11,13 @@ from src.support import resource_path
 
 
 class GeneralMenu:
-    def __init__(self,  title, options, switch, size, center=vector()):
+    def __init__(
+            self, title: str, options: list[str], switch: Callable[[GameState], None],
+            size: tuple[int, int], center: vector = None
+    ):
+        if center is None:
+            center = vector()
+
         # general setup
         self.display_surface = pygame.display.get_surface()
         self.buttons_surface = pygame.Surface(size)
@@ -58,7 +66,7 @@ class GeneralMenu:
             self.buttons.append(button)
             generic_button_rect = rect.move(0, button_height + space)
 
-    def handle_event(self, event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> bool:
         return self.handle_click_event(event)
 
     def get_hovered_button(self):
@@ -67,7 +75,7 @@ class GeneralMenu:
                 return button
         return None
 
-    def handle_click_event(self, event) -> bool:
+    def handle_click_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
             self.pressed_button = self.get_hovered_button()
             if self.pressed_button:
@@ -94,7 +102,7 @@ class GeneralMenu:
                 return
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-    def button_action(self, text):
+    def button_action(self, text: str):
         if text == 'Play':
             self.switch_screen(GameState.LEVEL)
         if text == 'Quit':
@@ -126,11 +134,11 @@ class GeneralMenu:
         self.draw_buttons()
 
     # update
-    def update_buttons(self, dt):
+    def update_buttons(self, dt: float):
         for button in self.buttons:
             button.update(dt)
 
-    def update(self, dt):
+    def update(self, dt: float):
         self.mouse_hover()
         self.update_buttons(dt)
         self.draw()

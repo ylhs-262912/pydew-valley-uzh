@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Self
 
 import pygame
 
@@ -15,11 +15,11 @@ class Player(Entity):
             self,
             game,
             pos: settings.Coordinate,
-            frames,
-            groups,
+            frames: dict[str, settings.AniFrames],
+            groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable,
-            interact: Callable,
+            apply_tool: Callable[[FarmingTool, tuple[int, int], Self], None],
+            interact: Callable[[], None],
             sounds: settings.SoundDict,
             font: pygame.font.Font):
 
@@ -88,12 +88,6 @@ class Player(Entity):
         except FileNotFoundError:
             support.save_data(self.controls.as_dict(), 'keybinds.json')
 
-    def handle_event(self, event: pygame.event.Event):
-        if event.type == pygame.KEYDOWN:
-            pass
-        elif event.type == pygame.KEYUP:
-            pass
-
     # controls
     def update_controls(self):
         keys_just_pressed = pygame.key.get_just_pressed()
@@ -143,7 +137,7 @@ class Player(Entity):
             if self.controls.INTERACT.just_pressed:
                 self.interact()
 
-    def move(self, dt):
+    def move(self, dt: float):
         self.hitbox_rect.x += self.direction.x * self.speed * dt
         self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
@@ -157,10 +151,10 @@ class Player(Entity):
     def get_current_seed_string(self):
         return self.available_seeds[self.seed_index]
 
-    def add_resource(self, resource, amount=1):
+    def add_resource(self, resource: InventoryResource, amount: int = 1):
         super().add_resource(resource, amount)
         self.sounds['success'].play()
 
-    def update(self, dt):
+    def update(self, dt: float):
         self.handle_controls()
         super().update(dt)

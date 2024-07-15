@@ -63,7 +63,7 @@ class Game:
         }
         self.current_state = GameState.MAIN_MENU
 
-    def switch_state(self, state):
+    def switch_state(self, state: GameState):
         self.current_state = state
         if self.game_paused():
             self.level.player.blocked = True
@@ -119,7 +119,7 @@ class Game:
             if self.level.handle_event(event):
                 continue
 
-    def handle_event(self, event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
