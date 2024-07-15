@@ -2,6 +2,7 @@ import pygame
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
 
+from src.controls import Control, ControlType
 from src.support import resource_path
 
 
@@ -130,12 +131,14 @@ class Button(Component):
 
 
 class KeySetup(Component):
-    def __init__(self, name, unicode, params, pos, image):
+    def __init__(self, name: str, control: Control, unicode: str, pos: tuple[int, int], image: pygame.Surface):
         # params
         self.name = name
-        self.type = params['type']
-        self.value = params['value']
-        self.title = params['text']
+        self.type = control.type
+        if isinstance(self.type, ControlType):
+            self.type = self.type.value
+        self.value = control.value
+        self.title = control.text
         self.unicode = unicode
 
         # design

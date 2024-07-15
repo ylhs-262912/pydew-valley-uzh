@@ -30,7 +30,7 @@ class Game:
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps = None
+        self.tmx_maps = {}
         self.sounds = None
         self.font = None
         self._tb_base = None
@@ -48,7 +48,7 @@ class Game:
         self.level = Level(self, self.switch_state, self.tmx_maps, self.frames, self.sounds)
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level.player.controls)
         self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
 
         # dialog

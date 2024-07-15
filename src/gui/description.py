@@ -1,8 +1,10 @@
+from typing import Type
+
 import pygame
 from pygame.math import Vector2 as vector
 
+from src.controls import Controls, ControlType
 from src.gui.components import Button, Slider, KeySetup
-from src.settings import KEYBINDS
 from src.support import load_data, save_data, resource_path
 
 
@@ -80,30 +82,20 @@ class Description:
 
 
 class KeybindsDescription(Description):
-    def __init__(self, pos):
+    def __init__(self, pos, controls: Type[Controls]):
         super().__init__(pos)
-        self.default_keybinds = None
-        self.keybinds = {}
+        self.controls = controls
+
         self.keys_group = []
         self.selection_key = None
         self.pressed_key = None
 
         # setup
-        self.import_data()
         self.create_keybinds()
         reset_btn_rect = pygame.Rect(0, 0, 100, 50)
         reset_btn_rect.bottomright = self.rect.bottomleft - vector(10, 0)
 
         self.reset_button = Button('Reset', self.font, reset_btn_rect, (0, 0))
-
-    # setup
-    def import_data(self):
-        self.default_keybinds = KEYBINDS
-
-        try:
-            self.keybinds = load_data('keybinds.json')
-        except FileNotFoundError:
-            self.keybinds = self.default_keybinds
 
     def save_data(self):
         data = {}
@@ -113,31 +105,35 @@ class KeybindsDescription(Description):
             value['type'] = key.type
             value['value'] = key.value
             value['text'] = key.title
+            self.controls[key.name].value = key.value
 
             data[key.name] = value
 
         save_data(data, 'keybinds.json')
 
     def create_keybinds(self):
+        self.keys_group.clear()
         index = 0
-        for name, params in self.keybinds.items():
-            unicode = self.value_to_unicode(params['value'])
-            path = self.get_path(params['value'])
+        for control in self.controls.all_controls():
+            name = self.controls(control).name
+
+            unicode = self.value_to_unicode(control.value)
+            path = self.get_path(control.value)
 
             image = pygame.image.load(path)
             image = pygame.transform.scale(image, (40, 40))
 
             topleft = (10, 10 + 60 * index)
-            key_setup_button = KeySetup(name, unicode, params, topleft, image)
+            key_setup_button = KeySetup(name, control, unicode, topleft, image)
             self.keys_group.append(key_setup_button)
 
             index += 1
 
     # events
-    def handle_event(self, event) -> bool:
+    def handle_event(self, event: pygame.event.Event) -> bool:
         return (super().handle_event(event) or
                 self.set_key(event) or
-                self.keysetup_selection(event))
+                self.handle_click(event))
 
     # keybinds
     def get_hovered_key(self):
@@ -149,7 +145,7 @@ class KeybindsDescription(Description):
                 return key
         return None
 
-    def keysetup_selection(self, event) -> bool:
+    def handle_click(self, event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.remove_selection()
             hovered_key = self.get_hovered_key()
@@ -187,7 +183,7 @@ class KeybindsDescription(Description):
                     lpath = resource_path('images/keys/lclick.png')
                     path = lpath if event.button == 1 else rpath
                     value = 0 if event.button == 1 else 2
-                    k_type = 'mouse'
+                    k_type = ControlType.mouse
                     unicode = None
                     self.update_key_value(path, value, k_type, unicode)
                     return True
@@ -195,20 +191,20 @@ class KeybindsDescription(Description):
             if event.type == pygame.KEYDOWN:
                 path = self.get_path(event.key)
                 value = event.key
-                k_type = 'key'
+                k_type = ControlType.key
                 unicode = event.unicode.upper()
                 self.update_key_value(path, value, k_type, unicode)
                 return True
 
         return False
 
-    def update_key_value(self, path, value, k_type, unicode):
+    def update_key_value(self, path: str, value: int, k_type: ControlType, unicode: str | None):
         image = pygame.image.load(path)
         image = pygame.transform.scale(image, (40, 40))
 
         k_unicode = unicode if self.is_generic(unicode) else None
         self.selection_key.unicode = k_unicode
-        self.selection_key.type = k_type
+        self.selection_key.type = k_type.value
         self.selection_key.symbol_image = image
         self.selection_key.value = value
 
@@ -220,21 +216,15 @@ class KeybindsDescription(Description):
             self.pressed_key = None
 
     def reset_keybinds(self):
-        for key in self.keys_group:
-            key.value = self.default_keybinds[key.name]['value']
-            key.type = self.default_keybinds[key.name]['type']
-            key.unicode = self.value_to_unicode(key.value)
-            path = self.get_path(key.value)
-            image = pygame.image.load(path)
-            image = pygame.transform.scale(image, (40, 40))
-            key.symbol_image = image
+        self.controls.load_default_keybinds()
+        self.create_keybinds()
 
     def is_generic(self, symbol):
         if not symbol or len(symbol) != 1:
             return False
-        alpha = symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+        alphanumeric = symbol in "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
         other = symbol in "!@#$%^&*()_+-=[]{}|;':,.<>/?"
-        return alpha or other
+        return alphanumeric or other
 
     def get_path(self, keydown):
         if keydown == 0:

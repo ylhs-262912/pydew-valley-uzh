@@ -36,7 +36,7 @@ class Player(Entity):
         )
 
         # movement
-        self.controls = Controls()
+        self.controls = Controls
         self.load_controls()
         self.speed = 250
         self.blocked = False
@@ -100,7 +100,7 @@ class Player(Entity):
         keys_pressed = pygame.key.get_pressed()
         mouse_pressed = pygame.mouse.get_pressed()
 
-        for control in self.controls.__dict__.values():
+        for control in self.controls.all_controls():
             if control.type == ControlType.key:
                 control.just_pressed = keys_just_pressed[control.value]
                 control.pressed = keys_pressed[control.value]
@@ -160,9 +160,6 @@ class Player(Entity):
     def add_resource(self, resource, amount=1):
         super().add_resource(resource, amount)
         self.sounds['success'].play()
-    
-    def update_keybinds(self):
-        self.load_controls()
 
     def update(self, dt):
         self.handle_controls()
