@@ -1,3 +1,4 @@
+import math
 from collections.abc import Callable
 from random import randint
 
@@ -9,6 +10,8 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 from src import settings
 from src.enums import FarmingTool, GameState
 from src.groups import AllSprites
+from src.npc.npc import NPC
+from src.npc.npc_behaviour import NPCBehaviourMethods
 from src.overlay.overlay import Overlay
 from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
@@ -38,8 +41,9 @@ class Level:
         self.switch_screen = switch
 
         # pathfinding
+        self.pf_matrix_size = ()
         self.pf_matrix = []
-        self.pf_grid: PF_Grid
+        self.pf_grid: PF_Grid | None = None
         self.pf_finder = PF_AStarFinder()
 
         # sprite groups
@@ -61,7 +65,8 @@ class Level:
             self.all_sprites,
             self.collision_sprites,
             tmx_maps['main'],
-            frames["level"])
+            frames["level"],
+        )
 
         # weather
         self.sky = Sky()
@@ -97,16 +102,23 @@ class Level:
     def setup(self):
         self.activate_music()
 
-        self.setup_layer_tiles('Lower ground', self.setup_environment)
-        self.setup_layer_tiles('Upper ground', self.setup_environment)
-        self.setup_layer_tiles('Water', self.setup_water)
+        self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
+        self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
 
-        self.setup_layer_objects('Collidable objects', self.setup_objects)
-        self.setup_layer_objects('Collisions', self.setup_collisions)
-        self.setup_layer_objects('Interactions', self.setup_interactions)
-        self.setup_layer_objects('Entities', self.setup_entities)
+        self.setup_tile_layer('Lower ground', self.setup_environment)
+        self.setup_tile_layer('Upper ground', self.setup_environment)
+        self.setup_tile_layer('Water', self.setup_water)
 
-    def setup_layer_tiles(self, layer: str, setup_func: Callable[[tuple[int, int], pygame.Surface], None]):
+        self.setup_object_layer('Collidable objects', self.setup_collideable_object)
+        self.setup_object_layer('Collisions', self.setup_collision)
+        self.setup_object_layer('Interactions', self.setup_interaction)
+        self.setup_object_layer('Entities', self.setup_entity)
+
+        self.pf_grid = PF_Grid(matrix=self.pf_matrix)
+        NPCBehaviourMethods.init()
+        self.setup_object_layer('NPCs', self.setup_npc)
+
+    def setup_tile_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pygame.Surface], None]):
         for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
@@ -121,14 +133,28 @@ class Level:
         image = self.frames['level']['animations']['water']
         AnimatedSprite(pos, image, self.all_sprites, LAYERS['water'])
 
-    def setup_layer_objects(self, layer: str, setup_func: Callable[[tuple[int, int], pytmx.TiledObject], None]):
+    def setup_object_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pytmx.TiledObject], None]):
         for obj in self.tmx_maps['main'].get_layer_by_name(layer):
             x = obj.x * SCALE_FACTOR
             y = obj.y * SCALE_FACTOR
             pos = (x, y)
             setup_func(pos, obj)
 
-    def setup_objects(self, pos: tuple[int, int], obj: pytmx.TiledObject):
+    def pf_matrix_setup_collision(self, pos: tuple[float, float], size: tuple[float, float]):
+        """
+        :param pos: Absolute position of collision rect (x, y)
+        :param size: Absolute size of collision rect (width, height)
+        """
+        tile_x = int(pos[0] / TILE_SIZE)
+        tile_y = int(pos[1] / TILE_SIZE)
+        tile_w = math.ceil((pos[0] + size[0]) / TILE_SIZE) - tile_x
+        tile_h = math.ceil((pos[1] + size[1]) / TILE_SIZE) - tile_y
+
+        for w in range(tile_w):
+            for h in range(tile_h):
+                self.pf_matrix[tile_y + h][tile_x + w] = 0
+
+    def setup_collideable_object(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
 
         if obj.name == 'Tree':
@@ -139,27 +165,44 @@ class Level:
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
 
-    def setup_collisions(self, pos: tuple[int, int], obj: pytmx.TiledObject):
+        self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
+
+    def setup_collision(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.collision_sprites)
 
-    def setup_interactions(self, pos: tuple[int, int], obj: pytmx.TiledObject):
+        self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
+
+    def setup_interaction(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
-    def setup_entities(self, pos: tuple[int, int], obj: pytmx.TiledObject):
+    def setup_entity(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.entities[obj.name] = Player(
             game=self.game,
             pos=pos,
             frames=self.frames['character']['rabbit'],
-            groups=self.all_sprites,
+            groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             interact=self.interact,
             sounds=self.sounds,
             font=self.font
+        )
+
+    def setup_npc(self, pos: tuple[int, int], obj: pytmx.TiledObject):
+        self.npcs[obj.name] = NPC(
+            pos=pos,
+            frames=self.frames['character']['rabbit'],
+            groups=(self.all_sprites, self.collision_sprites,),
+            collision_sprites=self.collision_sprites,
+            apply_tool=self.apply_tool,
+            soil_layer=self.soil_layer,
+            pf_matrix=self.pf_matrix,
+            pf_grid=self.pf_grid,
+            pf_finder=self.pf_finder
         )
 
     def get_map_size(self):
