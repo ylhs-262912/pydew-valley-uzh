@@ -7,7 +7,6 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src import settings
 from src.enums import FarmingTool, GameState
 from src.groups import AllSprites
 from src.npc.npc import NPC
@@ -21,6 +20,8 @@ from src.settings import (
     SCALE_FACTOR,
     LAYERS,
     MapDict,
+    ENABLE_NPCS,
+    SoundDict,
 )
 from src.sprites.base import Sprite, AnimatedSprite
 from src.sprites.entity import Entity
@@ -33,7 +34,7 @@ from src.support import map_coords_to_tile, load_data, resource_path
 class Level:
     def __init__(
             self, game, switch: Callable[[GameState], None], tmx_maps: MapDict,
-            frames: dict[str, dict], sounds: settings.SoundDict
+            frames: dict[str, dict], sounds: SoundDict
     ):
         # main setup
         self.display_surface = pygame.display.get_surface()
@@ -41,7 +42,7 @@ class Level:
         self.switch_screen = switch
 
         # pathfinding
-        self.pf_matrix_size = ()
+        self.pf_matrix_size = (0, 0)
         self.pf_matrix = []
         self.pf_grid: PF_Grid | None = None
         self.pf_finder = PF_AStarFinder()
@@ -102,8 +103,9 @@ class Level:
     def setup(self):
         self.activate_music()
 
-        self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
-        self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
+        if ENABLE_NPCS:
+            self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
+            self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
 
         self.setup_tile_layer('Lower ground', self.setup_environment)
         self.setup_tile_layer('Upper ground', self.setup_environment)
@@ -114,9 +116,10 @@ class Level:
         self.setup_object_layer('Interactions', self.setup_interaction)
         self.setup_object_layer('Entities', self.setup_entity)
 
-        self.pf_grid = PF_Grid(matrix=self.pf_matrix)
-        NPCBehaviourMethods.init()
-        self.setup_object_layer('NPCs', self.setup_npc)
+        if ENABLE_NPCS:
+            self.pf_grid = PF_Grid(matrix=self.pf_matrix)
+            NPCBehaviourMethods.init()
+            self.setup_object_layer('NPCs', self.setup_npc)
 
     def setup_tile_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pygame.Surface], None]):
         for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
@@ -165,14 +168,16 @@ class Level:
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
 
-        self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
+        if ENABLE_NPCS:
+            self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_collision(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
         Sprite(pos, image, self.collision_sprites)
 
-        self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
+        if ENABLE_NPCS:
+            self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_interaction(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
