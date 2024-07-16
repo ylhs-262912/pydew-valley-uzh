@@ -1,4 +1,3 @@
-
 import pygame
 from src.gui.general_menu import GeneralMenu
 from src.enums import GameState
@@ -17,7 +16,7 @@ class PauseMenu(GeneralMenu):
         if text == 'Options':
             self.switch_screen(GameState.SETTINGS)
         if text == "Save and Resume":
-            self.switch_screen(GameState.LEVEL)
+            self.switch_screen(GameState.SAVE_AND_RESUME)
         if text == 'Quit':
             self.quit_game()
 

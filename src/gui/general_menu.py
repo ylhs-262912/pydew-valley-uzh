@@ -9,6 +9,9 @@ from pygame.mouse import get_pressed as mouse_buttons
 from pygame.math import Vector2 as vector
 
 
+_SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
+
 class GeneralMenu:
     def __init__(self,  title, options, switch, size, center=vector()):
         # general setup
@@ -36,8 +39,7 @@ class GeneralMenu:
     # setup
     def rect_setup(self):
         self.rect = pygame.Rect((0, 0), self.size)
-        screen_center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-        self.rect.center = self.center or screen_center
+        self.rect.center = self.center or _SCREEN_CENTER
 
     def button_setup(self):
         # button setup
@@ -55,7 +57,7 @@ class GeneralMenu:
         # create buttons
         for title in self.options:
             rect = generic_button_rect
-            button = Button(title, self.font, rect, self.rect.topleft)
+            button = Button(title, rect, self.rect.topleft, self.font)
             self.buttons.append(button)
             generic_button_rect = rect.move(0, button_height + space)
 
@@ -71,7 +73,6 @@ class GeneralMenu:
 
     def handle_events(self, event):
         pass
-    
 
     def get_hovered_button(self):
         for button in self.buttons:

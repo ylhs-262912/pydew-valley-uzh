@@ -66,6 +66,9 @@ class Game:
 
     def switch_state(self, state):
         self.current_state = state
+        if self.current_state == GameState.SAVE_AND_RESUME:
+            self.level.player.save()
+            self.current_state = GameState.LEVEL
 
     def load_assets(self):
         self.tmx_maps = support.tmx_importer('data/maps')
