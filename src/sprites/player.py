@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pygame  # noqa
 from typing import Callable
-from pygame.math import Vector2 as vector
 from src import settings, savefile, support
+from src.gui.interface.emotes import PlayerEmoteManager
+from src.npc.bases.npc_base import NPCBase
 from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.settings import SCALE_FACTOR
@@ -15,28 +16,21 @@ _INV_DEFAULT_AMOUNTS = (
     _SEED_INVENTORY_DEFAULT_AMOUNT
 )
 
-_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
-_SEED_INVENTORY_DEFAULT_AMOUNT = 5
-_INV_DEFAULT_AMOUNTS = (
-    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
-    _SEED_INVENTORY_DEFAULT_AMOUNT
-)
 
 class Player(Entity):
     def __init__(
             self,
-            game,
             pos: settings.Coordinate,
             frames,
             groups,
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable,
             interact: Callable,
+            emote_manager: PlayerEmoteManager,
             sounds: settings.SoundDict,
             font: pygame.font.Font):
 
         save_data = savefile.load_savefile()
-        self.game = game
 
         super().__init__(
             pos,
@@ -55,9 +49,9 @@ class Player(Entity):
         self.paused = False
         self.font = font
         self.interact = interact
+        self.emote_manager = emote_manager
+        self.focused_entity: NPCBase = None
         self.sounds = sounds
-
-        # menus
 
         self.current_tool = save_data.get("current_tool", FarmingTool.get_first_tool_id())
         self.tool_index = self.current_tool.value - 1
@@ -78,6 +72,17 @@ class Player(Entity):
 
         # sounds
         self.sounds = sounds
+
+    def focus_entity(self, entity: Entity):
+        if self.focused_entity:
+            self.focused_entity.unfocus()
+        self.focused_entity = entity
+        self.focused_entity.focus()
+
+    def unfocus_entity(self):
+        if self.focused_entity:
+            self.focused_entity.unfocus()
+        self.focused_entity = None
 
     def save(self):
         # We compact the inventory first, i.e. remove any default values if they didn't change.
@@ -126,7 +131,7 @@ class Player(Entity):
         self.controls = self.update_controls()
 
         # movement
-        if not self.tool_active and not self.blocked:
+        if not self.tool_active and not self.blocked and not self.emote_manager.emote_wheel.visible:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
             self.direction = self.direction.normalize() if self.direction else self.direction
@@ -160,20 +165,20 @@ class Player(Entity):
         # emotes
         if not self.blocked:
             if self.controls["emote wheel"]:
-                self.game.emote_manager.toggle_emote_wheel(self.rect.center)
-                if self.game.emote_manager._show_emote_wheel:
+                self.emote_manager.toggle_emote_wheel()
+                if self.emote_manager.emote_wheel.visible:
                     self.direction = pygame.Vector2()
 
-            if self.game.emote_manager._show_emote_wheel:
+            if self.emote_manager.emote_wheel.visible:
                 if self.controls["key_right"]:
-                    self.game.emote_manager._emote_wheel.emote_index += 1
+                    self.emote_manager.emote_wheel.emote_index += 1
 
                 if self.controls["key_left"]:
-                    self.game.emote_manager._emote_wheel.emote_index -= 1
+                    self.emote_manager.emote_wheel.emote_index -= 1
 
                 if self.controls["use"]:
-                    self.game.emote_manager.show_emote(self, self.game.emote_manager._emote_wheel.current_emote)
-                    self.game.emote_manager.toggle_emote_wheel(self.rect.center)
+                    self.emote_manager.show_emote(self, self.emote_manager.emote_wheel._current_emote)
+                    self.emote_manager.toggle_emote_wheel()
 
     def move(self, dt):
         self.hitbox_rect.x += self.direction.x * self.speed * dt
@@ -201,5 +206,5 @@ class Player(Entity):
 
         super().update(dt)
 
-        self.game.emote_manager.update_obj(self, (self.rect.centerx - 47, self.rect.centery - 128))
-        self.game.emote_manager.update_emote_wheel(self.rect.center)
+        self.emote_manager.update_obj(self, (self.rect.centerx - 47, self.rect.centery - 128))
+        self.emote_manager.update_emote_wheel(self.rect.center)

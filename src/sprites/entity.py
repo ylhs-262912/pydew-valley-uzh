@@ -1,11 +1,13 @@
-
-
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Self
+
 import pygame
+
 from src import settings
-from src.sprites.base import CollideableSprite, LAYERS
 from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.gui.interface.indicators import Indicators
+from src.settings import EMOTE_LAYER
+from src.sprites.base import CollideableSprite, LAYERS, Sprite
 from src.support import screen_to_tile
 
 
@@ -14,16 +16,18 @@ class Entity(CollideableSprite, ABC):
             self,
             pos: settings.Coordinate,
             frames: dict[str, settings.AniFrames],
-            groups: tuple[pygame.sprite.Group],
+            groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             shrink: tuple[int, int],
-            apply_tool: Callable,
+            apply_tool: Callable[[FarmingTool, tuple[int, int], Self], None],
             z=LAYERS['main']):
 
         self.frames = frames
         self.frame_index = 0
         self.state = 'idle'
         self.facing_direction = 'down'
+        self.focused = False
+        self.focused_indicator = None
 
         super().__init__(
             pos,
@@ -69,16 +73,32 @@ class Entity(CollideableSprite, ABC):
     def get_state(self):
         self.state = 'walk' if self.direction else 'idle'
 
-    def get_facing_direction(self):
+    def get_facing_direction(self, direction: tuple[float, float] = None):
+        """
+        :param direction: Direction to use.
+                          If it is not set, uses self.direction instead
+        """
         # prioritizes vertical animations, flip if statements to get horizontal
         # ones
-        if self.direction.x:
-            self.facing_direction = 'right' if self.direction.x > 0 else 'left'
-        if self.direction.y:
-            self.facing_direction = 'down' if self.direction.y > 0 else 'up'
+        if not direction:
+            direction = self.direction
+        if direction[0]:
+            self.facing_direction = 'right' if direction[0] > 0 else 'left'
+        if direction[1]:
+            self.facing_direction = 'down' if direction[1] > 0 else 'up'
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
+
+    def focus(self):
+        self.focused = True
+        self.focused_indicator = Sprite((0, 0), Indicators.ENTITY_FOCUSED, self.groups()[0], EMOTE_LAYER)
+
+    def unfocus(self):
+        self.focused = False
+        if self.focused_indicator:
+            self.focused_indicator.kill()
+            self.focused_indicator = None
 
     @abstractmethod
     def move(self, dt):
@@ -124,7 +144,7 @@ class Entity(CollideableSprite, ABC):
                 self.frame_index) % len(current_animation)]
         else:
             tool_animation = self.frames[self.available_tools[self.tool_index]
-            ][self.facing_direction]
+                                         ][self.facing_direction]
             if self.frame_index < len(tool_animation):
                 self.image = tool_animation[min(
                     (round(self.frame_index), len(tool_animation) - 1))]
@@ -133,7 +153,6 @@ class Entity(CollideableSprite, ABC):
                     self.just_used_tool = True
                     self.use_tool(ItemToUse.REGULAR_TOOL)
             else:
-                # self.use_tool('tool')
                 self.state = 'idle'
                 self.tool_active = False
                 self.just_used_tool = False
@@ -145,6 +164,10 @@ class Entity(CollideableSprite, ABC):
         self.inventory[resource] += amount
 
     def update(self, dt):
+        if self.focused_indicator:
+            self.focused_indicator.rect.update((self.rect.centerx - self.focused_indicator.rect.width / 2,
+                                                self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
+                                               self.focused_indicator.rect.size)
         self.get_state()
         self.get_facing_direction()
         self.move(dt)

@@ -7,8 +7,8 @@ from typing import Callable
 import pygame
 
 from src.enums import FarmingTool, ItemToUse
-from src.npc.behaviour_base import Context, Selector, Sequence, Condition, Action
-from src.npc.npc_base import NPCBase
+from src.npc.bases.behaviour_base import Context, Selector, Sequence, Condition, Action
+from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
 
 

@@ -1,6 +1,6 @@
 
 import pygame
-from src.gui.components import Button, Slider, KeySetup
+from src.gui.menu.components import Button, Slider, KeySetup
 from src.settings import KEYBINDS
 from src.support import load_data, save_data, resource_path
 from pygame.math import Vector2 as vector

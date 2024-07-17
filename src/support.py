@@ -1,21 +1,25 @@
+import json
+import math
 import os
-import pygame
-import pytmx
 import sys
+
+import pygame
+import pygame.gfxdraw
+import pytmx
+
 from src import settings
 from src.settings import (
     CHAR_TILE_SIZE,
     SCALE_FACTOR,
     TILE_SIZE,
 )
-import json
 
 
 def resource_path(relative_path: str):
     """Get absolute path to resource, works for dev and for PyInstaller"""
     relative_path = relative_path.replace("/", os.sep)
     try:
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS  # noqa
     except AttributeError:
         base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     return os.path.join(base_path, relative_path)
@@ -180,10 +184,33 @@ def flip_items(d: dict) -> dict:
         ret[val] = key
     return ret
 
+
 def tile_to_screen(pos):
     tile_size = TILE_SIZE * SCALE_FACTOR
     return pos[0] * tile_size, pos[1] * tile_size
 
+
 def screen_to_tile(pos):
     tile_size = TILE_SIZE * SCALE_FACTOR
     return pos[0] // tile_size, pos[1] // tile_size
+
+
+def draw_aa_line(
+        surface: pygame.Surface,
+        center_pos: tuple[float, float],
+        thickness: int,
+        length: int,
+        deg: float,
+        color: tuple[int, int, int],
+):
+        ul = (center_pos[0] + (length / 2.) * math.cos(deg) - (thickness / 2.) * math.sin(deg),
+              center_pos[1] + (thickness / 2.) * math.cos(deg) + (length / 2.) * math.sin(deg))
+        ur = (center_pos[0] - (length / 2.) * math.cos(deg) - (thickness / 2.) * math.sin(deg),
+              center_pos[1] + (thickness / 2.) * math.cos(deg) - (length / 2.) * math.sin(deg))
+        bl = (center_pos[0] + (length / 2.) * math.cos(deg) + (thickness / 2.) * math.sin(deg),
+              center_pos[1] - (thickness / 2.) * math.cos(deg) + (length / 2.) * math.sin(deg))
+        br = (center_pos[0] - (length / 2.) * math.cos(deg) + (thickness / 2.) * math.sin(deg),
+              center_pos[1] - (thickness / 2.) * math.cos(deg) - (length / 2.) * math.sin(deg))
+
+        pygame.gfxdraw.aapolygon(surface, (ul, ur, br, bl), color)
+        pygame.gfxdraw.filled_polygon(surface, (ul, ur, br, bl), color)

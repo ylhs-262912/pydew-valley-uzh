@@ -1,6 +1,6 @@
 
 import pygame
-from src.gui.general_menu import GeneralMenu
+from src.gui.menu.general_menu import GeneralMenu
 from src.enums import GameState
 
 

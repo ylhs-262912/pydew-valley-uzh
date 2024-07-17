@@ -33,7 +33,7 @@ class SoilLayer:
         self.water_sprites = pygame.sprite.Group()
         self.plant_sprites = pygame.sprite.Group()
 
-        self.map = {}
+        self.tiles = {}
         self.create_soil_map(tmx_map)
         self.sounds = sounds
         self.neighbor_directions = [
@@ -46,11 +46,11 @@ class SoilLayer:
         for x, y, _ in farmable_layer.tiles():
             tile = Tile((x, y), [self.all_sprites, self.soil_sprites])
             tile.farmable = True
-            self.map[(x, y)] = tile
+            self.tiles[(x, y)] = tile
 
     def update_tile_image(self, tile, pos):
         for dx, dy in self.neighbor_directions:
-            neighbor = self.map.get((pos[0] + dx, pos[1] + dy))
+            neighbor = self.tiles.get((pos[0] + dx, pos[1] + dy))
             if neighbor and neighbor.hoed:
                 neighbor_pos = (pos[0] + dx, pos[1] + dy)
                 neighbor_type = self.determine_tile_type(neighbor_pos)
@@ -60,17 +60,18 @@ class SoilLayer:
         tile.image = self.level_frames["soil"][tile_type]
 
     def hoe(self, pos):
-        tile = self.map.get(pos)
+        tile = self.tiles.get(pos)
         if tile and tile.farmable and not tile.hoed:
             tile.hoed = True
             self.sounds["hoe"].play()
             self.update_tile_image(tile, pos)
 
-    def water(self, pos):
-        tile = self.map.get(pos)
+    def water(self, pos, play_sound: bool = True):
+        tile = self.tiles.get(pos)
         if tile and tile.hoed and not tile.watered:
             tile.watered = True
-            self.sounds["water"].play()
+            if play_sound:
+                self.sounds["water"].play()
 
             water_frames = list(self.level_frames["soil water"].values())
             water_frame = choice(water_frames)
@@ -82,7 +83,7 @@ class SoilLayer:
             )
 
     def plant(self, pos, seed, inventory):
-        tile = self.map.get(pos)
+        tile = self.tiles.get(pos)
         seed_amount = inventory.get(seed)
         seed_type = SeedType.from_farming_tool(seed)
 
@@ -98,10 +99,10 @@ class SoilLayer:
 
     def determine_tile_type(self, pos):
         x, y = pos
-        tile_above = self.map.get((x, y - 1))
-        tile_below = self.map.get((x, y + 1))
-        tile_right = self.map.get((x + 1, y))
-        tile_left = self.map.get((x - 1, y))
+        tile_above = self.tiles.get((x, y - 1))
+        tile_below = self.tiles.get((x, y + 1))
+        tile_right = self.tiles.get((x + 1, y))
+        tile_left = self.tiles.get((x - 1, y))
 
         hoed_above = tile_above.hoed if tile_above else False
         hoed_below = tile_below.hoed if tile_below else False

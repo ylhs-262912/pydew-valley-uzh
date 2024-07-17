@@ -3,8 +3,9 @@ from pytmx import TiledMap
 
 from src import support
 from src.enums import GameState
-from src.npc.dialog import DialogueManager, prepare_tb_image
-from src.npc.emotes import EmoteManager
+from src.gui.interface.dialog import DialogueManager
+
+from src.gui.setup import setup_gui
 from src.screens.level import Level
 from src.screens.menu import MainMenu
 from src.screens.pause import PauseMenu
@@ -31,12 +32,7 @@ class Game:
         # assets
         self.tmx_maps: dict[str, TiledMap] | None = None
 
-        self._tb_base: pygame.Surface | None = None
-        self.tb_main_text_base_surf: pygame.Surface | None = None
-        self.tb_cname_base_surf: pygame.Surface | None = None
-
         self.emotes: AniFrames | None = None
-        self.emote_dialog_box: pygame.Surface | None = None
 
         self.font: pygame.font.Font | None = None
         self.sounds: SoundDict | None = None
@@ -47,17 +43,14 @@ class Game:
         self.load_assets()
 
         # screens
-        self.level = Level(self, self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
         self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
 
         # dialog
-        self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
-
-        # emotes
-        self.emote_manager = EmoteManager(self.level.all_sprites, self.emotes, self.emote_dialog_box)
+        self.dm = DialogueManager(self.level.all_sprites)
 
         # screens
         self.menus = {
@@ -76,6 +69,11 @@ class Game:
         self.tmx_maps = support.tmx_importer('data/maps')
 
         # frames
+        self.character_frames = support.character_importer('images/characters')
+
+        self.emotes = support.animation_importer("images/ui/emotes/sprout_lands",
+                                                 frame_size=EMOTE_SIZE, resize=EMOTE_SIZE)
+
         self.level_frames = {
             'animations': support.animation_importer('images', 'animations'),
             'soil': support.import_folder_dict('images/soil'),
@@ -87,25 +85,15 @@ class Game:
             'objects': support.import_folder_dict('images/objects')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
-        self.character_frames = support.character_importer('images/characters')
+
         self.frames = {
             'character': self.character_frames,
+            "emotes": self.emotes,
             'level': self.level_frames,
             'overlay': self.overlay_frames
         }
 
-        self._tb_base = pygame.image.load(support.resource_path("images/textbox.png")).convert_alpha()
-        self.tb_cname_base_surf = self._tb_base.subsurface(pygame.Rect(0, 0, 212, 67))
-        self.tb_main_text_base_surf = self._tb_base.subsurface(pygame.Rect(0, 74, 391, 202))
-        prepare_tb_image(self.tb_cname_base_surf, self.tb_main_text_base_surf)
-
-        self.emotes = support.animation_importer("images/ui/emotes/sprout_lands",
-                                                 frame_size=EMOTE_SIZE, resize=EMOTE_SIZE)
-        self.emote_dialog_box = pygame.image.load(
-            support.resource_path("images/ui/dialog_boxes/tiny_down.png")
-        ).convert_alpha()
-        self.emote_dialog_box = self.emote_dialog_box.subsurface(pygame.Rect(8, 8, 32, 32))
-        self.emote_dialog_box = pygame.transform.scale(self.emote_dialog_box, (32 * 3, 32 * 3))
+        setup_gui()
 
         # sounds
         self.sounds = support.sound_importer('audio', default_volume=0.25)

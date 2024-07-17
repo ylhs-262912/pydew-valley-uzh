@@ -1,18 +1,20 @@
 from __future__ import annotations
 
+import random
 from typing import Callable
 
+import pygame
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
-from src.npc.npc_base import NPCState, NPCBase
+from src.enums import InventoryResource, FarmingTool
+from src.gui.interface.emotes import NPCEmoteManager
+from src.npc.bases.npc_base import NPCState, NPCBase
 from src.npc.npc_behaviour import NPCBehaviourContext, NPCBehaviourMethods
-from src.enums import InventoryResource
-from src.settings import SCALE_FACTOR, SCALED_TILE_SIZE
+from src.overlay.soil import SoilLayer
 from src.settings import Coordinate, AniFrames
-
-import pygame
-import random
+from src.settings import SCALE_FACTOR, SCALED_TILE_SIZE
+from src.sprites.entity import Entity
 
 
 class NPC(NPCBase):
@@ -21,15 +23,18 @@ class NPC(NPCBase):
             self,
             pos: Coordinate,
             frames: dict[str, AniFrames],
-            groups: tuple[pygame.sprite.Group],
+            groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable,
-            soil_layer,
+            apply_tool: Callable[[FarmingTool, tuple[int, int], Entity], None],
+            soil_layer: SoilLayer,
+            emote_manager: NPCEmoteManager,
             pf_matrix: list[list[int]],
             pf_grid: Grid,
-            pf_finder: AStarFinder):
-
+            pf_finder: AStarFinder
+    ):
         self.soil_layer = soil_layer
+
+        self.emote_manager = emote_manager
 
         self.pf_matrix = pf_matrix
         self.pf_grid = pf_grid
@@ -109,7 +114,13 @@ class NPC(NPCBase):
 
         self.pf_grid.cleanup()
 
-        start = self.pf_grid.node(int(tile_coord.x), int(tile_coord.y))
+        try:
+            start = self.pf_grid.node(int(tile_coord.x), int(tile_coord.y))
+        except IndexError as e:
+            # FIXME: Occurs when NPCs get stuck inside each other at the edge of the map and one of them gets pushed
+            #  out of the walkable area
+            print(f"NPC is at invalid location {tile_coord}\nFull error: {e}")
+            return False
         end = self.pf_grid.node(*[int(i) for i in coord])
 
         path_raw = self.pf_finder.find_path(start, end, self.pf_grid)
@@ -204,3 +215,8 @@ class NPC(NPCBase):
         self.rect.update((self.hitbox_rect.centerx - self.rect.width / 2,
                           self.hitbox_rect.centery - self.rect.height / 2), self.rect.size)
         self.plant_collide_rect.center = self.hitbox_rect.center
+
+    def update(self, dt):
+        super().update(dt)
+
+        self.emote_manager.update_obj(self, (self.rect.centerx - 47, self.rect.centery - 128))

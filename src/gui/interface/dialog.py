@@ -1,6 +1,6 @@
-from ..support import resource_path
-from ..settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, TB_LAYER
-from ..timer import Timer
+from src.support import resource_path
+from src.settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, TB_LAYER
+from src.timer import Timer
 import pygame
 import json
 from jsmin import jsmin  # JSON minifier function (removes comments, notably)
@@ -117,10 +117,8 @@ def prepare_tb_image(cname_surf: pygame.Surface, txt_surf: pygame.Surface):
 class DialogueManager:
     """Dialogue manager object.
     This class will store all dialogues and has a method to show a dialogue on-screen."""
-    def __init__(self, sprite_group: pygame.sprite.Group, cname_surf: pygame.Surface, txt_surf: pygame.Surface):
+    def __init__(self, sprite_group: pygame.sprite.Group):
         self.spr_grp: pygame.sprite.Group = sprite_group
-        self._cname_surf: pygame.Surface = cname_surf
-        self._txt_surf: pygame.Surface = txt_surf
         # Open the dialogues file and dump all of its content in here,
         # while purging the raw file content from its comments.
         with open(resource_path("data/dialogues.json"), "r") as dialogue_file:

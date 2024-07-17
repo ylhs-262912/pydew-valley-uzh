@@ -1,6 +1,5 @@
-
 import pygame
-from src.gui.general_menu import GeneralMenu
+from src.gui.menu.general_menu import GeneralMenu
 from src.enums import GameState
 
 
@@ -23,3 +22,6 @@ class MainMenu(GeneralMenu):
                 self.quit_game()
             if event.key == pygame.K_RETURN:
                 self.switch_screen(GameState.LEVEL)
+
+    def draw(self):
+        super().draw()
