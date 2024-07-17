@@ -168,3 +168,11 @@ def flip_items(d: dict) -> dict:
     for key, val in d.items():
         ret[val] = key
     return ret
+
+def interpolate_color(color1, color2, factor):
+    ''' interpolate / blend two colors '''
+    return (
+        int(max(0, min(255, color1[0] + (color2[0] - color1[0]) * factor))),
+        int(max(0, min(255, color1[1] + (color2[1] - color1[1]) * factor))),
+        int(max(0, min(255, color1[2] + (color2[2] - color1[2]) * factor))),
+    )
