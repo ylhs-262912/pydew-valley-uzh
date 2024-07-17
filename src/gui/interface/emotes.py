@@ -40,6 +40,7 @@ class EmoteBox(EmoteBoxBase):
         self._ani_length = self._ani_frame_count * 2
         self._ani_total_frames = int(self._ani_length / self._ani_frame_length)
         self.ani_finished = False
+        self.__on_finish_animation_funcs = []
 
         # load first animation frame
         self._ani_next_frame()
@@ -55,14 +56,18 @@ class EmoteBox(EmoteBoxBase):
         self._pos = value
         self.rect.update(self._pos, self.rect.size)
 
+    def on_finish_animation(self, func: Callable[[], None]):
+        self.__on_finish_animation_funcs.append(func)
+
     def _ani_next_frame(self):
         """
         Advances one frame of the Emote animation.
         """
         self._ani_cframe += 1
         if self._ani_cframe >= self._ani_total_frames:
-            # TODO: Create decorator that calls a given function on animation finish for more efficiency & readability
             self.ani_finished = True
+            for func in self.__on_finish_animation_funcs:
+                func()
             return
 
         self._current_emote_image = self.emote[self._ani_cframe % self._ani_frame_count]
@@ -103,11 +108,7 @@ class EmoteManager(EmoteManagerBase, ABC):
         :return: Whether the Emote animation attached to a given object is still playing or not.
         """
         if id(obj) in self._emote_boxes.keys():
-            if not self[id(obj)].ani_finished:
-                return True
-            else:
-                self._remove_emote_box(id(obj))
-                return False
+            return True
         return False
 
     def show_emote(self, obj: object, emote: str):
@@ -123,6 +124,10 @@ class EmoteManager(EmoteManagerBase, ABC):
 
         self[id(obj)] = EmoteBox((0, 0), self.emotes[emote])
         self[id(obj)].add(self.sprite_group)
+
+        @self[id(obj)].on_finish_animation
+        def on_finish_animation():
+            self._remove_emote_box(id(obj))
 
     def update_obj(self, obj: object, pos: tuple[float, float]):
         """

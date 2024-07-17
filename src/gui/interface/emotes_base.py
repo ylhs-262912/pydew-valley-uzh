@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from typing import TypeVar
 
 import pygame
@@ -20,12 +21,17 @@ class EmoteBoxBase(pygame.sprite.Sprite, ABC):
     _ani_length: float  # Total time the animation will play
     _ani_total_frames: int  # Total frame count of the animation
     ani_finished: bool  # Whether the animation has been finished or not
+    __on_finish_animation_funcs: list[Callable[[], None]]
 
     timer: Timer
 
     @property
     @abstractmethod
     def pos(self):
+        pass
+
+    @abstractmethod
+    def on_finish_animation(self):
         pass
 
     @abstractmethod
