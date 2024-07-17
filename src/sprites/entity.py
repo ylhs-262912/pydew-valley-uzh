@@ -6,7 +6,7 @@ import pygame
 from src import settings
 from src.sprites.base import CollideableSprite, LAYERS
 from src.enums import InventoryResource, FarmingTool, ItemToUse
-
+from src.support import screen_to_tile
 
 
 class Entity(CollideableSprite, ABC):
@@ -78,13 +78,7 @@ class Entity(CollideableSprite, ABC):
             self.facing_direction = 'down' if self.direction.y > 0 else 'up'
 
     def get_target_pos(self):
-        vectors = {
-            'left': pygame.Vector2(-1, 0),
-            'right': pygame.Vector2(1, 0),
-            'down': pygame.Vector2(0, 1),
-            'up': pygame.Vector2(0, -1),
-        }
-        return self.rect.center + vectors[self.facing_direction] * 40
+        return screen_to_tile(self.hitbox_rect.center)
 
     @abstractmethod
     def move(self, dt):

@@ -1,12 +1,6 @@
 import pygame  # noqa
-from src.settings import (
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-)
-from src.enums import InventoryResource
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
-
-# TODO: Refactor this class
 
 class ShopMenu:
     def __init__(self, player, toggle_menu, font):
@@ -46,9 +40,9 @@ class ShopMenu:
     def setup(self):
 
         # create the text surfaces
-
         for item in self.options:
-            text_surf = self.font.render(item.as_serialised_string(), False, 'Black')
+            text = item.as_serialised_string()
+            text_surf = self.font.render(text, False, 'Black')
             self.text_surfs.append(text_surf)
             self.total_height += text_surf.get_height() + (self.padding * 2)
 

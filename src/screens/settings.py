@@ -1,13 +1,10 @@
 
 import pygame
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.support import resource_path
 from src.gui.general_menu import GeneralMenu
 from src.gui.description import KeybindsDescription, VolumeDescription
 from src.enums import GameState
 from pygame.math import Vector2 as vector
-
-
 
 
 class SettingsMenu(GeneralMenu):
