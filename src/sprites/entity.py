@@ -66,6 +66,9 @@ class Entity(CollideableSprite, ABC):
         # Not all Entities can go to the market, so those that can't should not have money either
         self.money = 0
 
+        # Axe hitbox, which allows for independent usage of the axe by any entity (player or NPC)
+        self.axe_hitbox = pygame.Rect(0, 0, 32, 32)
+
     def get_state(self):
         self.state = 'walk' if self.direction else 'idle'
 
@@ -76,6 +79,19 @@ class Entity(CollideableSprite, ABC):
             self.facing_direction = 'right' if self.direction.x > 0 else 'left'
         if self.direction.y:
             self.facing_direction = 'down' if self.direction.y > 0 else 'up'
+        match self.facing_direction:
+            case "down":
+                self.axe_hitbox.x = self.rect.centerx - 24
+                self.axe_hitbox.y = self.rect.centery + 24
+            case "up":
+                self.axe_hitbox.x = self.rect.centerx - 8
+                self.axe_hitbox.bottom = self.rect.centery - 24
+            case "left":
+                self.axe_hitbox.right = self.rect.centerx - 16
+                self.axe_hitbox.y = self.rect.centery + 8
+            case "right":
+                self.axe_hitbox.x = self.rect.centerx + 16
+                self.axe_hitbox.y = self.rect.centery + 8
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
@@ -133,7 +149,6 @@ class Entity(CollideableSprite, ABC):
                     self.just_used_tool = True
                     self.use_tool(ItemToUse.REGULAR_TOOL)
             else:
-                # self.use_tool('tool')
                 self.state = 'idle'
                 self.tool_active = False
                 self.just_used_tool = False

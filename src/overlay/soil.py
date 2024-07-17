@@ -11,9 +11,7 @@ from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR
 class Tile(Sprite):
     def __init__(self, pos, group):
         size = TILE_SIZE * SCALE_FACTOR
-        surf = pygame.Surface((size, size))
-        surf.fill("green")
-        surf.set_colorkey("green")
+        surf = pygame.Surface((size, size), pygame.SRCALPHA)
         super().__init__(tile_to_screen(pos), surf, group, LAYERS["soil"])
 
         self.pos = pos

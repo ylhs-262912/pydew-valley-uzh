@@ -10,7 +10,7 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 from src.npc.npc import NPC
 from src.npc.npc_behaviour import NPCBehaviourMethods
-from src.support import map_coords_to_tile, load_data, resource_path
+from src.support import map_coords_to_tile, load_data, resource_path, tile_to_screen
 from src.groups import AllSprites
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
@@ -258,10 +258,14 @@ class Level:
     def apply_tool(self, tool: FarmingTool, pos, entity):
         match tool:
             case FarmingTool.AXE:
-                for tree in self.tree_sprites:
-                    if tree.rect.collidepoint(pos):
-                        tree.hit(entity)
-                        self.sounds['axe'].play()
+                for tree in pygame.sprite.spritecollide(
+                    entity,
+                    self.tree_sprites,
+                    False,
+                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(tree_spr.rect)
+                ):
+                    tree.hit(entity)
+                    self.sounds["axe"].play()
             case FarmingTool.HOE:
                 self.soil_layer.hoe(pos)
             case FarmingTool.WATERING_CAN:

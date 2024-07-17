@@ -114,6 +114,8 @@ class Game:
             # self.level.update(dt)
 
             # if self.game_paused():
+            if self.game_paused():
+                self.level.draw(dt)
             self.menus[self.current_state].update(dt)
 
             pygame.display.update()

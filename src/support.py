@@ -169,9 +169,11 @@ def flip_items(d: dict) -> dict:
         ret[val] = key
     return ret
 
+
 def tile_to_screen(pos):
     tile_size = TILE_SIZE * SCALE_FACTOR
     return pos[0] * tile_size, pos[1] * tile_size
+
 
 def screen_to_tile(pos):
     tile_size = TILE_SIZE * SCALE_FACTOR

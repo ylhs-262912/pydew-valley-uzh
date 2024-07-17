@@ -1,4 +1,4 @@
 import pygame  # noqa
-from src.gui.general_menu import GeneralMenu
+from src.gui.abstract_menu import AbstractMenu
 
 

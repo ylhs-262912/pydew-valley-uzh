@@ -6,10 +6,115 @@ from src.gui.components import Button
 from src.enums import GameState
 from pygame.mouse import get_pressed as mouse_buttons
 from pygame.math import Vector2 as vector
-from abc import ABC
+from abc import ABC, abstractmethod
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 
 class AbstractMenu(ABC):
-    pass
+
+    def __init__(self, title, size, center=vector()):
+        self.title = title
+        self.size = size
+        self.center = center
+        self.buttons_surface = pygame.Surface(size, flags=pygame.SRCALPHA)
+        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
+        self.display_surface = pygame.display.get_surface()
+
+        self.buttons = []
+        self.pressed_button = None
+
+        # rect
+        self.rect = pygame.Rect()
+        self.rect_setup()
+
+    @abstractmethod
+    def button_action(self, *args, **kwargs):
+        pass
+
+    def get_hovered_button(self):
+        for button in self.buttons:
+            if button.mouse_hover():
+                return button
+        return None
+
+    def mouse_hover(self):
+        for button in self.buttons:
+            if button.hover_active:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+                return
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+    @abstractmethod
+    def button_setup(self):
+        pass
+
+    # setup
+    def rect_setup(self):
+        self.rect = pygame.Rect((0, 0), self.size)
+        self.rect.center = self.center or _SCREEN_CENTER
+
+    def handle_events(self, event):
+        pass
+
+    def click(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
+            self.pressed_button = self.get_hovered_button()
+            if self.pressed_button:
+                self.pressed_button.start_press_animation()
+
+        if event.type == pygame.MOUSEBUTTONUP:
+            if self.pressed_button:
+                self.pressed_button.start_release_animation()
+
+                if self.pressed_button.mouse_hover():
+                    self.button_action(self.pressed_button.text)
+                    pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+                self.pressed_button = None
+
+    def quit_game(self):
+        pygame.quit()
+        sys.exit()
+
+    # events
+    def event_loop(self):
+        self.mouse_hover()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.quit_game()
+
+            self.click(event)
+            self.handle_events(event)
+
+    def update_buttons(self, dt):
+        for button in self.buttons:
+            button.update(dt)
+
+    # draw
+    def draw_title(self):
+        text_surf = self.font.render(self.title, False, 'Black')
+        midtop = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 20)
+        text_rect = text_surf.get_frect(midtop=midtop)
+
+        bg_rect = pygame.Rect((0, 0), (200, 50))
+        bg_rect.center = text_rect.center
+
+        pygame.draw.rect(self.display_surface, 'White', bg_rect, 0, 4)
+        self.display_surface.blit(text_surf, text_rect)
+
+    def draw_buttons(self):
+        self.buttons_surface.fill(pygame.Color(0, 0, 0, 0))
+        for button in self.buttons:
+            button.draw(self.display_surface)
+        self.display_surface.blit(self.buttons_surface, self.rect.topleft)
+
+    def draw(self):
+        self.draw_title()
+        self.draw_buttons()
+
+    def update(self, dt):
+        self.event_loop()
+        self.update_buttons(dt)
+        self.draw()
+
