@@ -10,13 +10,6 @@ from src.settings import SCALE_FACTOR
 from src.sprites.entity import Entity
 
 
-_NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
-_SEED_INVENTORY_DEFAULT_AMOUNT = 5
-_INV_DEFAULT_AMOUNTS = (
-    _NONSEED_INVENTORY_DEFAULT_AMOUNT,
-    _SEED_INVENTORY_DEFAULT_AMOUNT
-)
-
 
 class Player(Entity):
     def __init__(

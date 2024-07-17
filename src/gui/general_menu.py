@@ -127,6 +127,7 @@ class GeneralMenu:
         self.display_surface.blit(self.buttons_surface, self.rect.topleft)
 
     def draw(self):
+        self.display_surface.fill('cadetblue')
         self.draw_title()
         self.draw_buttons()
 
