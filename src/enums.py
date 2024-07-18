@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, nonmember  # noqa
+from enum import Enum, IntEnum, nonmember, StrEnum  # noqa
 
 
 class PlayerState(IntEnum):
@@ -7,7 +7,8 @@ class PlayerState(IntEnum):
 
 
 class ItemToUse(IntEnum):
-    """Both available options for Player.use_tool. If any more have to be added, put them as members of this enum."""
+    """Both available options for Player.use_tool. If any more have to be
+    added, put them as members of this enum."""
     REGULAR_TOOL = 0
     SEED = 1
 
@@ -17,8 +18,8 @@ _FT_SERIALISED_STRINGS = (
     "axe",
     "hoe",
     "water",
-    "corn seed",
-    "tomato seed"
+    "corn_seed",
+    "tomato_seed"
 )
 
 
@@ -34,13 +35,16 @@ class GameState(IntEnum):
     CREDITS = 8
 
 
-# NOTE : DO NOT pay attention to anything the IDE might complain about in this class, as the enum generation mechanisms
-# will ensure _SERIALISABLE_STRINGS is actually treated like a tuple of strings instead of an integer.
+# NOTE : DO NOT pay attention to anything the IDE might complain about in this
+# class, as the enum generation mechanisms will ensure _SERIALISABLE_STRINGS is
+# actually treated like a tuple of strings instead of an integer.
 class _SerialisableEnum(IntEnum):
-    _SERIALISABLE_STRINGS = nonmember(())  # This will be overridden in derived enums.
+    # This will be overridden in derived enums.
+    _SERIALISABLE_STRINGS = nonmember(())
 
     def as_serialised_string(self):
-        # We keep that method separate from the actual str dunder, so we can still get the original repr when debugging
+        # We keep that method separate from the actual str dunder, so we can
+        # still get the original repr when debugging
         return self._SERIALISABLE_STRINGS[self]  # noqa
 
     @classmethod
@@ -53,7 +57,10 @@ class _SerialisableEnum(IntEnum):
         try:
             return cls(cls._SERIALISABLE_STRINGS.index(val))  # noqa
         except IndexError as exc:
-            raise LookupError(f"serialised string '{val}' does not match any member in enum '{cls.__name__}'") from exc
+            raise LookupError(
+                f"serialised string '{val}' does not match "
+                f"any member in enum '{cls.__name__}'"
+            ) from exc
 
 
 class InventoryResource(_SerialisableEnum):
@@ -64,13 +71,14 @@ class InventoryResource(_SerialisableEnum):
             "apple",
             "corn",
             "tomato",
-            "corn seed",
-            "tomato seed"
+            "corn_seed",
+            "tomato_seed"
         )
     )
 
-    # All item worths in the game. When traders buy things off you, they pay you for half the worth.
-    # If YOU buy something from THEM, then you have to pay the FULL worth, though.
+    # All item worths in the game. When traders buy things off you, they pay
+    # you for half the worth. If YOU buy something from THEM, then you have to
+    # pay the FULL worth, though.
     _ITEM_WORTHS = nonmember(
         (
             8,  # WOOD
@@ -97,15 +105,16 @@ class InventoryResource(_SerialisableEnum):
 
 
 class FarmingTool(_SerialisableEnum):
-    """Notably used to distinguish the different farming tools (including seeds) in-code."""
+    """Notably used to distinguish the different farming tools
+    (including seeds) in-code."""
     _SERIALISABLE_STRINGS = nonmember(
         (
             "none",
             "axe",
             "hoe",
             "water",
-            "corn seed",
-            "tomato seed"
+            "corn_seed",
+            "tomato_seed"
         )
     )
 
@@ -135,7 +144,8 @@ class FarmingTool(_SerialisableEnum):
 
     @classmethod
     def get_first_tool_id(cls):
-        """Return the first tool ID. This might change in the course of development."""
+        """Return the first tool ID.
+        This might change in the course of development."""
         return cls.AXE
 
     @classmethod
@@ -198,4 +208,16 @@ class SeedType(IntEnum):
         return self._AS_NS_IRS[self]
 
     def as_plant_name(self):
-        return self._AS_FTS[self].as_serialised_string().removesuffix(" seed")
+        return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
+
+
+class Direction(StrEnum):
+    UP = "up"
+    RIGHT = "right"
+    DOWN = "down"
+    LEFT = "left"
+
+
+class EntityState(StrEnum):
+    IDLE = "idle"
+    WALK = "walk"

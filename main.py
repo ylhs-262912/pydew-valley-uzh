@@ -1,4 +1,5 @@
-import pygame  
+import pygame
+from pytmx import TiledMap
 
 from src import settings
 from src.screens.shop import ShopMenu
@@ -11,7 +12,6 @@ from src.npc.dialog import DialogueManager, prepare_tb_image
 from src.screens.menu import MainMenu
 from src.screens.pause import PauseMenu
 from src.screens.settings import SettingsMenu
-
 
 
 class Game:
@@ -30,7 +30,7 @@ class Game:
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps = None
+        self.tmx_maps: dict[str, TiledMap] | None = None
         self.sounds = None
         self.font = None
         self._tb_base = None
@@ -45,7 +45,9 @@ class Game:
         self.load_assets()
 
         # screens
-        self.level = Level(self, self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(
+            self.switch_state, self.tmx_maps, self.frames, self.sounds
+        )
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)

@@ -7,76 +7,76 @@ from typing import Callable
 import pygame
 
 from src.enums import FarmingTool, ItemToUse
-from src.npc.behaviour_base import Context, Selector, Sequence, Condition, Action
-from src.npc.npc_base import NPCBase
+from src.npc.behaviour.ai_behaviour_tree_base import Context, Selector, Sequence, Condition, Action
+from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
 
 
 @dataclass
-class NPCBehaviourContext(Context):
+class NPCBehaviourTreeContext(Context):
     npc: NPCBase
 
 
 # TODO: NPCs can not harvest fully grown crops on their own yet
-class NPCBehaviourMethods:
+class NPCBehaviourTree:
     """
     Group of classes used for NPC behaviour.
 
     Attributes:
-        behaviour:   Default NPC behaviour tree
+        tree:   Default NPC behaviour tree
     """
-    behaviour = None
+    tree = None
 
-    @staticmethod
-    def init():
+    @classmethod
+    def init(cls):
         """
         Initialises the behaviour tree.
         """
-        NPCBehaviourMethods.behaviour = Selector([
+        cls.tree = Selector([
             Sequence([
-                Condition(NPCBehaviourMethods.will_farm),
+                Condition(cls.will_farm),
                 Selector([
                     Sequence([
-                        Condition(NPCBehaviourMethods.will_create_new_farmland),
-                        Action(NPCBehaviourMethods.create_new_farmland)
+                        Condition(cls.will_create_new_farmland),
+                        Action(cls.create_new_farmland)
                     ]),
                     Sequence([
-                        Condition(NPCBehaviourMethods.will_plant_tilled_farmland),
-                        Action(NPCBehaviourMethods.plant_random_seed)
+                        Condition(cls.will_plant_tilled_farmland),
+                        Action(cls.plant_random_seed)
                     ]),
-                    Action(NPCBehaviourMethods.water_farmland)
+                    Action(cls.water_farmland)
                 ])
             ]),
-            Action(NPCBehaviourMethods.wander)
+            Action(cls.wander)
         ])
 
     @staticmethod
-    def will_farm(context: NPCBehaviourContext) -> bool:
+    def will_farm(context: NPCBehaviourTreeContext) -> bool:
         """
         1 in 3 chance to go farming instead of wandering around
         :return: 1/3 true | 2/3 false
         """
-        return random.randint(0, 2) is 0
+        return random.randint(0, 2) == 0
 
     @staticmethod
-    def will_create_new_farmland(context: NPCBehaviourContext) -> bool:
+    def will_create_new_farmland(context: NPCBehaviourTreeContext) -> bool:
         """
         :return: True: untilled farmland available AND (all other farmland planted and watered OR 1/3), otherwise False
         """
         empty_farmland_available = 0
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "F" in entry:
-                    if "X" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.tiles.get((x, y))
+                if entry and entry.farmable:
+                    if not entry.hoed:
                         empty_farmland_available += 1
                     else:
-                        if "P" not in entry:
+                        if not entry.planted:
                             unplanted_farmland_available += 1
                         else:
-                            if "W" not in entry:
+                            if not entry.watered:
                                 unwatered_farmland_available += 1
 
         if empty_farmland_available <= 0:
@@ -85,16 +85,16 @@ class NPCBehaviourMethods:
         return (unplanted_farmland_available == 0 and unwatered_farmland_available == 0) or random.randint(0, 2) == 0
 
     @staticmethod
-    def create_new_farmland(context: NPCBehaviourContext) -> bool:
+    def create_new_farmland(context: NPCBehaviourTreeContext) -> bool:
         """
         Finds a random untilled but farmable tile, makes the NPC walk to and till it.
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "F" in entry and "X" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.tiles.get((x, y))
+                if entry and entry.farmable and not entry.hoed:
                     possible_coordinates.append((x, y))
 
         if not possible_coordinates:
@@ -106,25 +106,25 @@ class NPCBehaviourMethods:
             context.npc.tool_index = context.npc.current_tool.value - 1
             context.npc.frame_index = 0
 
-        return NPCBehaviourMethods.wander_to_interact(
+        return NPCBehaviourTree.wander_to_interact(
             context, random.choice(possible_coordinates), on_path_completion
         )
 
     @staticmethod
-    def will_plant_tilled_farmland(context: NPCBehaviourContext) -> bool:
+    def will_plant_tilled_farmland(context: NPCBehaviourTreeContext) -> bool:
         """
         :return: True if unplanted farmland available AND (all other farmland watered OR 3/4), otherwise False
         """
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "X" in entry:
-                    if "P" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.tiles.get((x, y))
+                if entry and entry.hoed:
+                    if not entry.planted:
                         unplanted_farmland_available += 1
                     else:
-                        if "W" not in entry:
+                        if not entry.watered:
                             unwatered_farmland_available += 1
 
         if unplanted_farmland_available <= 0:
@@ -133,16 +133,16 @@ class NPCBehaviourMethods:
         return unwatered_farmland_available == 0 or random.randint(0, 3) <= 2
 
     @staticmethod
-    def plant_random_seed(context: NPCBehaviourContext) -> bool:
+    def plant_random_seed(context: NPCBehaviourTreeContext) -> bool:
         """
         Finds a random unplanted but tilled tile, makes the NPC walk to and plant a random seed on it.
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "X" in entry and "P" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.tiles.get((x, y))
+                if entry and entry.hoed and not entry.planted:
                     possible_coordinates.append((x, y))
 
         if not possible_coordinates:
@@ -153,21 +153,21 @@ class NPCBehaviourMethods:
             context.npc.seed_index = context.npc.current_seed.value - FarmingTool.get_first_seed_id().value
             context.npc.use_tool(ItemToUse(1))
 
-        return NPCBehaviourMethods.wander_to_interact(
+        return NPCBehaviourTree.wander_to_interact(
             context, random.choice(possible_coordinates), on_path_completion
         )
 
     @staticmethod
-    def water_farmland(context: NPCBehaviourContext) -> bool:
+    def water_farmland(context: NPCBehaviourTreeContext) -> bool:
         """
         Finds a random unwatered but planted tile, makes the NPC walk to and water it.
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(len(context.npc.soil_layer.grid)):
-            for x in range(len(context.npc.soil_layer.grid[y])):
-                entry = context.npc.soil_layer.grid[y][x]
-                if "P" in entry and "W" not in entry:
+        for y in range(context.npc.pf_grid.height):
+            for x in range(context.npc.pf_grid.width):
+                entry = context.npc.soil_layer.tiles.get((x, y))
+                if entry and entry.planted and not entry.watered:
                     possible_coordinates.append((x, y))
 
         if not possible_coordinates:
@@ -179,12 +179,12 @@ class NPCBehaviourMethods:
             context.npc.tool_index = context.npc.current_tool.value - 1
             context.npc.frame_index = 0
 
-        return NPCBehaviourMethods.wander_to_interact(
+        return NPCBehaviourTree.wander_to_interact(
             context, random.choice(possible_coordinates), on_path_completion
         )
 
     @staticmethod
-    def wander_to_interact(context: NPCBehaviourContext,
+    def wander_to_interact(context: NPCBehaviourTreeContext,
                            target_position: tuple[int, int],
                            on_path_completion: Callable[[], None]):
         """
@@ -201,10 +201,6 @@ class NPCBehaviourMethods:
 
             facing = (facing[0], 0) if abs(facing[0]) > abs(facing[1]) else (0, facing[1])
 
-            # Deleting the final step of the path leads to the NPC always standing in reach of the tile they want to
-            #  interact with (cf. Entity.get_target_pos)
-            context.npc.pf_path.pop(-1)
-
             @context.npc.on_path_completion
             def inner():
                 context.npc.direction.update(facing)
@@ -212,11 +208,12 @@ class NPCBehaviourMethods:
                 context.npc.direction.update((0, 0))
 
                 on_path_completion()
+
             return True
         return False
 
     @staticmethod
-    def wander(context: NPCBehaviourContext) -> bool:
+    def wander(context: NPCBehaviourTreeContext) -> bool:
         """
         Makes the NPC wander to a random location in a 5 tile radius.
         :return: True if path has successfully been created, otherwise False
