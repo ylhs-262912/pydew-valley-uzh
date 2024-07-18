@@ -39,7 +39,7 @@ class GeneralMenu(AbstractMenu):
         # create buttons
         for title in self.options:
             rect = generic_button_rect
-            button = Button(title, rect, self.rect.topleft, self.font)
+            button = Button(title, rect, self.font)
             self.buttons.append(button)
             generic_button_rect = rect.move(0, button_height + space)
 

@@ -89,7 +89,7 @@ class KeybindsDescription(Description):
         reset_btn_rect = pygame.Rect(0, 0, 100, 50)
         reset_btn_rect.bottomright = self.rect.bottomleft - vector(10, 0)
 
-        self.reset_button = Button('Reset', reset_btn_rect, (0, 0), self.font)
+        self.reset_button = Button('Reset', reset_btn_rect, self.font)
 
     # setup
     def import_data(self):

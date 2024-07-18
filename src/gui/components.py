@@ -97,7 +97,7 @@ class AbstractButton(Component, ABC):
     """Abstract base class for all button types."""
 
     @abstractmethod
-    def __init__(self, content: str | pygame.Surface, rect, offset, font=None):
+    def __init__(self, content: str | pygame.Surface, rect, font=None):
         super().__init__(rect)
         self.initial_rect = rect.copy()
         self.font_size = 30
@@ -105,7 +105,6 @@ class AbstractButton(Component, ABC):
         self._content = content
         self.content = None
         self._content_rect = None
-        self.offset = vector(offset)
         self.color = 'White'
         self.hover_active = False
 
@@ -134,7 +133,7 @@ class AbstractButton(Component, ABC):
 class Button(AbstractButton):
     """A button that can contain text."""
 
-    def __init__(self, content: str, rect, offset, font):
+    def __init__(self, content: str, rect, font):
         # Force the user to pass a string as content or else raise an error
         if not isinstance(content, str):
             if isinstance(content, pygame.Surface):
@@ -143,7 +142,7 @@ class Button(AbstractButton):
             raise TypeError(f"expected a value of type 'str', got '{content.__class__.__name__}'")
 
         # Setup
-        super().__init__(content, rect, offset, font)
+        super().__init__(content, rect, font)
         self.content = font.render(
             self._content,
             False,
@@ -159,14 +158,14 @@ class Button(AbstractButton):
 class ImageButton(AbstractButton):
     """A button type that can contain an image."""
 
-    def __init__(self, content: pygame.Surface, rect, offset):
+    def __init__(self, content: pygame.Surface, rect):
         # Force the user to pass an image as content or else raise an error
         if not isinstance(content, pygame.Surface):
             if isinstance(content, str):
                 raise TypeError("Image buttons cannot contain text, use Button instead")
             raise TypeError(f"expected a pygame.Surface instance, got '{content.__class__.__name__}'")
 
-        super().__init__(content, rect, offset)
+        super().__init__(content, rect)
         self.content = self._content
         self._content_rect = self.content.get_frect(center=self.rect.center)
 
@@ -297,6 +296,7 @@ class Slider:
 
     def draw(self, surface):
         self.surface = surface
+        self.surface.fill(pygame.Color(0, 0, 0, 0))
         self.draw_rect()
         self.draw_knob()
         self.draw_value()
