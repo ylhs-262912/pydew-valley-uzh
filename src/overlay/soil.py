@@ -98,10 +98,6 @@ class SoilLayer:
 
     def determine_tile_type(self, pos):
         x, y = pos
-        tile_above = self.map.get((x, y - 1))
-        tile_below = self.map.get((x, y + 1))
-        tile_right = self.map.get((x + 1, y))
-        tile_left = self.map.get((x - 1, y))
         tile_above = self.tiles.get((x, y - 1))
         tile_below = self.tiles.get((x, y + 1))
         tile_right = self.tiles.get((x + 1, y))
