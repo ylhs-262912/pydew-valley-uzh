@@ -73,11 +73,11 @@ class Entity(CollideableSprite, ABC):
         return screen_to_tile(self.hitbox_rect.center)
 
     @abstractmethod
-    def move(self, dt):
+    def move(self, dt: float):
         pass
 
     # FIXME: Sometimes NPCs get stuck inside the player's hitbox
-    def collision(self, direction) -> bool:
+    def collision(self, direction: str) -> bool:
         """
         :return: true: Entity collides with a sprite in self.collision_sprites,
                  otherwise false
@@ -111,7 +111,7 @@ class Entity(CollideableSprite, ABC):
         return bool(colliding_rect)
 
     @abstractmethod
-    def animate(self, dt):
+    def animate(self, dt: float):
         """
         Animate the Entity. Child classes should implement method and
         set current image based on self._current_ani_frame
@@ -121,7 +121,7 @@ class Entity(CollideableSprite, ABC):
         ]
         self.frame_index += 4 * dt
 
-    def update(self, dt):
+    def update(self, dt: float):
         self.get_state()
         self.get_facing_direction()
         self.move(dt)

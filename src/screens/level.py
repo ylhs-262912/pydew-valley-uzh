@@ -222,6 +222,8 @@ class Level:
                 frames=self.frames['entities']['cow'],
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
+
+                player=self.entities['Player']
             ))
         else:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")
@@ -365,18 +367,6 @@ class Level:
             self.sky.set_time(6, 0)   # set to 0600 hours upon sleeping
 
     def update(self, dt):
-        # TODO: refactor (maybe integrate into CowBehaviourTree)
-        if TEST_ANIMALS:
-            distance_to_player = 2.5 * SCALED_TILE_SIZE
-            for animal in self.animals:
-                if isinstance(animal, Cow):
-                    current_distance = ((self.player.rect.center[0]
-                                         - animal.rect.center[0]) ** 2 +
-                                        (self.player.rect.center[1]
-                                         - animal.rect.center[1]) ** 2) ** .5
-                    if current_distance < distance_to_player:
-                        animal.flee_from_pos(self.player.rect.center)
-
         # update
         self.event_loop()
         self.plant_collision()

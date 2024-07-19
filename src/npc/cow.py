@@ -8,8 +8,13 @@ from src.npc.behaviour.cow_behaviour_tree import (
     CowBehaviourTree,
     CowBehaviourTreeContext
 )
+from src.npc.behaviour.cow_flee_behaviour_tree import (
+    CowFleeBehaviourTree,
+    CowFleeBehaviourTreeContext
+)
 from src.npc.setup import AIData
 from src.settings import Coordinate, AniFrames, LAYERS, SCALED_TILE_SIZE
+from src.sprites.character import Character
 from src.support import get_flight_matrix
 
 
@@ -19,7 +24,9 @@ class Cow(CowBase):
             pos: Coordinate,
             frames: dict[str, AniFrames],
             groups: tuple[pygame.sprite.Group, ...],
-            collision_sprites: pygame.sprite.Group
+            collision_sprites: pygame.sprite.Group,
+
+            player: Character
     ):
         super().__init__(
             pos=pos,
@@ -34,18 +41,30 @@ class Cow(CowBase):
             z=LAYERS["main"]
         )
 
+        self.player = player
+
         self.fleeing = False
 
     def exit_idle(self):
         CowBehaviourTree.tree.run(CowBehaviourTreeContext(self))
 
-    def flee_from_pos(self, pos: tuple[int, int]):
+    def exit_moving(self):
+        self.speed = 150
+        self.fleeing = False
+
+    def update(self, dt: float):
+        CowFleeBehaviourTree.tree.run(
+            CowFleeBehaviourTreeContext(self, self.player)
+        )
+        super().update(dt)
+
+    def flee_from_pos(self, pos: tuple[int, int]) -> bool:
         """
-        TODO: Should work with tile pos instead of pixel coordinate
+        Aborts the current path of the cow and makes it flee into the opposite
+        direction of the given position.
+        :param pos: Position on the Tilemap that should be fled from
         """
         if not self.fleeing:
-            pos = pos[0] / SCALED_TILE_SIZE, pos[1] / SCALED_TILE_SIZE
-
             self.abort_path()
 
             self.speed = 350
@@ -112,9 +131,6 @@ class Cow(CowBase):
                         break
                 else:
                     self.abort_path()
-
-        return True
-
-    def exit_moving(self):
-        self.speed = 150
-        self.fleeing = False
+                    return False
+            return True
+        return False

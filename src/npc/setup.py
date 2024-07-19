@@ -4,6 +4,7 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
 from src.npc.behaviour.cow_behaviour_tree import CowBehaviourTree
+from src.npc.behaviour.cow_flee_behaviour_tree import CowFleeBehaviourTree
 from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
 
 
@@ -20,6 +21,7 @@ class AIData:
         NPCBehaviourTree.init()
         ChickenBehaviourTree.init()
         CowBehaviourTree.init()
+        CowFleeBehaviourTree.init()
 
         cls.Matrix = pathfinding_matrix
         cls.Grid = Grid(matrix=cls.Matrix)

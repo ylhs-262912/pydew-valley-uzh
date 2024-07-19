@@ -9,10 +9,13 @@ from pathfinding.finder.a_star import AStarFinder
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.ai_behaviour import AIBehaviour
 from src.settings import Coordinate, AniFrames
+from src.sprites.character import Character
 
 
 class CowBase(Animal, AIBehaviour, ABC):
     fleeing: bool
+
+    player: Character
 
     def __init__(
             self,
@@ -48,5 +51,5 @@ class CowBase(Animal, AIBehaviour, ABC):
         self.speed = 150
 
     @abstractmethod
-    def flee_from_pos(self, pos: tuple[int, int]):
+    def flee_from_pos(self, pos: tuple[int, int]) -> bool:
         pass
