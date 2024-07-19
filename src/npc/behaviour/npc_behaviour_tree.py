@@ -66,18 +66,14 @@ class NPCBehaviourTree:
         empty_farmland_available = 0
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
-        for y in range(context.npc.pf_grid.height):
-            for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.tiles.get((x, y))
-                if entry and entry.farmable:
-                    if not entry.hoed:
-                        empty_farmland_available += 1
-                    else:
-                        if not entry.planted:
-                            unplanted_farmland_available += 1
-                        else:
-                            if not entry.watered:
-                                unwatered_farmland_available += 1
+
+        for tile in context.npc.soil_layer.tiles.values():
+            if tile.farmable and not tile.hoed:
+                empty_farmland_available += 1
+            if tile.hoed and not tile.planted:
+                unplanted_farmland_available += 1
+            if tile.planted and not tile.watered:
+                unwatered_farmland_available += 1
 
         if empty_farmland_available <= 0:
             return False
@@ -91,11 +87,9 @@ class NPCBehaviourTree:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(context.npc.pf_grid.height):
-            for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.tiles.get((x, y))
-                if entry and entry.farmable and not entry.hoed:
-                    possible_coordinates.append((x, y))
+        for pos, tile in context.npc.soil_layer.tiles.items():
+            if tile.farmable and not tile.hoed:
+                possible_coordinates.append(pos)
 
         if not possible_coordinates:
             return False
@@ -117,15 +111,12 @@ class NPCBehaviourTree:
         """
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
-        for y in range(context.npc.pf_grid.height):
-            for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.tiles.get((x, y))
-                if entry and entry.hoed:
-                    if not entry.planted:
-                        unplanted_farmland_available += 1
-                    else:
-                        if not entry.watered:
-                            unwatered_farmland_available += 1
+
+        for tile in context.npc.soil_layer.tiles.values():
+            if tile.hoed and not tile.planted:
+                unplanted_farmland_available += 1
+            if tile.planted and not tile.watered:
+                unwatered_farmland_available += 1
 
         if unplanted_farmland_available <= 0:
             return False
@@ -139,11 +130,9 @@ class NPCBehaviourTree:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(context.npc.pf_grid.height):
-            for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.tiles.get((x, y))
-                if entry and entry.hoed and not entry.planted:
-                    possible_coordinates.append((x, y))
+        for pos, tile in context.npc.soil_layer.tiles.items():
+            if tile.hoed and not tile.planted:
+                possible_coordinates.append(pos)
 
         if not possible_coordinates:
             return False
@@ -164,11 +153,9 @@ class NPCBehaviourTree:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for y in range(context.npc.pf_grid.height):
-            for x in range(context.npc.pf_grid.width):
-                entry = context.npc.soil_layer.tiles.get((x, y))
-                if entry and entry.planted and not entry.watered:
-                    possible_coordinates.append((x, y))
+        for pos, tile in context.npc.soil_layer.tiles.items():
+            if tile.planted and not tile.watered:
+                possible_coordinates.append(pos)
 
         if not possible_coordinates:
             return False

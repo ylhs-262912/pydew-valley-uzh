@@ -113,15 +113,15 @@ class Level:
             for _ in range(self.pf_matrix_size[1])
         ]
 
-        self.setup_tile_layer('Lower ground', self.setup_environment)
-        self.setup_tile_layer('Upper ground', self.setup_environment)
-        self.setup_tile_layer('Water', self.setup_water)
+        self.setup_layer_tiles('Lower ground', self.setup_environment)
+        self.setup_layer_tiles('Upper ground', self.setup_environment)
+        self.setup_layer_tiles('Water', self.setup_water)
 
         self.setup_object_layer('Collidable objects',
                                 self.setup_collideable_object)
         self.setup_object_layer('Collisions', self.setup_collision)
         self.setup_object_layer('Interactions', self.setup_interaction)
-        self.setup_object_layer('Entities', self.setup_entity)
+        self.setup_object_layer('Entities', self.setup_entities)
 
         AIData.setup(self.pf_matrix)
         self.setup_object_layer('NPCs', self.setup_npc)
