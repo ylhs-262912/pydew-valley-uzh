@@ -2,7 +2,7 @@ import pygame  # noqa
 from src.gui.abstract_menu import AbstractMenu
 from src.enums import FarmingTool, InventoryResource, GameState
 from src.gui.components import ImageButton
-from src.settings import SCREEN_WIDTH
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from itertools import chain
 
 
@@ -17,6 +17,14 @@ class _IMButton(ImageButton):
 
 
 _SPACING_BETWEEN_ROWS = 20
+_TOP_MARGIN = 160
+_LEFT_MARGIN = 40
+_BUTTON_SIZE = (80, 80)
+_SECTION_TITLES = (
+    "Resources",
+    "Tools",
+    "Special Items"
+)
 
 
 class InventoryMenu(AbstractMenu):
@@ -46,6 +54,7 @@ class InventoryMenu(AbstractMenu):
         # the same requirement might appear for tools and personal items
         self._inv_buttons = []
         self._ft_buttons = []
+        self.button_setup()
 
     def _inventory_part_btn_setup(self, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to see
@@ -53,23 +62,20 @@ class InventoryMenu(AbstractMenu):
         # and possibly assign them as their current seed
         # (if the selected one is a seed).
         generic_rect = pygame.Rect((0, 0), button_size)
-        available_width_for_btns = (self.size[0] // 2)
+        available_width_for_btns = (self.size[0] * 2 // 3)
         btns_per_line = available_width_for_btns // button_size[0]
-        x_spacing = (available_width_for_btns % button_size[0]) // max(1, btns_per_line[0] - 1)
+        x_spacing = (available_width_for_btns % button_size[0]) // max(1, btns_per_line - 1)
         for button_no, (ir, count) in enumerate(self._inventory.items()):
             match ir:
                 case InventoryResource.APPLE:
                     btn_name = "apple"
                     img = self.obj_frames["apple"]
-                case InventoryResource.WOOD:
-                    btn_name = "wood"
-                    img = self.obj_frames["wood"]
                 case _:
                     btn_name = self._IR_TO_OVERLAY_IMG[ir]
                     img = self.overlay_frames[btn_name]
             calc_rect = img.get_frect(center=(32, 32))
             calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
-            amount = self.font.render(str(count), False, "grey")
+            amount = self.font.render(str(count), False, "black")
             blit_list = (
                 (img, calc_rect),
                 (amount, amount.get_frect(bottomright=(64, 64)))
@@ -77,21 +83,20 @@ class InventoryMenu(AbstractMenu):
             calc_img.fblits(blit_list)  # faster than doing two separate blits
             row, column = divmod(button_no, btns_per_line)
             btn_rect = generic_rect.copy()
-            spaces = (column - 1)
-            btn_rect.x = button_size[0]*spaces + x_spacing * spaces
-            btn_rect.y = button_size[1]*(row - 1) + _SPACING_BETWEEN_ROWS * (row - 1)
+            btn_rect.x = _LEFT_MARGIN + button_size[0]*column + x_spacing * column
+            btn_rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * row
             yield _IMButton(calc_img, btn_rect, btn_name)
 
     def _ft_btn_setup(self, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to select their current tool.
         rect = pygame.Rect((0, 0), button_size)
-        rect.centerx = self.rect.centerx + (self.rect.width / 4)
+        rect.centerx = (self.rect.width / 2)
         for index, tool in enumerate(self._av_tools):
             img = self.overlay_frames[tool]
             calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
             calc_img.blit(img, img.get_frect(center=(32, 32)))
             btn_rect = rect.copy()
-            btn_rect.y = (button_size[1] + _SPACING_BETWEEN_ROWS) * index
+            btn_rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * index
             yield _IMButton(calc_img, btn_rect, tool)
 
     def _special_btn_setup(self):
@@ -99,23 +104,38 @@ class InventoryMenu(AbstractMenu):
         # Part of the menu for items such as the goggles, the hat, etc.
         pass
 
+    def button_action(self, *args, **kwargs):
+        # TODO: add the different assign actions.
+        pass
+
     def button_setup(self):
-        button_size = (80, 80)
-        self._inv_buttons.extend(self._inventory_part_btn_setup(button_size))
+        self._inv_buttons.extend(self._inventory_part_btn_setup(_BUTTON_SIZE))
         self.buttons.extend(self._inv_buttons)
-        self._ft_buttons.extend(self._ft_btn_setup(button_size))
+        self._ft_buttons.extend(self._ft_btn_setup(_BUTTON_SIZE))
         self.buttons.extend(self._ft_buttons)
 
+    def draw_title(self):
+        super().draw_title()
+        top = SCREEN_HEIGHT / 20 + 75
+        for i, section_name in enumerate(_SECTION_TITLES):
+            text_surf = self.font.render(section_name, False, "black")
+            text_rect = text_surf.get_frect(top=top, centerx=(self.rect.width * (i + 1))/4)
+
+            bg_rect = pygame.Rect(0, 0, text_rect.width + 40, 50)
+            bg_rect.center = text_rect.center
+
+            pygame.draw.rect(self.display_surface, "white", bg_rect, 0, 4)
+            self.display_surface.blit(text_surf, text_rect)
+
     def update_display(self):
-        button_size = (80, 80)
         for btn in chain(self._inv_buttons, self._ft_buttons):
             self.buttons.remove(btn)
         self._inv_buttons.clear()
         self._ft_buttons.clear()
         self._inv_buttons.extend(
-            self._inventory_part_btn_setup(button_size)
+            self._inventory_part_btn_setup(_BUTTON_SIZE)
         )
-        self._ft_buttons.extend(self._ft_btn_setup(button_size))
+        self._ft_buttons.extend(self._ft_btn_setup(_BUTTON_SIZE))
         self.buttons.extend(
             chain(
                 self._inv_buttons,

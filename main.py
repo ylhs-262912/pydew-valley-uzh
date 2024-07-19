@@ -11,7 +11,7 @@ from src.npc.dialog import DialogueManager, prepare_tb_image
 from src.screens.menu import MainMenu
 from src.screens.pause import PauseMenu
 from src.screens.settings import SettingsMenu
-
+from src.screens.inventory import InventoryMenu
 
 
 class Game:
@@ -50,6 +50,13 @@ class Game:
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
         self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
+        self.inventory_menu = InventoryMenu(
+            self.level.player.inventory,
+            self.level.player.available_tools,
+            self.switch_state,
+            self.frames["overlay"],
+            self.frames["level"]["objects"]
+        )
 
         # dialog
         self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
@@ -60,7 +67,8 @@ class Game:
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
-            GameState.LEVEL: self.level
+            GameState.LEVEL: self.level,
+            GameState.INVENTORY: self.inventory_menu
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -69,6 +77,8 @@ class Game:
         if self.current_state == GameState.SAVE_AND_RESUME:
             self.level.player.save()
             self.current_state = GameState.LEVEL
+        if self.current_state == GameState.INVENTORY:
+            self.inventory_menu.update_display()
 
     def load_assets(self):
         self.tmx_maps = support.tmx_importer('data/maps')

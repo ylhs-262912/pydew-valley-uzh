@@ -12,6 +12,10 @@ _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 
 class AbstractMenu(ABC):
+    """Abstract base class for all menus in the game.
+
+    Most of the time, you will override GeneralMenu instead
+    (which is a subclass of this) when making new menus and screens here."""
 
     def __init__(self, title, size, center=vector()):
         self.title = title
@@ -30,6 +34,7 @@ class AbstractMenu(ABC):
 
     @abstractmethod
     def button_action(self, *args, **kwargs):
+        """What should be done when a button is pressed goes here."""
         pass
 
     def get_hovered_button(self):

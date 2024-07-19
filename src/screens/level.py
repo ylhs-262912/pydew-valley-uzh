@@ -214,7 +214,6 @@ class Level:
         self.sounds["music"].set_volume(volume)
         self.sounds["music"].play(-1)
 
-
     # events
     def event_loop(self):
         for event in pygame.event.get():
@@ -228,6 +227,9 @@ class Level:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
+                self.player.direction.xy = (0, 0)
+            if event.key == pygame.K_i:
+                self.switch_screen(GameState.INVENTORY)
                 self.player.direction.xy = (0, 0)
 
     # plant collision
