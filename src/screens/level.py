@@ -129,7 +129,7 @@ class Level:
         if TEST_ANIMALS:
             self.setup_object_layer("Animals", self.setup_animal)
 
-    def setup_tile_layer(self, layer, setup_func):
+    def setup_layer_tiles(self, layer, setup_func):
         for x, y, surf in (self.tmx_maps['main'].
                            get_layer_by_name(layer).tiles()):
             x = x * TILE_SIZE * SCALE_FACTOR
@@ -195,7 +195,7 @@ class Level:
         image = pygame.Surface(size)
         Sprite(pos, image, self.interaction_sprites, LAYERS['main'], obj.name)
 
-    def setup_entity(self, pos, obj):
+    def setup_entities(self, pos, obj):
         self.entities[obj.name] = Player(
             pos=pos,
             frames=self.frames['character']['rabbit'],
