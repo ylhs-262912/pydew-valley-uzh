@@ -126,7 +126,7 @@ class Level:
             self.setup_object_layer("Animals", self.setup_animal)
 
     def setup_layer_tiles(self, layer, setup_func):
-        for x, y, surf in (self.tmx_maps['main'].get_layer_by_name(layer).tiles()):
+        for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
             pos = (x, y)
@@ -227,7 +227,7 @@ class Level:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")
 
     def get_map_size(self):
-        return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
+        return self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR
 
     def activate_music(self):
         volume = 0.1
@@ -269,7 +269,7 @@ class Level:
 
                     # update grid
                     x, y = map_coords_to_tile(plant.rect.center)
-                    self.soil_layer.grid[y][x].remove("P")
+                    self.soil_layer.grid[y][x].remove('P')
 
                     # remove plant
                     plant.kill()

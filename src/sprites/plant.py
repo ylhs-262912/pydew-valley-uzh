@@ -33,5 +33,5 @@ class Plant(CollideableSprite):
 
             self.image = self.frames[int(self.age)]
             self.rect = self.image.get_frect(
-                midbottom=self.tile.rect.midbottom + vector(0, 2))
+                midbottom=self.soil.rect.midbottom + vector(0, 2))
 
