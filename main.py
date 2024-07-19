@@ -24,6 +24,8 @@ class Game:
 
         # frames
         self.character_frames: dict[str, settings.AniFrames] | None = None
+        self.chicken_frames: dict[str, settings.AniFrames] | None = None
+        self.cow_frames: dict[str, settings.AniFrames] | None = None
         self.level_frames: dict | None = None
         self.tmx_maps: settings.MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
@@ -50,11 +52,18 @@ class Game:
         )
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
-        self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
+        self.settings_menu = SettingsMenu(
+            self.switch_state, self.sounds, self.level
+        )
+        self.shop_menu = ShopMenu(
+            self.level.player, self.switch_state, self.font
+        )
 
         # dialog
-        self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
+        self.dm = DialogueManager(
+            self.level.all_sprites,
+            self.tb_cname_base_surf, self.tb_main_text_base_surf
+        )
 
         # screens
         self.menus = {
@@ -84,16 +93,39 @@ class Game:
             'objects': support.import_folder_dict('images/objects')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
-        self.character_frames = support.character_importer('images/characters')
+        self.character_frames = support.entity_importer(
+            'images/characters', 48, ["down", "up", "left"]
+        )
+        self.chicken_frames = support.entity_importer(
+            "images/entities/chicken", 16, ["right"]
+        )
+        self.cow_frames = support.entity_importer(
+            "images/entities/cow", 32, ["right"]
+        )
         self.frames = {
             'character': self.character_frames,
+            "entities": {
+                "chicken": self.chicken_frames,
+                "cow": self.cow_frames
+            },
             'level': self.level_frames,
             'overlay': self.overlay_frames
         }
 
-        self._tb_base = pygame.image.load(support.resource_path("images/textbox.png")).convert_alpha()
-        self.tb_cname_base_surf = self._tb_base.subsurface(pygame.Rect(0, 0, 212, 67))
-        self.tb_main_text_base_surf = self._tb_base.subsurface(pygame.Rect(0, 74, 391, 202))
+        # The chicken idle animation looks kinda weird,
+        #  that's why the second frame is getting removed
+        self.frames["entities"]["chicken"]["idle"]["left"].pop(1)
+        self.frames["entities"]["chicken"]["idle"]["right"].pop(1)
+
+        self._tb_base = pygame.image.load(
+            support.resource_path("images/textbox.png")
+        ).convert_alpha()
+        self.tb_cname_base_surf = self._tb_base.subsurface(
+            pygame.Rect(0, 0, 212, 67)
+        )
+        self.tb_main_text_base_surf = self._tb_base.subsurface(
+            pygame.Rect(0, 74, 391, 202)
+        )
         prepare_tb_image(self.tb_cname_base_surf, self.tb_main_text_base_surf)
 
         # sounds

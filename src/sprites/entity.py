@@ -11,7 +11,7 @@ from src.support import screen_to_tile
 class Entity(CollideableSprite, ABC):
     frames: dict[str, settings.AniFrames]
     frame_index: int
-    _current_ani_frame: pygame.Surface | None
+    _current_ani_frame: list[pygame.Surface] | None
 
     state: EntityState
     facing_direction: Direction

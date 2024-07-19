@@ -1,19 +1,16 @@
 from typing import Callable, Self
 
 import pygame
-from pathfinding.core.grid import Grid
-from pathfinding.finder.a_star import AStarFinder
 
-from src.enums import FarmingTool
-from src.npc.behaviour.ai_behaviour import AIBehaviour
+from src.enums import FarmingTool, InventoryResource
 from src.npc.bases.npc_base import NPCBase
 from src.npc.behaviour.npc_behaviour_tree import (
     NPCBehaviourTree,
     NPCBehaviourTreeContext
 )
+from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate, AniFrames, LAYERS
-from src.sprites.character import Character
 
 
 class NPC(NPCBase):
@@ -26,18 +23,35 @@ class NPC(NPCBase):
             apply_tool: Callable[
                 [FarmingTool, tuple[float, float], Self], None
             ],
-            soil_layer: SoilLayer,
-            pf_matrix: list[list[int]],
-            pf_grid: Grid,
-            pf_finder: AStarFinder
+            soil_layer: SoilLayer
     ):
         self.soil_layer = soil_layer
 
-        Character.__init__(
-            self, pos, frames, groups, collision_sprites, apply_tool,
+        super().__init__(
+            pos=pos,
+            frames=frames,
+            groups=groups,
+            collision_sprites=collision_sprites,
+
+            apply_tool=apply_tool,
+
+            pf_matrix=AIData.Matrix,
+            pf_grid=AIData.Grid,
+            pf_finder=AIData.ChickenPathFinder,
+
             z=LAYERS["main"]
         )
-        AIBehaviour.__init__(self, pf_matrix, pf_grid, pf_finder)
+
+        # TODO: Ensure that the NPC always has all needed seeds it needs
+        #  in its inventory
+        self.inventory = {
+            InventoryResource.WOOD: 0,
+            InventoryResource.APPLE: 0,
+            InventoryResource.CORN: 0,
+            InventoryResource.TOMATO: 0,
+            InventoryResource.CORN_SEED: 999,
+            InventoryResource.TOMATO_SEED: 999,
+        }
 
     def exit_idle(self):
         NPCBehaviourTree.tree.run(NPCBehaviourTreeContext(self))

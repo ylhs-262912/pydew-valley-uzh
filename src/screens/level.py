@@ -8,8 +8,10 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
+from src.npc.chicken import Chicken
+from src.npc.cow import Cow
 from src.npc.npc import NPC
+from src.npc.setup import AIData
 from src.sprites.player import Player
 from src.support import map_coords_to_tile, load_data, resource_path
 from src.groups import AllSprites
@@ -23,9 +25,11 @@ from src.sprites.particle import ParticleSprite
 from src.sprites.tree import Tree
 from src.enums import FarmingTool, GameState
 from src.settings import (
-    TILE_SIZE,
-    SCALE_FACTOR,
     LAYERS,
+    SCALE_FACTOR,
+    SCALED_TILE_SIZE,
+    TEST_ANIMALS,
+    TILE_SIZE,
     MapDict,
 )
 
@@ -45,6 +49,7 @@ class Level:
         # sprite groups
         self.entities = {}
         self.npcs = {}
+        self.animals = []
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
@@ -118,9 +123,11 @@ class Level:
         self.setup_object_layer('Interactions', self.setup_interaction)
         self.setup_object_layer('Entities', self.setup_entity)
 
-        self.pf_grid = PF_Grid(matrix=self.pf_matrix)
-        NPCBehaviourTree.init()
+        AIData.setup(self.pf_matrix)
         self.setup_object_layer('NPCs', self.setup_npc)
+
+        if TEST_ANIMALS:
+            self.setup_object_layer("Animals", self.setup_animal)
 
     def setup_tile_layer(self, layer, setup_func):
         for x, y, surf in (self.tmx_maps['main'].
@@ -208,10 +215,25 @@ class Level:
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             soil_layer=self.soil_layer,
-            pf_matrix=self.pf_matrix,
-            pf_grid=self.pf_grid,
-            pf_finder=self.pf_finder
         )
+
+    def setup_animal(self, pos, obj):
+        if obj.name == "Chicken":
+            self.animals.append(Chicken(
+                pos=pos,
+                frames=self.frames['entities']['chicken'],
+                groups=(self.all_sprites, self.collision_sprites),
+                collision_sprites=self.collision_sprites,
+            ))
+        elif obj.name == "Cow":
+            self.animals.append(Cow(
+                pos=pos,
+                frames=self.frames['entities']['cow'],
+                groups=(self.all_sprites, self.collision_sprites),
+                collision_sprites=self.collision_sprites,
+            ))
+        else:
+            print(f"Malformed animal object name \"{obj.name}\" in tilemap")
 
     def get_map_size(self):
         return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR,
@@ -364,6 +386,18 @@ class Level:
             self.sky.set_time(6, 0)   # set to 0600 hours upon sleeping
 
     def update(self, dt):
+        # TODO: refactor / maybe integrate into CowBehaviourTree
+        if TEST_ANIMALS:
+            distance_to_player = 2.5 * SCALED_TILE_SIZE
+            for animal in self.animals:
+                if isinstance(animal, Cow):
+                    current_distance = ((self.player.rect.center[0]
+                                         - animal.rect.center[0]) ** 2 +
+                                        (self.player.rect.center[1]
+                                         - animal.rect.center[1]) ** 2) ** .5
+                    if current_distance < distance_to_player:
+                        animal.flee_from_pos(self.player.rect.center)
+
         # update
         self.event_loop()
         self.plant_collision()

@@ -1,12 +1,11 @@
 import random
-from abc import ABC, abstractmethod
+from abc import ABC
 from collections.abc import Callable
 
 import pygame
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
-from src.enums import InventoryResource
 from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
 from src.settings import SCALED_TILE_SIZE
 
@@ -16,36 +15,25 @@ class AIBehaviour(AIBehaviourBase, ABC):
             self,
             pf_matrix: list[list[int]],
             pf_grid: Grid,
-            pf_finder: AStarFinder):
+            pf_finder: AStarFinder
+    ):
         """
         !IMPORTANT! AIBehaviour doesn't call Entity.__init__ while still
         relying on it. Be aware that when inheriting from AIBehaviour you
         should first inherit from Entity itself, or inherit from another class
         that has Entity as base.
         """
-
         self.pf_matrix = pf_matrix
         self.pf_grid = pf_grid
         self.pf_finder = pf_finder
         self.pf_state = AIState.IDLE
-        self.pf_state_duration = 0
+        self.pf_state_duration = random.random() * 3 + 1
         self.pf_path = []
 
         self.__on_path_abortion_funcs = []
         self.__on_path_completion_funcs = []
 
         self.speed = 150
-
-        # TODO: Ensure that the NPC always has all needed seeds it needs
-        #  in its inventory
-        self.inventory = {
-            InventoryResource.WOOD: 0,
-            InventoryResource.APPLE: 0,
-            InventoryResource.CORN: 0,
-            InventoryResource.TOMATO: 0,
-            InventoryResource.CORN_SEED: 999,
-            InventoryResource.TOMATO_SEED: 999,
-        }
 
     def on_path_abortion(self, func: Callable[[], None]):
         self.__on_path_abortion_funcs.append(func)
@@ -61,6 +49,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         self.__on_path_abortion_funcs.clear()
         self.__on_path_completion_funcs.clear()
+
+        self.exit_moving()
         return
 
     def on_path_completion(self, func: Callable[[], None]):
@@ -77,10 +67,14 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         self.__on_path_abortion_funcs.clear()
         self.__on_path_completion_funcs.clear()
+
+        self.exit_moving()
         return
 
-    @abstractmethod
     def exit_idle(self):
+        pass
+
+    def exit_moving(self):
         pass
 
     def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
@@ -97,7 +91,13 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         self.pf_grid.cleanup()
 
-        start = self.pf_grid.node(int(tile_coord.x), int(tile_coord.y))
+        try:
+            start = self.pf_grid.node(int(tile_coord.x), int(tile_coord.y))
+        except IndexError as e:
+            # FIXME: Occurs when NPCs get stuck inside each other at the edge
+            #  of the map and one of them gets pushed out of the walkable area
+            print(f"NPC is at invalid location {tile_coord}\nFull error: {e}")
+            return False
         end = self.pf_grid.node(*[int(i) for i in coord])
 
         path_raw = self.pf_finder.find_path(start, end, self.pf_grid)

@@ -58,5 +58,13 @@ class AIBehaviourBase(Entity, ABC):
         pass
 
     @abstractmethod
+    def exit_idle(self):
+        pass
+
+    @abstractmethod
+    def exit_moving(self):
+        pass
+
+    @abstractmethod
     def move(self, dt):
         pass
