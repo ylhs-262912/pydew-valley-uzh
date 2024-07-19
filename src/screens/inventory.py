@@ -3,9 +3,10 @@ from src.gui.abstract_menu import AbstractMenu
 from src.enums import FarmingTool, InventoryResource, GameState
 from src.gui.components import ImageButton
 from src.settings import SCREEN_WIDTH
+from itertools import chain
 
 
-class _IRButton(ImageButton):
+class _IMButton(ImageButton):
     def __init__(self, content: pygame.Surface, rect: pygame.Rect, name: str):
         super().__init__(content, rect)
         self._name = name
@@ -39,6 +40,12 @@ class InventoryMenu(AbstractMenu):
         self.switch_screen = switch_screen
         self.overlay_frames = overlay_frames
         self.obj_frames = obj_frames
+        # Splitting this into three lists, because
+        # the inventory's content can get updated with new resources,
+        # and if tools are progressively handed over to the player,
+        # the same requirement might appear for tools and personal items
+        self._inv_buttons = []
+        self._ft_buttons = []
 
     def _inventory_part_btn_setup(self, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to see
@@ -72,21 +79,46 @@ class InventoryMenu(AbstractMenu):
             btn_rect = generic_rect.copy()
             spaces = (column - 1)
             btn_rect.x = button_size[0]*spaces + x_spacing * spaces
-            btn_rect.y = button_size[1]*(row - 1) + _SPACING_BETWEEN_ROWS * spaces
-            yield _IRButton(calc_img, btn_rect, btn_name)
+            btn_rect.y = button_size[1]*(row - 1) + _SPACING_BETWEEN_ROWS * (row - 1)
+            yield _IMButton(calc_img, btn_rect, btn_name)
 
     def _ft_btn_setup(self, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to select their current tool.
+        rect = pygame.Rect((0, 0), button_size)
+        rect.centerx = self.rect.centerx + (self.rect.width / 4)
         for index, tool in enumerate(self._av_tools):
             img = self.overlay_frames[tool]
             calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
             calc_img.blit(img, img.get_frect(center=(32, 32)))
+            btn_rect = rect.copy()
+            btn_rect.y = (button_size[1] + _SPACING_BETWEEN_ROWS) * index
+            yield _IMButton(calc_img, btn_rect, tool)
 
     def _special_btn_setup(self):
+        # TODO: this part requires separate icons for the goggles, the hat and all special items.
         # Part of the menu for items such as the goggles, the hat, etc.
         pass
 
     def button_setup(self):
         button_size = (80, 80)
-        self.buttons.extend(self._inventory_part_btn_setup(button_size))
+        self._inv_buttons.extend(self._inventory_part_btn_setup(button_size))
+        self.buttons.extend(self._inv_buttons)
+        self._ft_buttons.extend(self._ft_btn_setup(button_size))
+        self.buttons.extend(self._ft_buttons)
 
+    def update_display(self):
+        button_size = (80, 80)
+        for btn in chain(self._inv_buttons, self._ft_buttons):
+            self.buttons.remove(btn)
+        self._inv_buttons.clear()
+        self._ft_buttons.clear()
+        self._inv_buttons.extend(
+            self._inventory_part_btn_setup(button_size)
+        )
+        self._ft_buttons.extend(self._ft_btn_setup(button_size))
+        self.buttons.extend(
+            chain(
+                self._inv_buttons,
+                self._ft_buttons
+            )
+        )
