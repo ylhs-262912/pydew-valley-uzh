@@ -35,7 +35,9 @@ class Character(Entity, ABC):
             frames=frames,
             groups=groups,
             collision_sprites=collision_sprites,
+
             shrink=(38 * SCALE_FACTOR, 40 * SCALE_FACTOR),
+
             z=z
         )
 

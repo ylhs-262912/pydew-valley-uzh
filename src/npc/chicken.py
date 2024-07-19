@@ -30,7 +30,5 @@ class Chicken(ChickenBase):
             z=LAYERS["main"]
         )
 
-        self.speed = 250
-
     def exit_idle(self):
         ChickenBehaviourTree.tree.run(ChickenBehaviourTreeContext(self))

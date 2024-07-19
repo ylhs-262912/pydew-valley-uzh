@@ -1,10 +1,9 @@
 import pygame
-from pytmx import TiledMap
 
 from src import settings
 from src.screens.shop import ShopMenu
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.enums import GameState
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CHAR_TILE_SIZE
+from src.enums import GameState, Direction
 from src import support
 
 from src.screens.level import Level
@@ -32,7 +31,7 @@ class Game:
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps: dict[str, TiledMap] | None = None
+        self.tmx_maps = None
         self.sounds = None
         self.font = None
         self._tb_base = None
@@ -47,23 +46,14 @@ class Game:
         self.load_assets()
 
         # screens
-        self.level = Level(
-            self.switch_state, self.tmx_maps, self.frames, self.sounds
-        )
+        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(
-            self.switch_state, self.sounds, self.level
-        )
-        self.shop_menu = ShopMenu(
-            self.level.player, self.switch_state, self.font
-        )
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
+        self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
 
         # dialog
-        self.dm = DialogueManager(
-            self.level.all_sprites,
-            self.tb_cname_base_surf, self.tb_main_text_base_surf
-        )
+        self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
 
         # screens
         self.menus = {
@@ -94,13 +84,14 @@ class Game:
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
         self.character_frames = support.entity_importer(
-            'images/characters', 48, ["down", "up", "left"]
+            'images/characters', CHAR_TILE_SIZE,
+            [Direction.DOWN, Direction.UP, Direction.LEFT]
         )
         self.chicken_frames = support.entity_importer(
-            "images/entities/chicken", 16, ["right"]
+            "images/entities/chicken", 16, [Direction.RIGHT]
         )
         self.cow_frames = support.entity_importer(
-            "images/entities/cow", 32, ["right"]
+            "images/entities/cow", 32, [Direction.RIGHT]
         )
         self.frames = {
             'character': self.character_frames,
@@ -114,18 +105,12 @@ class Game:
 
         # The chicken idle animation looks kinda weird,
         #  that's why the second frame is getting removed
-        self.frames["entities"]["chicken"]["idle"]["left"].pop(1)
-        self.frames["entities"]["chicken"]["idle"]["right"].pop(1)
+        self.frames["entities"]["chicken"]["idle"][Direction.LEFT].pop(1)
+        self.frames["entities"]["chicken"]["idle"][Direction.RIGHT].pop(1)
 
-        self._tb_base = pygame.image.load(
-            support.resource_path("images/textbox.png")
-        ).convert_alpha()
-        self.tb_cname_base_surf = self._tb_base.subsurface(
-            pygame.Rect(0, 0, 212, 67)
-        )
-        self.tb_main_text_base_surf = self._tb_base.subsurface(
-            pygame.Rect(0, 74, 391, 202)
-        )
+        self._tb_base = pygame.image.load(support.resource_path("images/textbox.png")).convert_alpha()
+        self.tb_cname_base_surf = self._tb_base.subsurface(pygame.Rect(0, 0, 212, 67))
+        self.tb_main_text_base_surf = self._tb_base.subsurface(pygame.Rect(0, 74, 391, 202))
         prepare_tb_image(self.tb_cname_base_surf, self.tb_main_text_base_surf)
 
         # sounds

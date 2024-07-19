@@ -35,11 +35,17 @@ class CowBase(Animal, AIBehaviour, ABC):
             collision_sprites=collision_sprites,
 
             shrink=(30, 80),
+
             z=z
         )
         AIBehaviour.__init__(
-            self, pf_matrix=pf_matrix, pf_grid=pf_grid, pf_finder=pf_finder
+            self,
+            pf_matrix=pf_matrix,
+            pf_grid=pf_grid,
+            pf_finder=pf_finder
         )
+
+        self.speed = 150
 
     @abstractmethod
     def flee_from_pos(self, pos: tuple[int, int]):

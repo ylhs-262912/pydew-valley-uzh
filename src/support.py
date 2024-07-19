@@ -7,6 +7,7 @@ import pygame
 import pytmx
 
 from src import settings
+from src.enums import Direction
 from src.settings import (
     SCALE_FACTOR,
     TILE_SIZE,
@@ -114,10 +115,9 @@ def _single_file_importer(
     return char_dict
 
 
-def _single_folder_importer(path: str, size: int, directions: list[str]):
+def _single_folder_importer(path: str, size: int, directions: list[Direction]):
     folder = {}
-    for folder_path, sub_folders, file_names in os.walk(
-            path):
+    for folder_path, sub_folders, file_names in os.walk(path):
         for file_name in file_names:
             folder[file_name.split('.')[0]] = (
                 _single_file_importer(
@@ -130,7 +130,7 @@ def _single_folder_importer(path: str, size: int, directions: list[str]):
 
 
 def entity_importer(
-        chr_path: str, size: int, directions: list[str]
+        chr_path: str, size: int, directions: list[Direction]
 ) -> dict[str, settings.AniFrames]:
     # create dict with subfolders
     char_dict = {}

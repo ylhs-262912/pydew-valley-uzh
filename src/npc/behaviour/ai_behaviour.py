@@ -26,14 +26,15 @@ class AIBehaviour(AIBehaviourBase, ABC):
         self.pf_matrix = pf_matrix
         self.pf_grid = pf_grid
         self.pf_finder = pf_finder
+
+        # AI-controlled Entities will idle for 1-4s on game start
         self.pf_state = AIState.IDLE
         self.pf_state_duration = random.random() * 3 + 1
+
         self.pf_path = []
 
         self.__on_path_abortion_funcs = []
         self.__on_path_completion_funcs = []
-
-        self.speed = 150
 
     def on_path_abortion(self, func: Callable[[], None]):
         self.__on_path_abortion_funcs.append(func)
@@ -78,6 +79,12 @@ class AIBehaviour(AIBehaviourBase, ABC):
         pass
 
     def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
+        """
+        Initiates the AI-controlled Entity to move to the specified tile.
+        :param coord: Coordinate of the tile the Entity should move to.
+        :return: Whether the path has successfully been created.
+        """
+
         if not self.pf_grid.walkable(coord[0], coord[1]):
             return False
 
@@ -116,7 +123,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         return True
 
-    def move(self, dt):
+    def move(self, dt: float):
         # current NPC position on the tilemap
         tile_coord = pygame.Vector2(
             self.rect.centerx, self.rect.centery
@@ -132,13 +139,13 @@ class AIBehaviour(AIBehaviourBase, ABC):
             if not self.pf_path:
                 # runs in case the path has been emptied in the meantime
                 #  (e.g. NPCBehaviourMethods.wander_to_interact created a path
-                #  to a tile adjacent to the NPC)
+                #   to a tile adjacent to the NPC)
                 self.complete_path()
                 return
 
             next_position = (tile_coord.x, tile_coord.y)
 
-            # remaining distance the npc moves in the current frame
+            # remaining distance the NPC moves in the current frame
             remaining_distance = self.speed * dt / SCALED_TILE_SIZE
 
             while remaining_distance:
@@ -165,8 +172,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
                     remaining_distance -= distance
                 else:
                     # the NPC does not reach its current target position in the
-                    # current frame,
-                    #  so it continues to move towards it
+                    # current frame, so it continues to move towards it
                     next_position = (
                         next_position[0] + dx * remaining_distance / distance,
                         next_position[1] + dy * remaining_distance / distance
@@ -176,13 +182,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
                     # Rounding the direction leads to smoother animations,
                     #  e.g. if the distance vector was (-0.99, -0.01), the NPC
                     #  would face upwards, although it moves much more to the
-                    #  left than upwards, as the animation method favors
-                    #  vertical movement
-                    #
-                    # Maybe normalise the vector?
-                    #  Currently, it is not necessary as the NPC is not moving
-                    #  diagonally yet, unless it collides with another entity
-                    #  while it is in-between two coordinates
+                    #  left than upwards, as the get_facing_direction method
+                    #  favors vertical movement
                     self.direction.update((round(dx / distance),
                                            round(dy / distance)))
 

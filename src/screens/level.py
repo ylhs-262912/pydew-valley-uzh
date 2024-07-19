@@ -1,29 +1,23 @@
 import math
 import sys
-import pygame
-
 from random import randint
 
+import pygame
 import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
+from src.enums import FarmingTool, GameState
+from src.groups import AllSprites
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow
 from src.npc.npc import NPC
 from src.npc.setup import AIData
-from src.sprites.player import Player
-from src.support import map_coords_to_tile, load_data, resource_path
-from src.groups import AllSprites
+from src.overlay.overlay import Overlay
+from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
-from src.overlay.sky import Sky, Rain
-from src.overlay.overlay import Overlay
 from src.screens.shop import ShopMenu
-from src.sprites.base import Sprite, AnimatedSprite
-from src.sprites.particle import ParticleSprite
-from src.sprites.tree import Tree
-from src.enums import FarmingTool, GameState
 from src.settings import (
     LAYERS,
     SCALE_FACTOR,
@@ -32,6 +26,11 @@ from src.settings import (
     TILE_SIZE,
     MapDict,
 )
+from src.sprites.base import Sprite, AnimatedSprite
+from src.sprites.particle import ParticleSprite
+from src.sprites.player import Player
+from src.sprites.tree import Tree
+from src.support import map_coords_to_tile, load_data, resource_path
 
 
 class Level:
@@ -71,9 +70,7 @@ class Level:
 
         # weather
         self.sky = Sky()
-        self.rain = Rain(
-            self.all_sprites, frames['level'], self.get_map_size()
-        )
+        self.rain = Rain(self.all_sprites, frames['level'], self.get_map_size())
         self.raining = False
 
         # setup map
@@ -117,8 +114,7 @@ class Level:
         self.setup_layer_tiles('Upper ground', self.setup_environment)
         self.setup_layer_tiles('Water', self.setup_water)
 
-        self.setup_object_layer('Collidable objects',
-                                self.setup_collideable_object)
+        self.setup_object_layer('Collidable objects', self.setup_collideable_object)
         self.setup_object_layer('Collisions', self.setup_collision)
         self.setup_object_layer('Interactions', self.setup_interaction)
         self.setup_object_layer('Entities', self.setup_entities)
@@ -130,8 +126,7 @@ class Level:
             self.setup_object_layer("Animals", self.setup_animal)
 
     def setup_layer_tiles(self, layer, setup_func):
-        for x, y, surf in (self.tmx_maps['main'].
-                           get_layer_by_name(layer).tiles()):
+        for x, y, surf in (self.tmx_maps['main'].get_layer_by_name(layer).tiles()):
             x = x * TILE_SIZE * SCALE_FACTOR
             y = y * TILE_SIZE * SCALE_FACTOR
             pos = (x, y)
@@ -152,9 +147,7 @@ class Level:
             pos = (x, y)
             setup_func(pos, obj)
 
-    def pf_matrix_setup_collision(
-            self, pos: tuple[float, float], size: tuple[float, float]
-    ):
+    def pf_matrix_setup_collision(self, pos: tuple[float, float], size: tuple[float, float]):
         """
         :param pos: Absolute position of collision rect (x, y)
         :param size: Absolute size of collision rect (width, height)
@@ -175,9 +168,7 @@ class Level:
             apple_frames = self.frames['level']['objects']['apple']
             stump_frames = self.frames['level']['objects']['stump']
 
-            Tree(pos, image,
-                 (self.all_sprites, self.collision_sprites, self.tree_sprites),
-                 obj.name, apple_frames, stump_frames)
+            Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
 
@@ -236,8 +227,7 @@ class Level:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")
 
     def get_map_size(self):
-        return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR,
-                self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
+        return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
 
     def activate_music(self):
         volume = 0.1
@@ -268,9 +258,7 @@ class Level:
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
 
-                is_player_near = plant.rect.colliderect(
-                    self.player.plant_collide_rect
-                )
+                is_player_near = plant.rect.colliderect(self.player.plant_collide_rect)
 
                 if plant.harvestable and is_player_near:
 
@@ -281,9 +269,7 @@ class Level:
 
                     # update grid
                     x, y = map_coords_to_tile(plant.rect.center)
-                    tile = self.soil_layer.tiles.get((x, y))
-                    if tile:
-                        tile.planted = False
+                    self.soil_layer.grid[y][x].remove("P")
 
                     # remove plant
                     plant.kill()
@@ -308,9 +294,7 @@ class Level:
                 self.soil_layer.plant(pos, tool, entity.inventory)
 
     def interact(self):
-        collided_interactions = pygame.sprite.spritecollide(
-            self.player, self.interaction_sprites, False
-        )
+        collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)
         if collided_interactions:
             if collided_interactions[0].name == 'Bed':
                 self.start_reset()
@@ -324,22 +308,17 @@ class Level:
     def reset(self):
         self.current_day += 1
 
+        # plants
+        self.soil_layer.update_plants()
+
         self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
 
-        # plants + soil
-        for tile in self.soil_layer.tiles.values():
-            if tile.plant:
-                tile.plant.grow()
-            tile.watered = False
-            for sprite in self.soil_layer.water_sprites:
-                sprite.kill()
-
+        # soil
+        self.soil_layer.remove_water()
         self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining
         if self.raining:
-            for pos, tile in self.soil_layer.tiles.items():
-                self.soil_layer.water(pos)
-                self.soil_layer.update_tile_image(tile, pos)
+            self.soil_layer.water_all()
 
         # apples on the trees
 
@@ -386,7 +365,7 @@ class Level:
             self.sky.set_time(6, 0)   # set to 0600 hours upon sleeping
 
     def update(self, dt):
-        # TODO: refactor / maybe integrate into CowBehaviourTree
+        # TODO: refactor (maybe integrate into CowBehaviourTree)
         if TEST_ANIMALS:
             distance_to_player = 2.5 * SCALED_TILE_SIZE
             for animal in self.animals:

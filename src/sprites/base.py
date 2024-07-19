@@ -36,4 +36,3 @@ class AnimatedSprite(Sprite):
 
     def update(self, dt):
         self.animate(dt)
-

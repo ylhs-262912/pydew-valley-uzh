@@ -33,8 +33,14 @@ class ChickenBase(Animal, AIBehaviour, ABC):
             collision_sprites=collision_sprites,
 
             shrink=(30, 30),
+
             z=z
         )
         AIBehaviour.__init__(
-            self, pf_matrix=pf_matrix, pf_grid=pf_grid, pf_finder=pf_finder
+            self,
+            pf_matrix=pf_matrix,
+            pf_grid=pf_grid,
+            pf_finder=pf_finder
         )
+
+        self.speed = 250

@@ -51,3 +51,5 @@ class NPCBase(Character, AIBehaviour, ABC):
             pf_grid=pf_grid,
             pf_finder=pf_finder
         )
+
+        self.speed = 150

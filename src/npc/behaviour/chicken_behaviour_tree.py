@@ -39,9 +39,11 @@ class ChickenBehaviourTree:
         Makes the Chicken wander to a random location in a 5 tile radius.
         :return: True if path has successfully been created, otherwise False
         """
-
         # current position on the tilemap
-        tile_coord = pygame.Vector2(context.chicken.rect.centerx, context.chicken.rect.centery) / SCALED_TILE_SIZE
+        tile_coord = pygame.Vector2(
+            context.chicken.rect.centerx,
+            context.chicken.rect.centery
+        ) / SCALED_TILE_SIZE
 
         # To limit the required computing power, Chickens currently only try
         # to navigate to 11 random points in their immediate vicinity

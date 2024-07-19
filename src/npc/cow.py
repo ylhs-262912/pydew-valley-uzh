@@ -34,8 +34,6 @@ class Cow(CowBase):
             z=LAYERS["main"]
         )
 
-        self.speed = 150
-
         self.fleeing = False
 
     def exit_idle(self):
@@ -43,7 +41,7 @@ class Cow(CowBase):
 
     def flee_from_pos(self, pos: tuple[int, int]):
         """
-        Currently works with pixel coordinate instead of tile pos
+        TODO: Should work with tile pos instead of pixel coordinate
         """
         if not self.fleeing:
             pos = pos[0] / SCALED_TILE_SIZE, pos[1] / SCALED_TILE_SIZE

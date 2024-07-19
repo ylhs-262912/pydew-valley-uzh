@@ -41,7 +41,10 @@ class CowBehaviourTree:
         """
 
         # current position on the tilemap
-        tile_coord = pygame.Vector2(context.cow.rect.centerx, context.cow.rect.centery) / SCALED_TILE_SIZE
+        tile_coord = pygame.Vector2(
+            context.cow.rect.centerx,
+            context.cow.rect.centery
+        ) / SCALED_TILE_SIZE
 
         # To limit the required computing power, Cows currently only try to
         # navigate to 11 random points in their immediate vicinity

@@ -117,7 +117,7 @@ class Entity(CollideableSprite, ABC):
         set current image based on self._current_ani_frame
         """
         self._current_ani_frame = self.frames[self.state.value][
-            self.facing_direction.value
+            self.facing_direction
         ]
         self.frame_index += 4 * dt
 
