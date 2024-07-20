@@ -116,6 +116,14 @@ class Player(Entity):
                 controls[control_name] = linear_keys[value]
         return controls
 
+    def switch_to_next_tool(self):
+        self.tool_index = (self.tool_index + 1) % len(self.available_tools)
+        self.current_tool = FarmingTool(self.tool_index + FarmingTool.get_first_tool_id())
+
+    def assign_tool_from_name(self, name: str):
+        self.current_tool = FarmingTool.from_serialised_string(name)
+        self.tool_index = (self.current_tool - FarmingTool.get_first_tool_id()) % len(self.available_tools)
+
     def input(self):
         self.controls = self.update_controls()
 
@@ -127,8 +135,7 @@ class Player(Entity):
 
             # tool switch
             if self.controls['next tool']:
-                self.tool_index = (self.tool_index + 1) % len(self.available_tools)
-                self.current_tool = FarmingTool(self.tool_index + FarmingTool.get_first_tool_id())
+                self.switch_to_next_tool()
 
             # tool use
             if self.controls['use']:

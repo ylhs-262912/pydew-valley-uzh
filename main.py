@@ -54,8 +54,8 @@ class Game:
             self.level.player.inventory,
             self.level.player.available_tools,
             self.switch_state,
-            self.frames["overlay"],
-            self.frames["level"]["objects"]
+            self.frames,
+            self.level.player.assign_tool_from_name
         )
 
         # dialog
@@ -78,7 +78,7 @@ class Game:
             self.level.player.save()
             self.current_state = GameState.LEVEL
         if self.current_state == GameState.INVENTORY:
-            self.inventory_menu.update_display()
+            self.inventory_menu.refresh_buttons_content()
 
     def load_assets(self):
         self.tmx_maps = support.tmx_importer('data/maps')

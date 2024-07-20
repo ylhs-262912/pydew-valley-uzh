@@ -4,6 +4,8 @@ from src.enums import FarmingTool, InventoryResource, GameState
 from src.gui.components import ImageButton
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from itertools import chain
+from operator import itemgetter
+from typing import Callable
 
 
 class _IMButton(ImageButton):
@@ -23,8 +25,9 @@ _BUTTON_SIZE = (80, 80)
 _SECTION_TITLES = (
     "Resources",
     "Tools",
-    "Special Items"
+    "Equipment"
 )
+_get_resource_count = itemgetter(1)
 
 
 class InventoryMenu(AbstractMenu):
@@ -41,13 +44,14 @@ class InventoryMenu(AbstractMenu):
         FarmingTool.WATERING_CAN: "water"
     }
 
-    def __init__(self, inventory: dict, available_tools: list[str], switch_screen, overlay_frames, obj_frames):
+    def __init__(self, inventory: dict, available_tools: list[str], switch_screen: Callable, frames, assign_tool: Callable):
         super().__init__("Inventory", (SCREEN_WIDTH, 800))
         self._inventory = inventory
         self._av_tools = available_tools
         self.switch_screen = switch_screen
-        self.overlay_frames = overlay_frames
-        self.obj_frames = obj_frames
+        self.assign_tool = assign_tool
+        self.overlay_frames = frames["overlay"]
+        self.obj_frames = frames["level"]["objects"]
         # Splitting this into three lists, because
         # the inventory's content can get updated with new resources,
         # and if tools are progressively handed over to the player,
@@ -55,6 +59,24 @@ class InventoryMenu(AbstractMenu):
         self._inv_buttons = []
         self._ft_buttons = []
         self.button_setup()
+
+    def _prepare_img_for_ir_button(self, ir: InventoryResource, count: int):
+        match ir:
+            case InventoryResource.APPLE:
+                btn_name = "apple"
+                img = self.obj_frames["apple"]
+            case _:
+                btn_name = self._IR_TO_OVERLAY_IMG[ir]
+                img = self.overlay_frames[btn_name]
+        calc_rect = img.get_frect(center=(32, 32))
+        calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
+        amount = self.font.render(str(count), False, "black")
+        blit_list = (
+            (img, calc_rect),
+            (amount, amount.get_frect(bottomright=(64, 64)))
+        )
+        calc_img.fblits(blit_list)  # faster than doing two separate blits
+        return calc_img, btn_name
 
     def _inventory_part_btn_setup(self, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to see
@@ -65,22 +87,13 @@ class InventoryMenu(AbstractMenu):
         available_width_for_btns = (self.size[0] * 2 // 3)
         btns_per_line = available_width_for_btns // button_size[0]
         x_spacing = (available_width_for_btns % button_size[0]) // max(1, btns_per_line - 1)
-        for button_no, (ir, count) in enumerate(self._inventory.items()):
-            match ir:
-                case InventoryResource.APPLE:
-                    btn_name = "apple"
-                    img = self.obj_frames["apple"]
-                case _:
-                    btn_name = self._IR_TO_OVERLAY_IMG[ir]
-                    img = self.overlay_frames[btn_name]
-            calc_rect = img.get_frect(center=(32, 32))
-            calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
-            amount = self.font.render(str(count), False, "black")
-            blit_list = (
-                (img, calc_rect),
-                (amount, amount.get_frect(bottomright=(64, 64)))
-            )
-            calc_img.fblits(blit_list)  # faster than doing two separate blits
+        for button_no, (ir, count) in enumerate(
+                filter(
+                    _get_resource_count,
+                    self._inventory.items()
+                )
+        ):
+            calc_img, btn_name = self._prepare_img_for_ir_button(ir, count)
             row, column = divmod(button_no, btns_per_line)
             btn_rect = generic_rect.copy()
             btn_rect.x = _LEFT_MARGIN + button_size[0]*column + x_spacing * column
@@ -104,9 +117,9 @@ class InventoryMenu(AbstractMenu):
         # Part of the menu for items such as the goggles, the hat, etc.
         pass
 
-    def button_action(self, *args, **kwargs):
-        # TODO: add the different assign actions.
-        pass
+    def button_action(self, text):
+        if text in self._av_tools:
+            self.assign_tool(text)
 
     def button_setup(self):
         self._inv_buttons.extend(self._inventory_part_btn_setup(_BUTTON_SIZE))
@@ -127,7 +140,9 @@ class InventoryMenu(AbstractMenu):
             pygame.draw.rect(self.display_surface, "white", bg_rect, 0, 4)
             self.display_surface.blit(text_surf, text_rect)
 
-    def update_display(self):
+    def refresh_buttons_content(self):
+        """Replace the existing buttons for available tools and resource count,
+        in case the values change."""
         for btn in chain(self._inv_buttons, self._ft_buttons):
             self.buttons.remove(btn)
         self._inv_buttons.clear()
