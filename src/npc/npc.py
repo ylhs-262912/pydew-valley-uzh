@@ -179,9 +179,12 @@ class NPC(NPCBase):
 
 
         # Normalize the direction vector
-        magnitude = (dx ** 2 + dy ** 2) ** 0.5
-        self.direction.x = round(dx / magnitude)
-        self.direction.y = round(dy / magnitude)
+        magnitude = dx + dy
+        if magnitude:
+            self.direction.x = round(dx / magnitude)
+            self.direction.y = round(dy / magnitude)
+        else:
+            self.direction.xy = (0, 0)
 
 
     def next_path_point(self):

@@ -130,7 +130,8 @@ class Player(Entity):
         if not self.tool_active and not self.blocked:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
-            # self.direction = self.direction.normalize() if self.direction else self.direction
+            if self.direction:
+                self.direction = self.direction.normalize()
 
             # tool switch
             if self.controls['next tool']:
@@ -170,7 +171,7 @@ class Player(Entity):
 
         self.hitbox_rect.x += self.direction.x * self.speed * dt
         self.hitbox_rect.y += self.direction.y * self.speed * dt
-        self.collision()
+        self.check_collision()
 
         self.rect.update(
             (self.hitbox_rect.x - current_hitbox.x,

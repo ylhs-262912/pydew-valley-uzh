@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Callable
 import pygame
 from src import settings
@@ -36,6 +36,7 @@ class Entity(CollideableSprite, ABC):
         self.direction = pygame.Vector2()
         self.speed = 100
         self.collision_sprites = collision_sprites
+        self.is_colliding = False
 
         # tools
         self.available_tools = ['axe', 'hoe', 'water']
@@ -88,15 +89,15 @@ class Entity(CollideableSprite, ABC):
         # x
         x_movement = self.direction.x * self.speed * dt
         self.rect.x += int(x_movement)
-        self.check_collision('horizontal')
 
         # y
         y_movement = self.direction.y * self.speed * dt
         self.rect.y += int(y_movement)
-        self.check_collision('vertical')
+
+        self.check_collision()
 
     # FIXME: Sometimes NPCs get stuck inside the player's hitbox
-    def collision(self) -> bool:
+    def check_collision(self):
         """
         :return: true: Entity collides with a sprite in self.collision_sprites, otherwise false
         """
@@ -130,7 +131,7 @@ class Entity(CollideableSprite, ABC):
                     elif shortest_distance == distances[3]:
                         self.hitbox_rect.top = colliding_rect.bottom
 
-        return bool(colliding_rect)
+        self.is_colliding = bool(colliding_rect)
 
     def animate(self, dt):
         current_animation = self.assets[self.state][self.facing_direction]
