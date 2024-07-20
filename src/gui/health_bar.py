@@ -87,13 +87,13 @@ class HealthProgressBar(pygame.sprite.Sprite):
             self.health[3][0] = self.health_bar_rect.right - 3
 
     def change_color(self):
-        health_percent = (self.health[1][0] - self.pos[0]) / self.health_bar_rect.width
+        health_percent = abs((self.health[1][0] - self.pos[0]) / self.health_bar_rect.width)
         if health_percent > 0.5:
             factor = (health_percent - 0.5) * 2
-            self.color = self.colors['Green'].lerp(self.colors['Yellow'], factor)
+            self.color = self.colors['Yellow'].lerp(self.colors['Green'], factor)
         else:
             factor = health_percent * 2
-            self.color = self.colors['Yellow'].lerp(self.colors['Red'], factor)
+            self.color = self.colors['Red'].lerp(self.colors['Yellow'], factor)
 
     def update(self, screen, dt):
         self.change_color()
