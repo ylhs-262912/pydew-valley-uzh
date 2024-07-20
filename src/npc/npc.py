@@ -57,7 +57,7 @@ class NPC(NPCBase):
             hitbox[2] * SCALE_FACTOR,
             hitbox[3] * SCALE_FACTOR,
         )
-        self.hitbox_rect.update(
+        self.hitbox_rect = pygame.Rect(
             self.rect.left + self.relative_hitbox_rect.x,
             self.rect.top + self.relative_hitbox_rect.y,
             self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
@@ -213,4 +213,3 @@ class NPC(NPCBase):
 
         self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
                           self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
-        self.plant_collide_rect.center = self.hitbox_rect.center

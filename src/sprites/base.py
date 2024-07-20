@@ -1,3 +1,5 @@
+from abc import ABC
+
 import pygame
 
 from src.mapobjects import MapObjectType
@@ -20,10 +22,8 @@ class Sprite(pygame.sprite.Sprite):
         self.name = name
 
 
-class CollideableSprite(Sprite):
-    def __init__(self, pos, surf, groups, z=LAYERS['main']):
-        super().__init__(pos, surf, groups, z)
-        self.hitbox_rect = pygame.rect.FRect()
+class CollideableSprite(Sprite, ABC):
+    hitbox_rect: pygame.Rect
 
 
 class CollideableMapObject(CollideableSprite):

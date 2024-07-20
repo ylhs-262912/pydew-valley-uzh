@@ -35,7 +35,6 @@ class Entity(CollideableSprite, ABC):
         self.direction = pygame.Vector2()
         self.speed = 100
         self.collision_sprites = collision_sprites
-        self.plant_collide_rect = self.hitbox_rect.inflate(10, 10)
 
         # tools
         self.available_tools = ['axe', 'hoe', 'water']

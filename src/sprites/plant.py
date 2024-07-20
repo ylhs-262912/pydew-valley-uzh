@@ -1,5 +1,5 @@
 from src.settings import LAYERS, GROW_SPEED, SCALE_FACTOR
-from src.sprites.base import CollideableSprite, Sprite
+from src.sprites.base import Sprite
 from pygame.math import Vector2 as vector
 
 
