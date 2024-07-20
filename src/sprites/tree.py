@@ -1,13 +1,13 @@
 import random
+
 import pygame
 
-from src.mapobjects import MapObjectType
-from src.sprites.base import Sprite, CollideableMapObject
 from src import timer
-from src.settings import LAYERS, SCALE_FACTOR, APPLE_POS
-from src.support import generate_particle_surf
 from src.enums import InventoryResource
-
+from src.mapobjects import MapObjectType
+from src.settings import LAYERS, APPLE_POS
+from src.sprites.base import Sprite, CollideableMapObject
+from src.support import generate_particle_surf
 
 
 class Tree(CollideableMapObject):
@@ -17,7 +17,6 @@ class Tree(CollideableMapObject):
             object_type,
             groups,
         )
-
         self.name = name
         self.part_surf = generate_particle_surf(self.image)
         self.apple_surf = apple_surf

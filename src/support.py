@@ -1,6 +1,4 @@
 import os
-from xml.etree import ElementTree
-
 import pygame
 import pytmx
 import sys

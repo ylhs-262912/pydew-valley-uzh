@@ -45,6 +45,7 @@ class Level:
         self.pf_grid: PF_Grid | None = None
         self.pf_finder = PF_AStarFinder()
 
+        # tilemap objects
         self.map_objects: MapObjects | None = None
 
         # sprite groups
@@ -172,7 +173,9 @@ class Level:
         else:
             object_type = self.map_objects.objects[obj.properties.get("id")]
 
-            CollideableMapObject(pos, object_type, (self.all_sprites, self.collision_sprites))
+            CollideableMapObject(
+                pos, object_type, (self.all_sprites, self.collision_sprites)
+            )
 
         self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
@@ -248,7 +251,9 @@ class Level:
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
 
-                is_player_near = plant.rect.colliderect(self.player.hitbox_rect)
+                is_player_near = plant.rect.colliderect(
+                    self.player.hitbox_rect
+                )
 
                 if plant.harvestable and is_player_near:
 
@@ -334,16 +339,7 @@ class Level:
             entity.direction = pygame.Vector2(0, 0)
 
     # draw
-    def draw_overlay(self):
-        current_time = self.sky.get_time()
-        self.overlay.display(current_time)
-
-    def draw(self, dt):
-        self.display_surface.fill('gray')
-        self.all_sprites.draw(self.player.rect.center)
-        self.draw_overlay()
-        self.sky.display(dt)
-
+    def _test_draw_hitboxes(self):
         for entity in self.all_sprites.sprites():
             if "hitbox_rect" not in entity.__dict__.keys():
                 continue
@@ -353,6 +349,17 @@ class Level:
                  entity.hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.width / 2,
                  entity.hitbox_rect.width, entity.hitbox_rect.height),
                 2)
+
+    def draw_overlay(self):
+        current_time = self.sky.get_time()
+        self.overlay.display(current_time)
+
+    def draw(self, dt):
+        self.display_surface.fill('gray')
+        self.all_sprites.draw(self.player.rect.center)
+        self.draw_overlay()
+        self.sky.display(dt)
+        self._test_draw_hitboxes()
 
     # update
     def update_rain(self):

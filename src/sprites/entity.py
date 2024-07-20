@@ -1,5 +1,3 @@
-
-
 from abc import ABC, abstractmethod
 from typing import Callable
 import pygame
@@ -134,10 +132,15 @@ class Entity(CollideableSprite, ABC):
         if not self.tool_active:
             self.image = current_animation.get_frame(self.frame_index)
         else:
-            tool_animation = self.assets[EntityState(self.available_tools[self.tool_index])][self.facing_direction]
+            tool_animation = self.assets[
+                EntityState(self.available_tools[self.tool_index])
+            ][self.facing_direction]
             if self.frame_index < len(tool_animation):
-                self.image = tool_animation.get_frame(min((round(self.frame_index), len(tool_animation) - 1)))
-                if round(self.frame_index) == len(tool_animation) - 1 and not self.just_used_tool:
+                self.image = tool_animation.get_frame(
+                    min(round(self.frame_index), len(tool_animation) - 1)
+                )
+                if (round(self.frame_index) == len(tool_animation) - 1
+                        and not self.just_used_tool):
                     self.just_used_tool = True
                     self.use_tool(ItemToUse.REGULAR_TOOL)
             else:
