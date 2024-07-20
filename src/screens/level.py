@@ -8,21 +8,21 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
+from src.mapobjects import MapObjects
 from src.npc.npc import NPC
 from src.npc.npc_behaviour import NPCBehaviourMethods
-from src.support import map_coords_to_tile, load_data, resource_path, \
-    get_object_hitboxes
+from src.support import map_coords_to_tile, load_data, resource_path
 from src.groups import AllSprites
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.overlay.sky import Sky, Rain
 from src.overlay.overlay import Overlay
 from src.screens.shop import ShopMenu
-from src.sprites.base import Sprite, AnimatedSprite, CollideableSprite
+from src.sprites.base import Sprite, AnimatedSprite, CollideableMapObject
 from src.sprites.particle import ParticleSprite
 from src.sprites.tree import Tree
 from src.sprites.player import Player
-from src.enums import FarmingTool, GameState
+from src.enums import FarmingTool, GameState, Tileset
 from src.settings import (
     TILE_SIZE,
     SCALE_FACTOR,
@@ -44,12 +44,13 @@ class Level:
         self.pf_grid: PF_Grid | None = None
         self.pf_finder = PF_AStarFinder()
 
+        self.map_objects: MapObjects | None = None
+
         # sprite groups
         self.entities = {}
         self.npcs = {}
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
-        self.collideable_object_hitboxes: dict[int, tuple[int, int, int, int]] = {}
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
 
@@ -105,7 +106,7 @@ class Level:
         self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
         self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
 
-        self.collideable_object_hitboxes = get_object_hitboxes("data/tilesets/objects.tsx")
+        self.map_objects = MapObjects(Tileset.OBJECTS)
 
         self.setup_layer_tiles('Lower ground', self.setup_environment)
         self.setup_layer_tiles('Upper ground', self.setup_environment)
@@ -157,27 +158,18 @@ class Level:
                 self.pf_matrix[tile_y + h][tile_x + w] = 0
 
     def setup_collideable_object(self, pos, obj: pytmx.TiledObject):
-        image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
-
         if obj.name == 'Tree':
             apple_frames = self.frames['level']['objects']['apple']
             stump_frames = self.frames['level']['objects']['stump']
 
-            Tree(pos, image,
+            Tree(pos,
+                 self.map_objects.objects[obj.properties.get("id")],
                  (self.all_sprites, self.collision_sprites, self.tree_sprites),
-                 self.collideable_object_hitboxes.get(obj.properties.get("id")),
                  obj.name, apple_frames, stump_frames)
         else:
-            hitbox = self.collideable_object_hitboxes.get(obj.properties.get("id"))
-            x = CollideableSprite(
-                pos, image, (self.all_sprites, self.collision_sprites)
-            )
-            x.hitbox_rect = pygame.rect.Rect(
-                x.rect.left + hitbox[0] * SCALE_FACTOR,
-                x.rect.top + hitbox[1] * SCALE_FACTOR,
-                hitbox[2] * SCALE_FACTOR,
-                hitbox[3] * SCALE_FACTOR,
-            )
+            object_type = self.map_objects.objects[obj.properties.get("id")]
+
+            CollideableMapObject(pos, object_type, (self.all_sprites, self.collision_sprites))
 
         self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 

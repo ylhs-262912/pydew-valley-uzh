@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, nonmember  # noqa
+from enum import Enum, IntEnum, StrEnum, nonmember  # noqa
 
 
 class PlayerState(IntEnum):
@@ -199,3 +199,11 @@ class SeedType(IntEnum):
 
     def as_plant_name(self):
         return self._AS_FTS[self].as_serialised_string().removesuffix(" seed")
+
+
+class Tileset(StrEnum):
+    GRASS = "data/tilesets/grass_tileset.tsx"
+    HILL = "data/tilesets/hill_tileset.tsx"
+    HOUSE = "data/tilesets/house_tileset.tsx"
+    OBJECTS = "data/tilesets/objects.tsx"
+    SOIL = "data/tilesets/soil_tileset.tsx"

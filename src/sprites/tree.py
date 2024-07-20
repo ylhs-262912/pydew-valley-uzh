@@ -1,7 +1,9 @@
 
 import random
 import pygame
-from src.sprites.base import CollideableSprite, Sprite
+
+from src.mapobjects import MapObjectType
+from src.sprites.base import Sprite, CollideableMapObject
 from src import timer
 from src.settings import LAYERS, SCALE_FACTOR, APPLE_POS
 from src.support import generate_particle_surf
@@ -9,18 +11,12 @@ from src.enums import InventoryResource
 
 
 
-class Tree(CollideableSprite):
-    def __init__(self, pos, surf, groups, hitbox: tuple[int, int, int, int], name, apple_surf, stump_surf):
+class Tree(CollideableMapObject):
+    def __init__(self, pos, object_type: MapObjectType, groups, name, apple_surf, stump_surf):
         super().__init__(
             pos,
-            surf,
+            object_type,
             groups,
-        )
-        self.hitbox_rect = pygame.rect.Rect(
-            self.rect.left + hitbox[0] * SCALE_FACTOR,
-            self.rect.top + hitbox[1] * SCALE_FACTOR,
-            hitbox[2] * SCALE_FACTOR,
-            hitbox[3] * SCALE_FACTOR,
         )
 
         self.name = name
