@@ -2,7 +2,7 @@ import random
 import pygame
 
 from src.settings import SCALE_FACTOR
-from src.support import import_image, interpolate_color
+from src.support import import_image
 
 class HealthProgressBar(pygame.sprite.Sprite):
     def __init__(self, hp):
@@ -39,6 +39,13 @@ class HealthProgressBar(pygame.sprite.Sprite):
 
         # shake
         self.SHAKE_INTENSITY = 1.5
+
+        # colors for health bar.
+        self.colors = {
+            'Red': pygame.Color(255, 0, 0),
+            'Yellow': pygame.Color(255, 255, 0),
+            'Green': pygame.Color(0, 255, 0),
+        }
 
     def render(self, screen):
         health_percent = (self.health[1][0] - self.pos[0]) / self.health_bar_rect.width
@@ -83,10 +90,10 @@ class HealthProgressBar(pygame.sprite.Sprite):
         health_percent = (self.health[1][0] - self.pos[0]) / self.health_bar_rect.width
         if health_percent > 0.5:
             factor = (health_percent - 0.5) * 2
-            self.color = interpolate_color((255, 255, 0), (0, 255, 0), factor)
+            self.color = self.colors['Green'].lerp(self.colors['Yellow'], factor)
         else:
             factor = health_percent * 2
-            self.color = interpolate_color((255, 0, 0), (255, 255, 0), factor)
+            self.color = self.colors['Yellow'].lerp(self.colors['Red'], factor)
 
     def update(self, screen, dt):
         self.change_color()
