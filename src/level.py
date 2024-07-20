@@ -338,15 +338,11 @@ class Level:
         if self.day_transition:
             self.transition.play()
 
-        for npc in self.npcs.values():
+        for entity in self.all_sprites.sprites():
+            if not "hitbox_rect" in entity.__dict__.keys():
+                continue
             pygame.draw.rect(self.display_surface, (255, 0, 0),
-                             (npc.hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
-                              npc.hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.width / 2,
-                              npc.hitbox_rect.width, npc.hitbox_rect.height),
+                             (entity.hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
+                              entity.hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.width / 2,
+                              entity.hitbox_rect.width, entity.hitbox_rect.height),
                              2)
-
-        pygame.draw.rect(self.display_surface, (0, 0, 255),
-                         (self.entities["Player"].hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
-                          self.entities["Player"].hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.height / 2,
-                          self.entities["Player"].hitbox_rect.width, self.entities["Player"].hitbox_rect.height),
-                         2)
