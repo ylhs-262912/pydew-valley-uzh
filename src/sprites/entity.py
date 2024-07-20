@@ -16,7 +16,6 @@ class Entity(CollideableSprite, ABC):
             frames: dict[str, settings.AniFrames],
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
-            shrink: tuple[int, int],
             apply_tool: Callable,
             z=LAYERS['main']):
 
@@ -29,7 +28,6 @@ class Entity(CollideableSprite, ABC):
             pos,
             self.frames[self.state][self.facing_direction][self.frame_index],
             groups,
-            shrink,
             z=z
         )
 
@@ -89,14 +87,14 @@ class Entity(CollideableSprite, ABC):
         """
         :return: true: Entity collides with a sprite in self.collision_sprites, otherwise false
         """
-        colliding_rect = False
+        colliding_rect = None
 
         for sprite in self.collision_sprites:
             if sprite is not self:
 
                 # Entities should collide with their hitbox_rects to make them able to approach
                 #  each other further than the empty space on their sprite images would allow
-                if isinstance(sprite, Entity):
+                if isinstance(sprite, CollideableSprite):
                     if sprite.hitbox_rect.colliderect(self.hitbox_rect):
                         colliding_rect = sprite.hitbox_rect
                 elif sprite.rect.colliderect(self.hitbox_rect):

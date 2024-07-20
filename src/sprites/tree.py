@@ -10,13 +10,19 @@ from src.enums import InventoryResource
 
 
 class Tree(CollideableSprite):
-    def __init__(self, pos, surf, groups, name, apple_surf, stump_surf):
+    def __init__(self, pos, surf, groups, hitbox: tuple[int, int, int, int], name, apple_surf, stump_surf):
         super().__init__(
             pos,
             surf,
             groups,
-            (30 * SCALE_FACTOR, 20 * SCALE_FACTOR),
         )
+        self.hitbox_rect = pygame.rect.Rect(
+            self.rect.left + hitbox[0] * SCALE_FACTOR,
+            self.rect.top + hitbox[1] * SCALE_FACTOR,
+            hitbox[2] * SCALE_FACTOR,
+            hitbox[3] * SCALE_FACTOR,
+        )
+
         self.name = name
         self.part_surf = generate_particle_surf(self.image)
         self.apple_surf = apple_surf

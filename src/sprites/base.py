@@ -20,9 +20,9 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class CollideableSprite(Sprite):
-    def __init__(self, pos, surf, groups, shrink, z=LAYERS['main']):
+    def __init__(self, pos, surf, groups, z=LAYERS['main']):
         super().__init__(pos, surf, groups, z)
-        self.hitbox_rect = self.rect.inflate(-shrink[0], -shrink[1])
+        self.hitbox_rect = pygame.rect.FRect()
 
 
 

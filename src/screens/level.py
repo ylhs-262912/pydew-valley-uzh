@@ -10,14 +10,15 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 from src.npc.npc import NPC
 from src.npc.npc_behaviour import NPCBehaviourMethods
-from src.support import map_coords_to_tile, load_data, resource_path
+from src.support import map_coords_to_tile, load_data, resource_path, \
+    get_object_hitboxes
 from src.groups import AllSprites
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.overlay.sky import Sky, Rain
 from src.overlay.overlay import Overlay
 from src.screens.shop import ShopMenu
-from src.sprites.base import Sprite, AnimatedSprite
+from src.sprites.base import Sprite, AnimatedSprite, CollideableSprite
 from src.sprites.particle import ParticleSprite
 from src.sprites.tree import Tree
 from src.sprites.player import Player
@@ -48,6 +49,7 @@ class Level:
         self.npcs = {}
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
+        self.collideable_object_hitboxes: dict[int, tuple[int, int, int, int]] = {}
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
 
@@ -102,6 +104,8 @@ class Level:
 
         self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
         self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
+
+        self.collideable_object_hitboxes = get_object_hitboxes("data/tilesets/objects.tsx")
 
         self.setup_layer_tiles('Lower ground', self.setup_environment)
         self.setup_layer_tiles('Upper ground', self.setup_environment)
@@ -159,9 +163,21 @@ class Level:
             apple_frames = self.frames['level']['objects']['apple']
             stump_frames = self.frames['level']['objects']['stump']
 
-            Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
+            Tree(pos, image,
+                 (self.all_sprites, self.collision_sprites, self.tree_sprites),
+                 self.collideable_object_hitboxes.get(obj.properties.get("id")),
+                 obj.name, apple_frames, stump_frames)
         else:
-            Sprite(pos, image, (self.all_sprites, self.collision_sprites))
+            hitbox = self.collideable_object_hitboxes.get(obj.properties.get("id"))
+            x = CollideableSprite(
+                pos, image, (self.all_sprites, self.collision_sprites)
+            )
+            x.hitbox_rect = pygame.rect.Rect(
+                x.rect.left + hitbox[0] * SCALE_FACTOR,
+                x.rect.top + hitbox[1] * SCALE_FACTOR,
+                hitbox[2] * SCALE_FACTOR,
+                hitbox[3] * SCALE_FACTOR,
+            )
 
         self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
@@ -181,6 +197,7 @@ class Level:
         self.entities[obj.name] = Player(
             game=self.game,
             pos=pos,
+            hitbox=(18, 26, 12, 6),
             frames=self.frames['character']['rabbit'],
             groups=(self.all_sprites, self.collision_sprites),
             collision_sprites=self.collision_sprites,
@@ -192,6 +209,7 @@ class Level:
 
     def setup_npc(self, pos, obj):
         self.npcs[obj.name] = NPC(pos=pos,
+                                  hitbox=(18, 26, 12, 6),
                                   frames=self.frames['character']['rabbit'],
                                   groups=(self.all_sprites, self.collision_sprites),
                                   collision_sprites=self.collision_sprites,
@@ -330,6 +348,16 @@ class Level:
         self.all_sprites.draw(self.player.rect.center)
         self.draw_overlay()
         self.sky.display(dt)
+
+        for entity in self.all_sprites.sprites():
+            if "hitbox_rect" not in entity.__dict__.keys():
+                continue
+            pygame.draw.rect(
+                self.display_surface, (255, 0, 0),
+                (entity.hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
+                 entity.hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.width / 2,
+                 entity.hitbox_rect.width, entity.hitbox_rect.height),
+                2)
 
     # update
     def update_rain(self):

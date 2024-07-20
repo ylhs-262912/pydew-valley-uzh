@@ -1,12 +1,12 @@
 from src.settings import LAYERS, GROW_SPEED, SCALE_FACTOR
-from src.sprites.base import CollideableSprite
+from src.sprites.base import CollideableSprite, Sprite
 from pygame.math import Vector2 as vector
 
 
-class Plant(CollideableSprite):
+class Plant(Sprite):
     def __init__(self, seed_type, groups, tile, frames):
         super().__init__(tile.rect.center,
-                         frames[0], groups, (0, 0), LAYERS['plant'])
+                         frames[0], groups, LAYERS['plant'])
         self.rect.center = tile.rect.center + \
             vector(0.5, -3) * SCALE_FACTOR
         self.tile = tile

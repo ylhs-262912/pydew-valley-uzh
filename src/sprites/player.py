@@ -21,6 +21,7 @@ class Player(Entity):
             self,
             game,
             pos: settings.Coordinate,
+            hitbox: tuple[int, int, int, int],
             frames,
             groups,
             collision_sprites: pygame.sprite.Group,
@@ -37,8 +38,19 @@ class Player(Entity):
             frames,
             groups,
             collision_sprites,
-            (44 * SCALE_FACTOR, 40 * SCALE_FACTOR),
             apply_tool
+        )
+
+        self.relative_hitbox_rect = pygame.rect.Rect(
+            hitbox[0] * settings.SCALE_FACTOR,
+            hitbox[1] * settings.SCALE_FACTOR,
+            hitbox[2] * settings.SCALE_FACTOR,
+            hitbox[3] * settings.SCALE_FACTOR,
+        )
+        self.hitbox_rect.update(
+            self.rect.left + self.relative_hitbox_rect.x,
+            self.rect.top + self.relative_hitbox_rect.y,
+            self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
         )
 
         # movement
@@ -156,7 +168,8 @@ class Player(Entity):
         self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
         self.collision('vertical')
-        self.rect.center = self.hitbox_rect.center
+        self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
+                          self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
         self.plant_collide_rect.center = self.hitbox_rect.center
 
     def get_current_tool_string(self):

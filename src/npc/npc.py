@@ -20,6 +20,7 @@ class NPC(NPCBase):
     def __init__(
             self,
             pos: Coordinate,
+            hitbox: tuple[int, int, int, int],
             frames: dict[str, AniFrames],
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
@@ -47,10 +48,19 @@ class NPC(NPCBase):
             groups,
             collision_sprites,
 
-            (32 * SCALE_FACTOR, 32 * SCALE_FACTOR),
-            # scales the hitbox down to the exact tile size
-
             apply_tool
+        )
+
+        self.relative_hitbox_rect = pygame.rect.Rect(
+            hitbox[0] * SCALE_FACTOR,
+            hitbox[1] * SCALE_FACTOR,
+            hitbox[2] * SCALE_FACTOR,
+            hitbox[3] * SCALE_FACTOR,
+        )
+        self.hitbox_rect.update(
+            self.rect.left + self.relative_hitbox_rect.x,
+            self.rect.top + self.relative_hitbox_rect.y,
+            self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
         )
 
         self.speed = 150
@@ -187,20 +197,20 @@ class NPC(NPCBase):
                     self.direction.update((round(dx / distance), round(dy / distance)))
 
             self.hitbox_rect.update((
-                next_position[0] * SCALED_TILE_SIZE - self.hitbox_rect.width / 2,
+                next_position[0] * SCALED_TILE_SIZE - self.rect.width / 2 + self.relative_hitbox_rect.x,
                 self.hitbox_rect.top,
             ), self.hitbox_rect.size)
             colliding = self.collision('horizontal')
 
             self.hitbox_rect.update((
                 self.hitbox_rect.left,
-                next_position[1] * SCALED_TILE_SIZE - self.hitbox_rect.height / 2
+                next_position[1] * SCALED_TILE_SIZE - self.rect.height / 2 + self.relative_hitbox_rect.y,
             ), self.hitbox_rect.size)
             colliding = colliding or self.collision('vertical')
 
             if colliding:
                 self.abort_path()
 
-        self.rect.update((self.hitbox_rect.centerx - self.rect.width / 2,
-                          self.hitbox_rect.centery - self.rect.height / 2), self.rect.size)
+        self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
+                          self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
         self.plant_collide_rect.center = self.hitbox_rect.center
