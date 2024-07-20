@@ -72,13 +72,7 @@ class Entity(CollideableSprite, ABC):
     def get_state(self):
         self.state = 'walk' if self.direction else 'idle'
 
-    def get_facing_direction(self):
-        # prioritizes vertical animations, flip if statements to get horizontal
-        # ones
-        if self.direction.x:
-            self.facing_direction = 'right' if self.direction.x > 0 else 'left'
-        if self.direction.y:
-            self.facing_direction = 'down' if self.direction.y > 0 else 'up'
+    def _update_axe_hitbox(self):
         match self.facing_direction:
             case "down":
                 self.axe_hitbox.x = self.rect.centerx - 24
@@ -92,6 +86,15 @@ class Entity(CollideableSprite, ABC):
             case "right":
                 self.axe_hitbox.x = self.rect.centerx + 16
                 self.axe_hitbox.y = self.rect.centery + 8
+
+    def get_facing_direction(self):
+        # prioritizes vertical animations, flip if statements to get horizontal
+        # ones
+        if self.direction.x:
+            self.facing_direction = 'right' if self.direction.x > 0 else 'left'
+        if self.direction.y:
+            self.facing_direction = 'down' if self.direction.y > 0 else 'up'
+        self._update_axe_hitbox()
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)

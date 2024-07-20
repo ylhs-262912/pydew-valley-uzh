@@ -53,9 +53,10 @@ class Game:
         self.inventory_menu = InventoryMenu(
             self.level.player.inventory,
             self.level.player.available_tools,
-            self.switch_state,
             self.frames,
-            self.level.player.assign_tool_from_name
+            self.switch_state,
+            self.level.player.assign_tool_from_name,
+            self.level.player.assign_seed
         )
 
         # dialog

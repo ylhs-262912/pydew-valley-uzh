@@ -19,7 +19,7 @@ class _IMButton(ImageButton):
 
 
 _SPACING_BETWEEN_ROWS = 20
-_TOP_MARGIN = 160
+_TOP_MARGIN = 200
 _LEFT_MARGIN = 40
 _BUTTON_SIZE = (80, 80)
 _SECTION_TITLES = (
@@ -44,12 +44,21 @@ class InventoryMenu(AbstractMenu):
         FarmingTool.WATERING_CAN: "water"
     }
 
-    def __init__(self, inventory: dict, available_tools: list[str], switch_screen: Callable, frames, assign_tool: Callable):
+    def __init__(
+            self,
+            inventory: dict,
+            available_tools: list[str],
+            frames: dict,
+            switch_screen: Callable,
+            assign_tool: Callable,
+            assign_seed: Callable
+    ):
         super().__init__("Inventory", (SCREEN_WIDTH, 800))
         self._inventory = inventory
         self._av_tools = available_tools
         self.switch_screen = switch_screen
         self.assign_tool = assign_tool
+        self.assign_seed = assign_seed
         self.overlay_frames = frames["overlay"]
         self.obj_frames = frames["level"]["objects"]
         # Splitting this into three lists, because
@@ -96,7 +105,7 @@ class InventoryMenu(AbstractMenu):
             calc_img, btn_name = self._prepare_img_for_ir_button(ir, count)
             row, column = divmod(button_no, btns_per_line)
             btn_rect = generic_rect.copy()
-            btn_rect.x = _LEFT_MARGIN + button_size[0]*column + x_spacing * column
+            btn_rect.x = _LEFT_MARGIN + button_size[0] * column + x_spacing * column
             btn_rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * row
             yield _IMButton(calc_img, btn_rect, btn_name)
 
@@ -120,6 +129,8 @@ class InventoryMenu(AbstractMenu):
     def button_action(self, text):
         if text in self._av_tools:
             self.assign_tool(text)
+        if "seed" in text:
+            self.assign_seed(text)
 
     def button_setup(self):
         self._inv_buttons.extend(self._inventory_part_btn_setup(_BUTTON_SIZE))
@@ -132,7 +143,7 @@ class InventoryMenu(AbstractMenu):
         top = SCREEN_HEIGHT / 20 + 75
         for i, section_name in enumerate(_SECTION_TITLES):
             text_surf = self.font.render(section_name, False, "black")
-            text_rect = text_surf.get_frect(top=top, centerx=(self.rect.width * (i + 1))/4)
+            text_rect = text_surf.get_frect(top=top, centerx=(self.rect.width * (i + 1)) / 4)
 
             bg_rect = pygame.Rect(0, 0, text_rect.width + 40, 50)
             bg_rect.center = text_rect.center
@@ -157,3 +168,9 @@ class InventoryMenu(AbstractMenu):
                 self._ft_buttons
             )
         )
+
+    def handle_events(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+                self.switch_screen(GameState.LEVEL)

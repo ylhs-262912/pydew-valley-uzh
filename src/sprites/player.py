@@ -124,6 +124,14 @@ class Player(Entity):
         self.current_tool = FarmingTool.from_serialised_string(name)
         self.tool_index = (self.current_tool - FarmingTool.get_first_tool_id()) % len(self.available_tools)
 
+    def switch_to_next_seed(self):
+        self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
+        self.current_seed = FarmingTool(self.seed_index + FarmingTool.get_first_seed_id())
+
+    def assign_seed(self, name: str):
+        self.current_seed = FarmingTool.from_serialised_string(name.replace("_", " "))
+        self.seed_index = (self.current_seed - FarmingTool.get_first_seed_id()) % len(self.available_seeds)
+
     def input(self):
         self.controls = self.update_controls()
 
@@ -147,8 +155,7 @@ class Player(Entity):
 
             # seed switch
             if self.controls['next seed']:
-                self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
-                self.current_seed = FarmingTool(self.seed_index + FarmingTool.get_first_seed_id())
+                self.switch_to_next_seed()
 
             # seed used
             if self.controls['plant']:

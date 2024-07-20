@@ -54,6 +54,9 @@ class AbstractMenu(ABC):
     def button_setup(self):
         pass
 
+    def handle_events(self, event: pygame.event.Event):
+        pass
+
     # setup
     def rect_setup(self):
         self.rect = pygame.Rect((0, 0), self.size)
