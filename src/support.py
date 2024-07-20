@@ -141,6 +141,9 @@ def sound_importer(
 
 
 def save_data(data, file_name):
+    folder_path = resource_path('data/settings')
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
     with open(resource_path('data/settings/' + file_name), 'w') as file:
         json.dump(data, file, indent=4)
 
@@ -148,6 +151,10 @@ def save_data(data, file_name):
 def load_data(file_name):
     with open(resource_path('data/settings/' + file_name), 'r') as file:
         return json.load(file)
+
+
+def map_coords_to_tile(pos):
+    return pos[0] // (TILE_SIZE * SCALE_FACTOR), pos[1] // (TILE_SIZE * SCALE_FACTOR)
 
 
 def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
@@ -163,6 +170,14 @@ def flip_items(d: dict) -> dict:
     for key, val in d.items():
         ret[val] = key
     return ret
+
+def tile_to_screen(pos):
+    tile_size = TILE_SIZE * SCALE_FACTOR
+    return pos[0] * tile_size, pos[1] * tile_size
+
+def screen_to_tile(pos):
+    tile_size = TILE_SIZE * SCALE_FACTOR
+    return pos[0] // tile_size, pos[1] // tile_size
 
 
 def get_object_hitboxes(path_to_tileset: str) -> dict[int, tuple[int, int, int, int]]:
