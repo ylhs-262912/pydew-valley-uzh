@@ -51,8 +51,7 @@ class Game:
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
         self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
         self.inventory_menu = InventoryMenu(
-            self.level.player.inventory,
-            self.level.player.available_tools,
+            self.level.player,
             self.frames,
             self.switch_state,
             self.level.player.assign_tool_from_name,

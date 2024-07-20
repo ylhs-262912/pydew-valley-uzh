@@ -46,16 +46,15 @@ class InventoryMenu(AbstractMenu):
 
     def __init__(
             self,
-            inventory: dict,
-            available_tools: list[str],
+            player,
             frames: dict,
             switch_screen: Callable,
             assign_tool: Callable,
             assign_seed: Callable
     ):
         super().__init__("Inventory", (SCREEN_WIDTH, 800))
-        self._inventory = inventory
-        self._av_tools = available_tools
+        self._inventory = player.inventory
+        self._av_tools = player.available_tools
         self.switch_screen = switch_screen
         self.assign_tool = assign_tool
         self.assign_seed = assign_seed
