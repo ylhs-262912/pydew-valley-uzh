@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Callable
 
+import pygame
+import random
+
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
@@ -10,11 +13,8 @@ from src.npc.npc_behaviour import NPCBehaviourContext, NPCBehaviourMethods
 from src.enums import InventoryResource
 from src.settings import SCALED_TILE_SIZE
 from src.settings import Coordinate
-
-import pygame
-import random
-
 from src.sprites.setup import EntityAsset
+from src.support import screen_to_tile
 
 
 class NPC(NPCBase):
@@ -61,7 +61,7 @@ class NPC(NPCBase):
             first_frame_hitbox.w, first_frame_hitbox.h
         )
 
-        self.speed = 150
+        self.speed = 250
 
         # TODO: Ensure that the NPC always has all needed seeds it needs in its inventory
         self.inventory = {
@@ -144,81 +144,53 @@ class NPC(NPCBase):
             current_hitbox.size
         )
 
-        # current NPC position on the tilemap
-        tile_coord = pygame.Vector2(self.rect.centerx, self.rect.centery) / SCALED_TILE_SIZE
-
         if self.pf_state == NPCState.IDLE:
-            self.pf_state_duration -= dt
+            self.update_state(dt)
+        elif self.pf_state == NPCState.MOVING:
+            self.update_direction()
 
-            if self.pf_state_duration <= 0:
-                NPCBehaviourMethods.behaviour.run(NPCBehaviourContext(self))
+        super().move(dt)
 
-        if self.pf_state == NPCState.MOVING:
-            if not self.pf_path:
-                # runs in case the path has been emptied in the meantime
-                #  (e.g. NPCBehaviourMethods.wander_to_interact created a path to a tile adjacent to the NPC)
-                self.complete_path()
-                return
+        if self.is_colliding:
+            self.abort_path()
+            return
 
-            next_position = (tile_coord.x, tile_coord.y)
+    def update_state(self, dt):
+        self.pf_state_duration -= dt
+        if self.pf_state_duration <= 0:
+            NPCBehaviourMethods.behaviour.run(NPCBehaviourContext(self))
 
-            # remaining distance the npc moves in the current frame
-            remaining_distance = self.speed * dt / SCALED_TILE_SIZE
+    def update_direction(self):
+        if not self.pf_path:
+            self.complete_path()
+            return
 
-            while remaining_distance:
-                if next_position == self.pf_path[0]:
-                    # the NPC reached its current target position
-                    self.pf_path.pop(0)
+        # Get the next point in the path
+        next_point = self.pf_path[0]
+        current_point = screen_to_tile(self.rect.center)
 
-                if not len(self.pf_path):
-                    # the NPC has completed its path
-                    self.complete_path()
-                    break
+        # Calculate the direction vector
+        dx = next_point[0] - current_point[0]
+        dy = next_point[1] - current_point[1]
 
-                # x- and y-distances from the NPCs current position to its target position
-                dx = self.pf_path[0][0] - next_position[0]
-                dy = self.pf_path[0][1] - next_position[1]
+        # If the NPC is close enough to the next point, move to the next point
+        if abs(dx) < 1 and abs(dy) < 1:
+            self.next_path_point()
 
-                distance = (dx ** 2 + dy ** 2) ** 0.5
 
-                if remaining_distance >= distance:
-                    # the NPC reaches its current target position in the current frame
-                    next_position = self.pf_path[0]
-                    remaining_distance -= distance
-                else:
-                    # the NPC does not reach its current target position in the current frame,
-                    #  so it continues to move towards it
-                    next_position = (
-                        next_position[0] + dx * remaining_distance / distance,
-                        next_position[1] + dy * remaining_distance / distance
-                    )
-                    remaining_distance = 0
+        # Normalize the direction vector
+        magnitude = (dx ** 2 + dy ** 2) ** 0.5
+        self.direction.x = round(dx / magnitude)
+        self.direction.y = round(dy / magnitude)
 
-                    # Rounding the direction leads to smoother animations,
-                    #  e.g. if the distance vector was (-0.99, -0.01), the NPC would face upwards, although it moves
-                    #  much more to the left than upwards, as the animation method favors vertical movement
-                    #
-                    # Maybe normalise the vector?
-                    #  Currently, it is not necessary as the NPC is not moving diagonally yet,
-                    #  unless it collides with another entity while it is in-between two coordinates
-                    self.direction.update((round(dx / distance), round(dy / distance)))
 
-            self.hitbox_rect.update((
-                next_position[0] * SCALED_TILE_SIZE
-                - self.rect.width / 2 + current_hitbox.x,
-                self.hitbox_rect.top,
-            ), self.hitbox_rect.size)
-
-            self.hitbox_rect.update((
-                self.hitbox_rect.left,
-                next_position[1] * SCALED_TILE_SIZE
-                - self.rect.height / 2 + current_hitbox.y,
-            ), self.hitbox_rect.size)
-
-            colliding = self.collision()
-            if colliding:
-                self.abort_path()
-
-        self.rect.update(
-            (self.hitbox_rect.x - current_hitbox.x,
-             self.hitbox_rect.y - current_hitbox.y), self.rect.size)
+    def next_path_point(self):
+        self.pf_path.pop(0)
+        if not self.pf_path:
+            # NPC has reached the end of the path
+            self.direction.x, self.direction.y = 0, 0
+            return
+        next_point = self.pf_path[0]
+        current_point = screen_to_tile(self.rect.center)
+        dx = next_point[0] - current_point[0]
+        dy = next_point[1] - current_point[1]

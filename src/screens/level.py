@@ -21,10 +21,12 @@ from src.overlay.overlay import Overlay
 from src.screens.shop import ShopMenu
 from src.sprites.base import Sprite, AnimatedSprite, CollideableMapObject
 from src.sprites.particle import ParticleSprite
-from src.sprites.tree import Tree
-from src.sprites.player import Player
+from src.sprites.objects.tree import Tree
+from src.sprites.entities.player import Player
 from src.enums import FarmingTool, GameState, Tileset
 from src.settings import (
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
     TILE_SIZE,
     SCALE_FACTOR,
     LAYERS,
@@ -100,6 +102,7 @@ class Level:
         self.overlay = Overlay(self.player, frames['overlay'])
         self.shop = ShopMenu(self.player, self.toggle_shop, self.font)
         self.shop_active = False
+        self.show_hitbox_active = False
 
     # setup
     def setup(self):
@@ -142,8 +145,8 @@ class Level:
 
     def setup_object_layer(self, layer, setup_func):
         for obj in self.tmx_maps['main'].get_layer_by_name(layer):
-            x = obj.x * SCALE_FACTOR
-            y = obj.y * SCALE_FACTOR
+            x = int(obj.x * SCALE_FACTOR)
+            y = int(obj.y * SCALE_FACTOR)
             pos = (x, y)
             setup_func(pos, obj)
 
@@ -239,12 +242,19 @@ class Level:
                 sys.exit()
 
             self.echap(event)
+            self.show_hitbox(event)
 
     def echap(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
                 self.player.direction.xy = (0, 0)
+
+    def show_hitbox(self, event):
+        hitbox_key = self.player.keybinds['hitbox']['value']
+        if event.type == pygame.KEYDOWN:
+            if event.key == hitbox_key:
+                self.show_hitbox_active = not self.show_hitbox_active
 
     # plant collision
     def plant_collision(self):
@@ -339,16 +349,19 @@ class Level:
             entity.direction = pygame.Vector2(0, 0)
 
     # draw
-    def _test_draw_hitboxes(self):
-        for entity in self.all_sprites.sprites():
-            if "hitbox_rect" not in entity.__dict__.keys():
-                continue
-            pygame.draw.rect(
-                self.display_surface, (255, 0, 0),
-                (entity.hitbox_rect.x - (self.entities["Player"].rect.x - self.display_surface.get_width() / 2) - self.entities["Player"].rect.width / 2,
-                 entity.hitbox_rect.y - (self.entities["Player"].rect.y - self.display_surface.get_height() / 2) - self.entities["Player"].rect.width / 2,
-                 entity.hitbox_rect.width, entity.hitbox_rect.height),
-                2)
+    def draw_hitboxes(self):
+        if self.show_hitbox_active:
+            offset = pygame.Vector2(0, 0)
+            offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
+            offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
+            for sprite in self.collision_sprites:
+                rect = sprite.rect.copy()
+                rect.topleft += offset
+                pygame.draw.rect(self.display_surface, 'red', rect, 2)
+
+                hitbox = sprite.hitbox_rect.copy()
+                hitbox.topleft += offset
+                pygame.draw.rect(self.display_surface, 'blue', hitbox, 2)
 
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -359,7 +372,6 @@ class Level:
         self.all_sprites.draw(self.player.rect.center)
         self.draw_overlay()
         self.sky.display(dt)
-        self._test_draw_hitboxes()
 
     # update
     def update_rain(self):
@@ -381,3 +393,4 @@ class Level:
 
         # draw
         self.draw(dt)
+        self.draw_hitboxes()

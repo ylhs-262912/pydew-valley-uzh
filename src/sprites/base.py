@@ -20,6 +20,11 @@ class Sprite(pygame.sprite.Sprite):
         self.rect = self.image.get_frect(topleft=pos)
         self.z = z
         self.name = name
+        self.hitbox_rect = self.rect.copy()
+
+    def draw(self, display_surface, offset):
+        display_surface.blit(self.image, self.rect.topleft + offset)
+
 
 
 class CollideableSprite(Sprite, ABC):
@@ -32,13 +37,14 @@ class CollideableMapObject(CollideableSprite):
             pos: tuple[int, int],
             object_type: MapObjectType,
             groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
-            z=LAYERS['main']
+            z=LAYERS['main'],
+            name=None
     ):
         self.object_type = object_type
 
         surf = pygame.transform.scale_by(self.object_type.image, SCALE_FACTOR)
 
-        super().__init__(pos, surf, groups, z)
+        super().__init__(pos, surf, groups, z, name)
 
         self.hitbox_rect = self.object_type.hitbox.move(self.rect.topleft)
 

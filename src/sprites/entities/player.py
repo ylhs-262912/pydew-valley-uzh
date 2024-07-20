@@ -4,7 +4,7 @@ import pygame  # noqa
 from typing import Callable
 from pygame.math import Vector2 as vector
 from src import settings, savefile, support
-from src.sprites.entity import Entity
+from src.sprites.entities.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.sprites.setup import EntityAsset
 
@@ -57,7 +57,6 @@ class Player(Entity):
         self.paused = False
         self.font = font
         self.interact = interact
-        self.sounds = sounds
 
         # menus
 
@@ -131,7 +130,7 @@ class Player(Entity):
         if not self.tool_active and not self.blocked:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
-            self.direction = self.direction.normalize() if self.direction else self.direction
+            # self.direction = self.direction.normalize() if self.direction else self.direction
 
             # tool switch
             if self.controls['next tool']:
