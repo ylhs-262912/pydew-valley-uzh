@@ -6,7 +6,7 @@ from pygame.math import Vector2 as vector
 from src import settings, savefile, support
 from src.sprites.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
-from src.settings import SCALE_FACTOR
+from src.sprites.setup import EntityAsset
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
@@ -21,8 +21,7 @@ class Player(Entity):
             self,
             game,
             pos: settings.Coordinate,
-            hitbox: tuple[int, int, int, int],
-            frames,
+            assets: EntityAsset,
             groups,
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable,
@@ -35,22 +34,17 @@ class Player(Entity):
 
         super().__init__(
             pos,
-            frames,
+            assets,
             groups,
             collision_sprites,
             apply_tool
         )
 
-        self.relative_hitbox_rect = pygame.rect.Rect(
-            hitbox[0] * settings.SCALE_FACTOR,
-            hitbox[1] * settings.SCALE_FACTOR,
-            hitbox[2] * settings.SCALE_FACTOR,
-            hitbox[3] * settings.SCALE_FACTOR,
-        )
-        self.hitbox_rect = pygame.Rect(
-            self.rect.left + self.relative_hitbox_rect.x,
-            self.rect.top + self.relative_hitbox_rect.y,
-            self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
+        self.hitbox_rect = pygame.FRect(
+            self.rect.left + self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).x,
+            self.rect.top + self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).y,
+            self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).w,
+            self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).h
         )
 
         # movement
@@ -164,12 +158,20 @@ class Player(Entity):
                 self.interact()
 
     def move(self, dt):
+        current_hitbox = self.assets[self.state][self.facing_direction].get_hitbox(int(self.frame_index))
+
+        self.hitbox_rect.update(
+            (self.rect.x + current_hitbox.x,
+             self.rect.y + current_hitbox.y),
+            current_hitbox.size
+        )
+
         self.hitbox_rect.x += self.direction.x * self.speed * dt
-        self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
-        self.collision('vertical')
-        self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
-                          self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
+        self.collision()
+
+        self.rect.update((self.hitbox_rect.x - current_hitbox.x,
+                          self.hitbox_rect.y - current_hitbox.y), self.rect.size)
 
     def get_current_tool_string(self):
         return self.available_tools[self.tool_index]

@@ -5,7 +5,10 @@ from typing import Callable
 import pygame
 from src import settings
 from src.sprites.base import CollideableSprite, LAYERS
-from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.enums import (
+    InventoryResource, FarmingTool, ItemToUse, Direction, EntityState
+)
+from src.sprites.setup import EntityAsset
 from src.support import screen_to_tile
 
 
@@ -13,20 +16,20 @@ class Entity(CollideableSprite, ABC):
     def __init__(
             self,
             pos: settings.Coordinate,
-            frames: dict[str, settings.AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable,
             z=LAYERS['main']):
 
-        self.frames = frames
+        self.assets = assets
         self.frame_index = 0
-        self.state = 'idle'
-        self.facing_direction = 'down'
+        self.state = EntityState.IDLE
+        self.facing_direction = Direction.DOWN
 
         super().__init__(
             pos,
-            self.frames[self.state][self.facing_direction][self.frame_index],
+            self.assets[self.state][self.facing_direction].get_frame(0),
             groups,
             z=z
         )
@@ -70,9 +73,15 @@ class Entity(CollideableSprite, ABC):
         # prioritizes vertical animations, flip if statements to get horizontal
         # ones
         if self.direction.x:
-            self.facing_direction = 'right' if self.direction.x > 0 else 'left'
+            if self.direction.x > 0:
+                self.facing_direction = Direction.RIGHT
+            else:
+                self.facing_direction = Direction.LEFT
         if self.direction.y:
-            self.facing_direction = 'down' if self.direction.y > 0 else 'up'
+            if self.direction.y > 0:
+                self.facing_direction = Direction.DOWN
+            else:
+                self.facing_direction = Direction.UP
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
@@ -82,7 +91,7 @@ class Entity(CollideableSprite, ABC):
         pass
 
     # FIXME: Sometimes NPCs get stuck inside the player's hitbox
-    def collision(self, direction) -> bool:
+    def collision(self) -> bool:
         """
         :return: true: Entity collides with a sprite in self.collision_sprites, otherwise false
         """
@@ -100,33 +109,35 @@ class Entity(CollideableSprite, ABC):
                     colliding_rect = sprite.rect
 
                 if colliding_rect:
-                    if direction == 'horizontal':
-                        if self.direction.x > 0:
-                            self.hitbox_rect.right = colliding_rect.left
-                        if self.direction.x < 0:
-                            self.hitbox_rect.left = colliding_rect.right
-                    else:
-                        if self.direction.y < 0:
-                            self.hitbox_rect.top = colliding_rect.bottom
-                        if self.direction.y > 0:
-                            self.hitbox_rect.bottom = colliding_rect.top
+                    distances = (
+                        abs(self.hitbox_rect.right - colliding_rect.left),
+                        abs(self.hitbox_rect.left - colliding_rect.right),
+                        abs(self.hitbox_rect.bottom - colliding_rect.top),
+                        abs(self.hitbox_rect.top - colliding_rect.bottom)
+                    )
+                    shortest_distance = min(distances)
+                    if shortest_distance == distances[0]:
+                        self.hitbox_rect.right = colliding_rect.left
+                    elif shortest_distance == distances[1]:
+                        self.hitbox_rect.left = colliding_rect.right
+                    elif shortest_distance == distances[2]:
+                        self.hitbox_rect.bottom = colliding_rect.top
+                    elif shortest_distance == distances[3]:
+                        self.hitbox_rect.top = colliding_rect.bottom
 
         return bool(colliding_rect)
 
     def animate(self, dt):
-        current_animation = self.frames[self.state][self.facing_direction]
+        current_animation = self.assets[self.state][self.facing_direction]
+
         self.frame_index += 4 * dt
         if not self.tool_active:
-            self.image = current_animation[int(
-                self.frame_index) % len(current_animation)]
+            self.image = current_animation.get_frame(self.frame_index)
         else:
-            tool_animation = self.frames[self.available_tools[self.tool_index]
-            ][self.facing_direction]
+            tool_animation = self.assets[EntityState(self.available_tools[self.tool_index])][self.facing_direction]
             if self.frame_index < len(tool_animation):
-                self.image = tool_animation[min(
-                    (round(self.frame_index), len(tool_animation) - 1))]
-                if round(self.frame_index) == len(tool_animation) - \
-                        1 and not self.just_used_tool:
+                self.image = tool_animation.get_frame(min((round(self.frame_index), len(tool_animation) - 1)))
+                if round(self.frame_index) == len(tool_animation) - 1 and not self.just_used_tool:
                     self.just_used_tool = True
                     self.use_tool(ItemToUse.REGULAR_TOOL)
             else:

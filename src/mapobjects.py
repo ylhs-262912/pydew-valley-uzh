@@ -11,7 +11,7 @@ from src.settings import SCALE_FACTOR
 @dataclass
 class MapObjectType:
     image: pygame.Surface
-    hitbox: pygame.Rect
+    hitbox: pygame.FRect
 
 
 class MapObjects:
@@ -59,14 +59,14 @@ def get_object_hitboxes(path_to_tileset: str) -> dict[int, MapObjectType]:
                 if objectgroup is not None:
                     hitbox = objectgroup.find("object")
                     if hitbox is not None:
-                        obj["hitbox"] = pygame.Rect(
+                        obj["hitbox"] = pygame.FRect(
                             int(hitbox.attrib.get("x")) * SCALE_FACTOR,
                             int(hitbox.attrib.get("y")) * SCALE_FACTOR,
                             int(hitbox.attrib.get("width")) * SCALE_FACTOR,
                             int(hitbox.attrib.get("height")) * SCALE_FACTOR
                         )
                 else:
-                    obj["hitbox"] = pygame.Rect(
+                    obj["hitbox"] = pygame.FRect(
                         0, 0,
                         int(image.attrib.get("width")) * SCALE_FACTOR,
                         int(image.attrib.get("height")) * SCALE_FACTOR

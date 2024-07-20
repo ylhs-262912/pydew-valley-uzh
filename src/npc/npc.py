@@ -8,11 +8,13 @@ from pathfinding.finder.a_star import AStarFinder
 from src.npc.npc_base import NPCState, NPCBase
 from src.npc.npc_behaviour import NPCBehaviourContext, NPCBehaviourMethods
 from src.enums import InventoryResource
-from src.settings import SCALE_FACTOR, SCALED_TILE_SIZE
-from src.settings import Coordinate, AniFrames
+from src.settings import  SCALED_TILE_SIZE
+from src.settings import Coordinate
 
 import pygame
 import random
+
+from src.sprites.setup import EntityAsset
 
 
 class NPC(NPCBase):
@@ -20,8 +22,7 @@ class NPC(NPCBase):
     def __init__(
             self,
             pos: Coordinate,
-            hitbox: tuple[int, int, int, int],
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable,
@@ -44,23 +45,17 @@ class NPC(NPCBase):
 
         super().__init__(
             pos,
-            frames,
+            assets,
             groups,
             collision_sprites,
 
             apply_tool
         )
 
-        self.relative_hitbox_rect = pygame.rect.Rect(
-            hitbox[0] * SCALE_FACTOR,
-            hitbox[1] * SCALE_FACTOR,
-            hitbox[2] * SCALE_FACTOR,
-            hitbox[3] * SCALE_FACTOR,
-        )
-        self.hitbox_rect = pygame.Rect(
-            self.rect.left + self.relative_hitbox_rect.x,
-            self.rect.top + self.relative_hitbox_rect.y,
-            self.relative_hitbox_rect.w, self.relative_hitbox_rect.h
+        self.hitbox_rect = pygame.FRect(
+            self.rect.left + self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).x,
+            self.rect.top + self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).y,
+            self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).w, self.assets[self.state][self.facing_direction].get_hitbox(self.frame_index).h
         )
 
         self.speed = 150
@@ -137,6 +132,14 @@ class NPC(NPCBase):
         return True
 
     def move(self, dt):
+        current_hitbox = self.assets[self.state][self.facing_direction].get_hitbox(int(self.frame_index))
+
+        self.hitbox_rect.update(
+            (self.rect.x + current_hitbox.x,
+             self.rect.y + current_hitbox.y),
+            current_hitbox.size
+        )
+
         # current NPC position on the tilemap
         tile_coord = pygame.Vector2(self.rect.centerx, self.rect.centery) / SCALED_TILE_SIZE
 
@@ -197,19 +200,19 @@ class NPC(NPCBase):
                     self.direction.update((round(dx / distance), round(dy / distance)))
 
             self.hitbox_rect.update((
-                next_position[0] * SCALED_TILE_SIZE - self.rect.width / 2 + self.relative_hitbox_rect.x,
+                next_position[0] * SCALED_TILE_SIZE - self.rect.width / 2 + self.assets[self.state][self.facing_direction].get_hitbox(int(self.frame_index)).x,
                 self.hitbox_rect.top,
             ), self.hitbox_rect.size)
-            colliding = self.collision('horizontal')
 
             self.hitbox_rect.update((
                 self.hitbox_rect.left,
-                next_position[1] * SCALED_TILE_SIZE - self.rect.height / 2 + self.relative_hitbox_rect.y,
+                next_position[1] * SCALED_TILE_SIZE - self.rect.height / 2 + self.assets[self.state][self.facing_direction].get_hitbox(int(self.frame_index)).y,
             ), self.hitbox_rect.size)
-            colliding = colliding or self.collision('vertical')
+            colliding = self.collision()
 
             if colliding:
                 self.abort_path()
 
-        self.rect.update((self.hitbox_rect.x - self.relative_hitbox_rect.x,
-                          self.hitbox_rect.y - self.relative_hitbox_rect.y), self.rect.size)
+
+        self.rect.update((self.hitbox_rect.x - self.assets[self.state][self.facing_direction].get_hitbox(int(self.frame_index)).x,
+                          self.hitbox_rect.y - self.assets[self.state][self.facing_direction].get_hitbox(int(self.frame_index)).y), self.rect.size)

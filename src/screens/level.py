@@ -11,6 +11,7 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 from src.mapobjects import MapObjects
 from src.npc.npc import NPC
 from src.npc.npc_behaviour import NPCBehaviourMethods
+from src.sprites.setup import EntityAssets
 from src.support import map_coords_to_tile, load_data, resource_path
 from src.groups import AllSprites
 from src.overlay.soil import SoilLayer
@@ -115,6 +116,8 @@ class Level:
         self.setup_object_layer('Collidable objects', self.setup_collideable_object)
         self.setup_object_layer('Collisions', self.setup_collision)
         self.setup_object_layer('Interactions', self.setup_interaction)
+
+        EntityAssets.setup()
         self.setup_object_layer('Entities', self.setup_entities)
 
         self.pf_grid = PF_Grid(matrix=self.pf_matrix)
@@ -189,8 +192,7 @@ class Level:
         self.entities[obj.name] = Player(
             game=self.game,
             pos=pos,
-            hitbox=(18, 26, 12, 6),
-            frames=self.frames['character']['rabbit'],
+            assets=EntityAssets.Rabbit,
             groups=(self.all_sprites, self.collision_sprites),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
@@ -200,16 +202,17 @@ class Level:
         )
 
     def setup_npc(self, pos, obj):
-        self.npcs[obj.name] = NPC(pos=pos,
-                                  hitbox=(18, 26, 12, 6),
-                                  frames=self.frames['character']['rabbit'],
-                                  groups=(self.all_sprites, self.collision_sprites),
-                                  collision_sprites=self.collision_sprites,
-                                  apply_tool=self.apply_tool,
-                                  soil_layer=self.soil_layer,
-                                  pf_matrix=self.pf_matrix,
-                                  pf_grid=self.pf_grid,
-                                  pf_finder=self.pf_finder
+        self.npcs[obj.name] = NPC(
+            pos=pos,
+            assets=EntityAssets.Rabbit,
+            groups=(self.all_sprites, self.collision_sprites),
+            collision_sprites=self.collision_sprites,
+            apply_tool=self.apply_tool,
+            soil_layer=self.soil_layer,
+
+            pf_matrix=self.pf_matrix,
+            pf_grid=self.pf_grid,
+            pf_finder=self.pf_finder
         )
 
     def get_map_size(self):

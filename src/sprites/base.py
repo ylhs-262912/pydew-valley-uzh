@@ -23,7 +23,7 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class CollideableSprite(Sprite, ABC):
-    hitbox_rect: pygame.Rect
+    hitbox_rect: pygame.FRect
 
 
 class CollideableMapObject(CollideableSprite):
