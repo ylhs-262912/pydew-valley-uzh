@@ -1,14 +1,17 @@
+import json
+import math
 import os
+import sys
+
 import pygame
 import pytmx
-import sys
+
 from src import settings
+from src.enums import Direction
 from src.settings import (
-    CHAR_TILE_SIZE,
     SCALE_FACTOR,
     TILE_SIZE,
 )
-import json
 
 
 def resource_path(relative_path: str):
@@ -84,43 +87,73 @@ def animation_importer(*ani_path: str) -> dict[str, settings.AniFrames]:
     return animation_dict
 
 
-def single_character_importer(*sc_path: str) -> settings.AniFrames:
+def _single_file_importer(
+        *sc_path: str, size: int, directions: list[str]
+) -> settings.AniFrames:
     char_dict = {}
     full_path = os.path.join(*sc_path)
     surf = pygame.image.load(full_path).convert_alpha()
-    for row, dirct in enumerate(['down', 'up', 'left']):
+    for row, dirct in enumerate(directions):
         char_dict[dirct] = []
-        for col in range(surf.get_width() // CHAR_TILE_SIZE):
-            cutout_surf = pygame.Surface((48, 48), pygame.SRCALPHA)
+        for col in range(surf.get_width() // size):
+            cutout_surf = pygame.Surface((size, size), pygame.SRCALPHA)
             cutout_rect = pygame.Rect(
-                col * CHAR_TILE_SIZE,
-                row * CHAR_TILE_SIZE,
-                CHAR_TILE_SIZE,
-                CHAR_TILE_SIZE)
+                col * size,
+                row * size,
+                size,
+                size)
             cutout_surf.blit(surf, (0, 0), cutout_rect)
             char_dict[dirct].append(
                 pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
-    char_dict['right'] = [pygame.transform.flip(
-        surf, True, False) for surf in char_dict['left']]
+
+    if "left" in directions and "right" not in directions:
+        char_dict['right'] = [pygame.transform.flip(
+            surf, True, False) for surf in char_dict['left']]
+    elif "right" in directions and "left" not in directions:
+        char_dict['left'] = [pygame.transform.flip(
+            surf, True, False) for surf in char_dict['right']]
     return char_dict
 
 
-def character_importer(chr_path: str) -> dict[str, settings.AniFrames]:
+def _single_folder_importer(path: str, size: int, directions: list[Direction]):
+    folder = {}
+    for folder_path, sub_folders, file_names in os.walk(path):
+        for file_name in file_names:
+            folder[file_name.split('.')[0]] = (
+                _single_file_importer(
+                    os.path.join(folder_path, file_name),
+                    size=size,
+                    directions=directions,
+                )
+            )
+    return folder
+
+
+def entity_importer(
+        chr_path: str, size: int, directions: list[Direction]
+) -> dict[str, settings.AniFrames]:
     # create dict with subfolders
+    char_dict = {}
     for _, sub_folders, _ in os.walk(resource_path(chr_path)):
         if sub_folders:
             char_dict = {folder: {} for folder in sub_folders}
 
-    # go through all images and use single_character_importer to get the frames
-    for char, frame_dict in char_dict.items():
-        for folder_path, sub_folders, file_names in os.walk(
-                os.path.join(resource_path(chr_path), char)):
-            for file_name in file_names:
-                char_dict[char][file_name.split('.')[0]] = (
-                    single_character_importer(
-                        os.path.join(folder_path, file_name)
-                    )
-                )
+    if char_dict:
+        # go through all found characters
+        # and use _single_folder_importer to get their frames
+        for char, frame_dict in char_dict.items():
+            char_dict[char] = _single_folder_importer(
+                os.path.join(resource_path(chr_path), char),
+                size=size,
+                directions=directions
+            )
+    else:
+        # import the frames of a single character
+        char_dict = _single_folder_importer(
+            resource_path(chr_path),
+            size=size,
+            directions=directions
+        )
     return char_dict
 
 
@@ -169,10 +202,78 @@ def flip_items(d: dict) -> dict:
         ret[val] = key
     return ret
 
+
 def tile_to_screen(pos):
     tile_size = TILE_SIZE * SCALE_FACTOR
     return pos[0] * tile_size, pos[1] * tile_size
 
+
 def screen_to_tile(pos):
     tile_size = TILE_SIZE * SCALE_FACTOR
     return pos[0] // tile_size, pos[1] // tile_size
+
+
+def get_flight_matrix(
+        pos: tuple[int, int], radius: int, angle: float = math.pi / 2
+) -> list[list[int]]:
+    """
+    Returns a matrix with the width and height of radius * 2 + 1, with a value
+    of 1 if the matrix position can be fled to and 0 if not.
+    The position from which the flight is to be started is always in the centre
+    of the matrix. The position of the object to be fled from should be
+    relative to the start position, but does not have to be within the
+    matrix coordinates.
+
+    TODO: Could be optimised so that instead of a matrix with integer / boolean
+     values a matrix with the weight of each possible position is returned, of
+     which the walkable position with the greatest weight is then fled to.
+
+    :param pos: Position of the object that should be fled from
+    :param radius: Radius / distance of the flight vector.
+                   The returned matrix has a width and height of radius * 2 + 1
+    :param angle: Angle of the flight vector (measured in radians)
+                  Default: PI / 2 (90°)
+    :return: Matrix with positions that can be fled to
+    """
+
+    diameter = radius * 2 + 1
+
+    p1 = (radius, radius)
+    p2 = (pos[0] + radius, pos[1] + radius)
+
+    matrix = [[0 for _ in range(diameter)] for _ in range(diameter)]
+
+    # For further calculations the angle gets inverted and divided by two
+    # Can probably be optimised
+    angle = math.pi - angle / 2
+
+    # The exact angle of the position that should be fled from, measured from
+    # the centre of the matrix
+    dangerous_angle = math.atan2(
+        (p1[0] - p2[0]),
+        (p1[1] - p2[1])
+    )
+
+    for y in range(len(matrix)):
+        for x in range(len(matrix[0])):
+            # Angle from the centre of the matrix to the currently checked pos
+            current_angle = math.atan2(
+                (p1[0] - x),
+                (p1[1] - y)
+            )
+            # Angular distance of the dangerous angle and the current angle
+            distance = dangerous_angle - current_angle
+
+            # Distance could be greater than half a turn,
+            # in which case the result is rotated to the other extreme
+            if distance > math.pi:
+                distance = distance - (math.pi * 2)
+            elif distance < -math.pi:
+                distance = distance + (math.pi * 2)
+
+            if -angle < distance < angle:
+                matrix[y][x] = 0
+            else:
+                matrix[y][x] = 1
+
+    return matrix

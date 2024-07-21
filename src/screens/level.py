@@ -9,22 +9,26 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 from src.enums import FarmingTool, GameState
 from src.groups import AllSprites
+from src.npc.chicken import Chicken
+from src.npc.cow import Cow
 from src.npc.npc import NPC
-from src.npc.npc_behaviour import NPCBehaviourMethods
+from src.npc.setup import AIData
 from src.overlay.overlay import Overlay
 from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.settings import (
-    TILE_SIZE,
-    SCALE_FACTOR,
     LAYERS,
+    SCALE_FACTOR,
+    TEST_ANIMALS,
+    TILE_SIZE,
     MapDict,
     ENABLE_NPCS,
     SoundDict,
+    SETUP_PATHFINDING,
 )
 from src.sprites.base import Sprite, AnimatedSprite
-from src.sprites.entity import Entity
+from src.sprites.character import Character
 from src.sprites.particle import ParticleSprite
 from src.sprites.player import Player
 from src.sprites.tree import Tree
@@ -33,12 +37,11 @@ from src.support import map_coords_to_tile, load_data, resource_path
 
 class Level:
     def __init__(
-            self, game, switch: Callable[[GameState], None], tmx_maps: MapDict,
+            self, switch: Callable[[GameState], None], tmx_maps: MapDict,
             frames: dict[str, dict], sounds: SoundDict
     ):
         # main setup
         self.display_surface = pygame.display.get_surface()
-        self.game = game
         self.switch_screen = switch
 
         # pathfinding
@@ -50,6 +53,7 @@ class Level:
         # sprite groups
         self.entities = {}
         self.npcs = {}
+        self.animals = []
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
@@ -103,9 +107,13 @@ class Level:
     def setup(self):
         self.activate_music()
 
-        if ENABLE_NPCS:
-            self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
-            self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
+        if SETUP_PATHFINDING:
+            self.pf_matrix_size = (self.tmx_maps["main"].width,
+                                   self.tmx_maps["main"].height)
+            self.pf_matrix = [
+                [1 for _ in range(self.pf_matrix_size[0])]
+                for _ in range(self.pf_matrix_size[1])
+            ]
 
         self.setup_tile_layer('Lower ground', self.setup_environment)
         self.setup_tile_layer('Upper ground', self.setup_environment)
@@ -116,10 +124,14 @@ class Level:
         self.setup_object_layer('Interactions', self.setup_interaction)
         self.setup_object_layer('Entities', self.setup_entity)
 
+        if SETUP_PATHFINDING:
+            AIData.setup(self.pf_matrix)
+
         if ENABLE_NPCS:
-            self.pf_grid = PF_Grid(matrix=self.pf_matrix)
-            NPCBehaviourMethods.init()
             self.setup_object_layer('NPCs', self.setup_npc)
+
+        if TEST_ANIMALS:
+            self.setup_object_layer("Animals", self.setup_animal)
 
     def setup_tile_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pygame.Surface], None]):
         for x, y, surf in self.tmx_maps['main'].get_layer_by_name(layer).tiles():
@@ -168,7 +180,7 @@ class Level:
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
 
-        if ENABLE_NPCS:
+        if SETUP_PATHFINDING:
             self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_collision(self, pos: tuple[int, int], obj: pytmx.TiledObject):
@@ -176,7 +188,7 @@ class Level:
         image = pygame.Surface(size)
         Sprite(pos, image, self.collision_sprites)
 
-        if ENABLE_NPCS:
+        if SETUP_PATHFINDING:
             self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_interaction(self, pos: tuple[int, int], obj: pytmx.TiledObject):
@@ -186,7 +198,6 @@ class Level:
 
     def setup_entity(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.entities[obj.name] = Player(
-            game=self.game,
             pos=pos,
             frames=self.frames['character']['rabbit'],
             groups=(self.all_sprites, self.collision_sprites,),
@@ -205,10 +216,27 @@ class Level:
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             soil_layer=self.soil_layer,
-            pf_matrix=self.pf_matrix,
-            pf_grid=self.pf_grid,
-            pf_finder=self.pf_finder
         )
+
+    def setup_animal(self, pos, obj):
+        if obj.name == "Chicken":
+            self.animals.append(Chicken(
+                pos=pos,
+                frames=self.frames['entities']['chicken'],
+                groups=(self.all_sprites, self.collision_sprites),
+                collision_sprites=self.collision_sprites,
+            ))
+        elif obj.name == "Cow":
+            self.animals.append(Cow(
+                pos=pos,
+                frames=self.frames['entities']['cow'],
+                groups=(self.all_sprites, self.collision_sprites),
+                collision_sprites=self.collision_sprites,
+
+                player=self.entities['Player']
+            ))
+        else:
+            print(f"Malformed animal object name \"{obj.name}\" in tilemap")
 
     def get_map_size(self):
         return self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR
@@ -247,7 +275,9 @@ class Level:
     def create_particle(self, sprite: pygame.sprite.Sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
-    def apply_tool(self, tool: FarmingTool, pos: tuple[int, int], entity: Entity):
+    def apply_tool(
+            self, tool: FarmingTool, pos: tuple[int, int], entity: Character
+    ):
         match tool:
             case FarmingTool.AXE:
                 for tree in self.tree_sprites:

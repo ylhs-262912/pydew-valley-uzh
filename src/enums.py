@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, nonmember  # noqa
+from enum import Enum, IntEnum, StrEnum, nonmember  # noqa
 
 
 class PlayerState(IntEnum):
@@ -17,8 +17,8 @@ _FT_SERIALISED_STRINGS = (
     "axe",
     "hoe",
     "water",
-    "corn seed",
-    "tomato seed"
+    "corn_seed",
+    "tomato_seed"
 )
 
 
@@ -64,8 +64,8 @@ class InventoryResource(_SerialisableEnum):
             "apple",
             "corn",
             "tomato",
-            "corn seed",
-            "tomato seed"
+            "corn_seed",
+            "tomato_seed"
         )
     )
 
@@ -104,8 +104,8 @@ class FarmingTool(_SerialisableEnum):
             "axe",
             "hoe",
             "water",
-            "corn seed",
-            "tomato seed"
+            "corn_seed",
+            "tomato_seed"
         )
     )
 
@@ -198,4 +198,16 @@ class SeedType(IntEnum):
         return self._AS_NS_IRS[self]
 
     def as_plant_name(self):
-        return self._AS_FTS[self].as_serialised_string().removesuffix(" seed")
+        return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
+
+
+class Direction(StrEnum):
+    UP = "up"
+    RIGHT = "right"
+    DOWN = "down"
+    LEFT = "left"
+
+
+class EntityState(StrEnum):
+    IDLE = "idle"
+    WALK = "walk"

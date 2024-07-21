@@ -30,7 +30,10 @@ LAYERS = {
     "TextBox": TB_LAYER
 }
 
-ENABLE_NPCS = False
+ENABLE_NPCS = True
+TEST_ANIMALS = True
+
+SETUP_PATHFINDING = any((ENABLE_NPCS, TEST_ANIMALS))
 
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 
