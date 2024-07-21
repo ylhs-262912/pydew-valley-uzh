@@ -1,14 +1,21 @@
+from collections.abc import Callable
+from typing import Type
 
 import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.gui.general_menu import GeneralMenu
-from src.gui.description import KeybindsDescription, VolumeDescription
-from src.enums import GameState
 from pygame.math import Vector2 as vector
+
+from src import settings
+from src.controls import Controls
+from src.enums import GameState
+from src.gui.description import KeybindsDescription, VolumeDescription
+from src.gui.general_menu import GeneralMenu
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 
 class SettingsMenu(GeneralMenu):
-    def __init__(self, switch_screen, sounds, level):
+    def __init__(
+            self, switch_screen: Callable[[GameState], None], sounds: settings.SoundDict, controls: Type[Controls]
+    ):
         options = ['Keybinds', 'Volume', 'Back']
         title = 'Settings'
         size = (400, 400)
@@ -18,17 +25,15 @@ class SettingsMenu(GeneralMenu):
 
         # description
         description_pos = self.rect.topright + vector(100, 0)
-        self.keybinds_description = KeybindsDescription(description_pos)
+        self.keybinds_description = KeybindsDescription(description_pos, controls)
         self.volume_description = VolumeDescription(description_pos, sounds)
         self.current_description = self.keybinds_description
 
         # buttons
         self.buttons.append(self.keybinds_description.reset_button)
 
-        self.level = level
-
     # setup
-    def button_action(self, text):
+    def button_action(self, text: str):
         if text == 'Keybinds':
             self.current_description = self.keybinds_description
         if text == 'Volume':
@@ -36,20 +41,23 @@ class SettingsMenu(GeneralMenu):
         if text == 'Back':
             self.keybinds_description.save_data()
             self.volume_description.save_data()
-            self.level.player.update_keybinds()
             self.switch_screen(GameState.PAUSE)
         if text == 'Reset':
             self.keybinds_description.reset_keybinds()
 
     # events
-    def handle_events(self, event):
-        self.current_description.handle_events(event)
-        self.echap(event)
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        return (super().handle_event(event) or
+                self.current_description.handle_event(event) or
+                self.echap(event))
 
-    def echap(self, event):
+    def echap(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
+                return True
+
+        return False
 
     # draw
     def draw(self):
@@ -57,7 +65,7 @@ class SettingsMenu(GeneralMenu):
         self.current_description.draw()
 
     # update
-    def update(self, dt):
+    def update(self, dt: float):
         self.keybinds_description.update_keybinds(dt)
         super().update(dt)
 

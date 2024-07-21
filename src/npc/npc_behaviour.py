@@ -131,6 +131,7 @@ class NPCBehaviourMethods:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
+        
         for pos, tile in context.npc.soil_layer.map.items():
             if tile.hoed and not tile.planted:
                 possible_coordinates.append(pos)
@@ -154,6 +155,7 @@ class NPCBehaviourMethods:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
+        
         for pos, tile in context.npc.soil_layer.map.items():
             if tile.planted and not tile.watered:
                 possible_coordinates.append(pos)
@@ -188,10 +190,6 @@ class NPCBehaviourMethods:
                           context.npc.pf_path[-1][1] - context.npc.rect.centery / 64)
 
             facing = (facing[0], 0) if abs(facing[0]) > abs(facing[1]) else (0, facing[1])
-
-            # Deleting the final step of the path leads to the NPC always standing in reach of the tile they want to
-            #  interact with (cf. Entity.get_target_pos)
-            context.npc.pf_path.pop(-1)
 
             @context.npc.on_path_completion
             def inner():
