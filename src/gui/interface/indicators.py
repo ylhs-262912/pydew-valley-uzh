@@ -1,5 +1,4 @@
 import pygame
 
 
-class Indicators:
-    ENTITY_FOCUSED: pygame.Surface = None
+ENTITY_FOCUSED: pygame.Surface | None = None

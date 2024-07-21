@@ -214,3 +214,18 @@ def draw_aa_line(
 
         pygame.gfxdraw.aapolygon(surface, (ul, ur, br, bl), color)
         pygame.gfxdraw.filled_polygon(surface, (ul, ur, br, bl), color)
+
+
+def get_entity_facing_direction(
+        direction: tuple[float, float] | pygame.math.Vector2
+) -> str:
+    """
+    :param direction: Direction to use.
+    :return: String of the direction the entity is facing
+    """
+    # prioritizes vertical animations, flip if statements to get horizontal
+    # ones
+    if direction[0]:
+        return 'right' if direction[0] > 0 else 'left'
+    if direction[1]:
+        return 'down' if direction[1] > 0 else 'up'

@@ -5,10 +5,10 @@ import pygame
 
 from src import settings
 from src.enums import InventoryResource, FarmingTool, ItemToUse
-from src.gui.interface.indicators import Indicators
+from src.gui.interface import indicators
 from src.settings import EMOTE_LAYER
 from src.sprites.base import CollideableSprite, LAYERS, Sprite
-from src.support import screen_to_tile
+from src.support import screen_to_tile, get_entity_facing_direction
 
 
 class Entity(CollideableSprite, ABC):
@@ -73,26 +73,15 @@ class Entity(CollideableSprite, ABC):
     def get_state(self):
         self.state = 'walk' if self.direction else 'idle'
 
-    def get_facing_direction(self, direction: tuple[float, float] = None):
-        """
-        :param direction: Direction to use.
-                          If it is not set, uses self.direction instead
-        """
-        # prioritizes vertical animations, flip if statements to get horizontal
-        # ones
-        if not direction:
-            direction = self.direction
-        if direction[0]:
-            self.facing_direction = 'right' if direction[0] > 0 else 'left'
-        if direction[1]:
-            self.facing_direction = 'down' if direction[1] > 0 else 'up'
+    def get_facing_direction(self):
+        self.facing_direction = get_entity_facing_direction(self.direction)
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
 
     def focus(self):
         self.focused = True
-        self.focused_indicator = Sprite((0, 0), Indicators.ENTITY_FOCUSED, self.groups()[0], EMOTE_LAYER)
+        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], EMOTE_LAYER)
 
     def unfocus(self):
         self.focused = False
