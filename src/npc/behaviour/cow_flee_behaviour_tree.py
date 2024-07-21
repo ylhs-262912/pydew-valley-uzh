@@ -16,7 +16,7 @@ class CowFleeBehaviourTreeContext(Context):
 
 class CowFleeBehaviourTree:
     """
-    Group of classes used for Cow flee behaviour.
+    Group of methods used for Cow flee behaviour.
     Contrary to other trees, this behaviour tree will be run every tick.
 
     Attributes:

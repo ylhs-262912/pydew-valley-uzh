@@ -22,7 +22,7 @@ class NPCBehaviourTreeContext(Context):
 # TODO: NPCs can not harvest fully grown crops on their own yet
 class NPCBehaviourTree:
     """
-    Group of classes used for NPC behaviour.
+    Group of methods used for NPC behaviour.
 
     Attributes:
         tree:   Default NPC behaviour tree

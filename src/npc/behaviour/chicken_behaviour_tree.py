@@ -17,7 +17,7 @@ class ChickenBehaviourTreeContext(Context):
 
 class ChickenBehaviourTree:
     """
-    Group of classes used for Chicken behaviour.
+    Group of methods used for Chicken behaviour.
 
     Attributes:
         tree:   Default behaviour tree

@@ -46,7 +46,7 @@ class Game:
         self.load_assets()
 
         # screens
-        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(self, self.switch_state, self.tmx_maps, self.frames, self.sounds)
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
