@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import Callable, Self
+from typing import Callable
 
 import pygame  # noqa
 
-from src import settings, savefile, support
+from src import savefile, support
 from src.controls import Controls, ControlType
 from src.enums import InventoryResource, FarmingTool, ItemToUse
-from src.settings import AniFrames, Coordinate, SoundDict, SCALE_FACTOR
+from src.settings import AniFrames, Coordinate, SoundDict
 from src.sprites.character import Character
 
 
@@ -36,7 +36,7 @@ class Player(Character):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
-                [FarmingTool, tuple[float, float], Self], None
+                [FarmingTool, tuple[int, int], Character], None
             ],
             interact: Callable[[], None],
             sounds: SoundDict,

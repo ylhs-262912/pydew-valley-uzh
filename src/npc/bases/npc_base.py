@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Callable
-from typing import Self
 
 import pygame
 from pathfinding.core.grid import Grid
@@ -26,7 +25,7 @@ class NPCBase(Character, AIBehaviour, ABC):
             collision_sprites: pygame.sprite.Group,
 
             apply_tool: Callable[
-                [FarmingTool, tuple[float, float], Self], None
+                [FarmingTool, tuple[float, float], Character], None
             ],
 
             pf_matrix: list[list[int]],

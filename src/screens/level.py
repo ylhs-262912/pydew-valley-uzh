@@ -1,5 +1,4 @@
 import math
-import sys
 from collections.abc import Callable
 from random import randint
 
@@ -18,18 +17,18 @@ from src.overlay.overlay import Overlay
 from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
-from src.screens.shop import ShopMenu
 from src.settings import (
     LAYERS,
     SCALE_FACTOR,
-    SCALED_TILE_SIZE,
     TEST_ANIMALS,
     TILE_SIZE,
     MapDict,
     ENABLE_NPCS,
     SoundDict,
+    SETUP_PATHFINDING,
 )
 from src.sprites.base import Sprite, AnimatedSprite
+from src.sprites.character import Character
 from src.sprites.particle import ParticleSprite
 from src.sprites.player import Player
 from src.sprites.tree import Tree
@@ -108,7 +107,7 @@ class Level:
     def setup(self):
         self.activate_music()
 
-        if ENABLE_NPCS:
+        if SETUP_PATHFINDING:
             self.pf_matrix_size = (self.tmx_maps["main"].width,
                                    self.tmx_maps["main"].height)
             self.pf_matrix = [
@@ -125,7 +124,8 @@ class Level:
         self.setup_object_layer('Interactions', self.setup_interaction)
         self.setup_object_layer('Entities', self.setup_entity)
 
-        AIData.setup(self.pf_matrix)
+        if SETUP_PATHFINDING:
+            AIData.setup(self.pf_matrix)
 
         if ENABLE_NPCS:
             self.setup_object_layer('NPCs', self.setup_npc)
@@ -180,7 +180,7 @@ class Level:
         else:
             Sprite(pos, image, (self.all_sprites, self.collision_sprites))
 
-        if ENABLE_NPCS:
+        if SETUP_PATHFINDING:
             self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_collision(self, pos: tuple[int, int], obj: pytmx.TiledObject):
@@ -188,7 +188,7 @@ class Level:
         image = pygame.Surface(size)
         Sprite(pos, image, self.collision_sprites)
 
-        if ENABLE_NPCS:
+        if SETUP_PATHFINDING:
             self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_interaction(self, pos: tuple[int, int], obj: pytmx.TiledObject):
@@ -275,7 +275,9 @@ class Level:
     def create_particle(self, sprite: pygame.sprite.Sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
-    def apply_tool(self, tool: FarmingTool, pos: tuple[int, int], entity: Entity):
+    def apply_tool(
+            self, tool: FarmingTool, pos: tuple[int, int], entity: Character
+    ):
         match tool:
             case FarmingTool.AXE:
                 for tree in self.tree_sprites:

@@ -1,4 +1,4 @@
-from typing import Callable, Self
+from typing import Callable
 
 import pygame
 
@@ -11,6 +11,7 @@ from src.npc.behaviour.npc_behaviour_tree import (
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate, AniFrames, LAYERS
+from src.sprites.character import Character
 
 
 class NPC(NPCBase):
@@ -21,7 +22,7 @@ class NPC(NPCBase):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
-                [FarmingTool, tuple[float, float], Self], None
+                [FarmingTool, tuple[int, int], Character], None
             ],
             soil_layer: SoilLayer
     ):
