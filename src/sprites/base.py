@@ -8,7 +8,7 @@ class Sprite(pygame.sprite.Sprite):
                  pos: tuple[int | float,
                             int | float],
                  surf: pygame.Surface,
-                 groups: tuple[pygame.sprite.Group] | pygame.sprite.Group,
+                 groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
                  z: int = LAYERS['main'],
                  name: str | None = None):
         super().__init__(groups)
@@ -25,7 +25,6 @@ class CollideableSprite(Sprite):
         self.hitbox_rect = self.rect.inflate(-shrink[0], -shrink[1])
 
 
-
 class AnimatedSprite(Sprite):
     def __init__(self, pos, frames, groups, z=LAYERS['main']):
         self.frames, self.frame_index = frames, 0
@@ -37,4 +36,3 @@ class AnimatedSprite(Sprite):
 
     def update(self, dt):
         self.animate(dt)
-

@@ -3,9 +3,9 @@ import sys
 import pygame
 from pytmx import TiledMap
 
+from src import settings
 from src import support
-from src.enums import GameState
-from src.gui.health_bar import HealthProgressBar
+from src.enums import GameState, Direction
 from src.gui.setup import setup_gui
 from src.interface.dialog import DialogueManager
 from src.screens.level import Level
@@ -15,9 +15,10 @@ from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
+    CHAR_TILE_SIZE,
     AniFrames, MapDict, SoundDict
 )
-
+from src.gui.health_bar import HealthProgressBar
 
 class Game:
     def __init__(self):
@@ -29,6 +30,8 @@ class Game:
 
         # frames
         self.character_frames: dict[str, AniFrames] | None = None
+        self.chicken_frames: dict[str, AniFrames] | None = None
+        self.cow_frames: dict[str, AniFrames] | None = None
         self.level_frames: dict | None = None
         self.tmx_maps: MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
@@ -100,13 +103,31 @@ class Game:
             'objects': support.import_folder_dict('images/objects')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
-
+        self.character_frames = support.entity_importer(
+            'images/characters', CHAR_TILE_SIZE,
+            [Direction.DOWN, Direction.UP, Direction.LEFT]
+        )
+        self.chicken_frames = support.entity_importer(
+            "images/entities/chicken", 16, [Direction.RIGHT]
+        )
+        self.cow_frames = support.entity_importer(
+            "images/entities/cow", 32, [Direction.RIGHT]
+        )
         self.frames = {
             'character': self.character_frames,
             "emotes": self.emotes,
+            "entities": {
+                "chicken": self.chicken_frames,
+                "cow": self.cow_frames
+            },
             'level': self.level_frames,
             'overlay': self.overlay_frames
         }
+
+        # The chicken idle animation looks kinda weird,
+        #  that's why the second frame is getting removed
+        self.frames["entities"]["chicken"]["idle"][Direction.LEFT].pop(1)
+        self.frames["entities"]["chicken"]["idle"][Direction.RIGHT].pop(1)
 
         setup_gui()
 

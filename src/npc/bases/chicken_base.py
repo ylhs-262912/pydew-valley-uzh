@@ -1,22 +1,17 @@
 from __future__ import annotations
 
 from abc import ABC
-from collections.abc import Callable
 
 import pygame
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
-from src.enums import FarmingTool
+from src.npc.bases.animal import Animal
 from src.npc.behaviour.ai_behaviour import AIBehaviour
-from src.overlay.soil import SoilLayer
 from src.settings import Coordinate, AniFrames
-from src.sprites.character import Character
 
 
-class NPCBase(Character, AIBehaviour, ABC):
-    soil_layer: SoilLayer
-
+class ChickenBase(Animal, AIBehaviour, ABC):
     def __init__(
             self,
             pos: Coordinate,
@@ -24,24 +19,21 @@ class NPCBase(Character, AIBehaviour, ABC):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
 
-            apply_tool: Callable[
-                [FarmingTool, tuple[float, float], Character], None
-            ],
-
             pf_matrix: list[list[int]],
             pf_grid: Grid,
             pf_finder: AStarFinder,
 
             z: int
     ):
-        Character.__init__(
+        Animal.__init__(
             self,
             pos=pos,
             frames=frames,
             groups=groups,
             collision_sprites=collision_sprites,
 
-            apply_tool=apply_tool,
+            shrink=(30, 30),
+
             z=z
         )
         AIBehaviour.__init__(
@@ -51,4 +43,4 @@ class NPCBase(Character, AIBehaviour, ABC):
             pf_finder=pf_finder
         )
 
-        self.speed = 150
+        self.speed = 250

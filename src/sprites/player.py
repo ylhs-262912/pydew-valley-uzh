@@ -1,15 +1,16 @@
 from __future__ import annotations
-from typing import Callable, Self
+
+from typing import Callable
 
 import pygame  # noqa
 
-from src import settings, savefile, support
+from src import savefile, support
 from src.controls import Controls, ControlType
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import SCALE_FACTOR
-from src.sprites.entity import Entity
+from src.settings import AniFrames, Coordinate, SoundDict, SCALE_FACTOR
+from src.sprites.character import Character
 
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
@@ -20,28 +21,39 @@ _INV_DEFAULT_AMOUNTS = (
 )
 
 
-class Player(Entity):
+class Player(Character):
+    keybinds: dict
+    controls: dict
+
+    blocked: bool
+    paused: bool
+    font: pygame.font.Font
+    interact: Callable[[], None]
+    sounds: SoundDict
+
     def __init__(
             self,
-            pos: settings.Coordinate,
-            frames: dict[str, settings.AniFrames],
-            groups,
+            pos: Coordinate,
+            frames: dict[str, AniFrames],
+            groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable[[FarmingTool, tuple[int, int], Entity], None],
+            apply_tool: Callable[
+                [FarmingTool, tuple[int, int], Character], None
+            ],
             interact: Callable[[], None],
             emote_manager: PlayerEmoteManager,
-            sounds: settings.SoundDict,
-            font: pygame.font.Font):
+            sounds: SoundDict,
+            font: pygame.font.Font
+    ):
 
         save_data = savefile.load_savefile()
 
         super().__init__(
-            pos,
-            frames,
-            groups,
-            collision_sprites,
-            (44 * SCALE_FACTOR, 40 * SCALE_FACTOR),
-            apply_tool
+            pos=pos,
+            frames=frames,
+            groups=groups,
+            collision_sprites=collision_sprites,
+            apply_tool=apply_tool
         )
 
         # movement
@@ -52,21 +64,24 @@ class Player(Entity):
         self.paused = False
         self.font = font
         self.interact = interact
+
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase = None
-        self.sounds = sounds
 
-        self.current_tool = save_data.get("current_tool", FarmingTool.get_first_tool_id())
-        self.tool_index = self.current_tool.value - 1
-
-        self.current_seed = save_data.get("current_seed", FarmingTool.get_first_seed_id())
-        self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
+        # load saved tools
+        self.current_tool = save_data.get(
+            "current_tool", FarmingTool.get_first_tool_id()
+        )
+        self.current_seed = save_data.get(
+            "current_seed", FarmingTool.get_first_seed_id()
+        )
 
         # inventory
         self.inventory = {
             res: save_data["inventory"].get(
                 res.as_serialised_string(),
-                _SEED_INVENTORY_DEFAULT_AMOUNT if res >= InventoryResource.CORN_SEED else
+                _SEED_INVENTORY_DEFAULT_AMOUNT
+                if res >= InventoryResource.CORN_SEED else
                 _NONSEED_INVENTORY_DEFAULT_AMOUNT
             )
             for res in InventoryResource.__members__.values()
@@ -88,7 +103,8 @@ class Player(Entity):
         self.focused_entity = None
 
     def save(self):
-        # We compact the inventory first, i.e. remove any default values if they didn't change.
+        # We compact the inventory first,
+        # i.e. remove any default values if they didn't change.
         # This is to save space in the save file.
         compacted_inv = self.inventory.copy()
         key_set = list(compacted_inv.keys())
@@ -98,7 +114,9 @@ class Player(Entity):
             # (5 units for seeds, 20 units for everything else).
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
-        savefile.save(self.current_tool, self.current_seed, self.money, compacted_inv)
+        savefile.save(
+            self.current_tool, self.current_seed, self.money, compacted_inv
+        )
 
     def load_controls(self):
         self.controls.load_default_keybinds()
@@ -184,10 +202,10 @@ class Player(Entity):
         self.plant_collide_rect.center = self.hitbox_rect.center
 
     def get_current_tool_string(self):
-        return self.available_tools[self.tool_index]
+        return self.current_tool.as_serialised_string()
 
     def get_current_seed_string(self):
-        return self.available_seeds[self.seed_index]
+        return self.current_seed.as_serialised_string()
 
     def add_resource(self, resource: InventoryResource, amount: int = 1):
         super().add_resource(resource, amount)
