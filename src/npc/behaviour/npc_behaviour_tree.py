@@ -70,7 +70,7 @@ class NPCBehaviourTree:
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
 
-        for tile in context.npc.soil_layer.map.values():
+        for tile in context.npc.soil_layer.tiles.values():
             if tile.farmable and not tile.hoed:
                 empty_farmland_available += 1
             if tile.hoed and not tile.planted:
@@ -94,7 +94,7 @@ class NPCBehaviourTree:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
-        for pos, tile in context.npc.soil_layer.map.items():
+        for pos, tile in context.npc.soil_layer.tiles.items():
             if tile.farmable and not tile.hoed:
                 possible_coordinates.append(pos)
 
@@ -120,7 +120,7 @@ class NPCBehaviourTree:
         unplanted_farmland_available = 0
         unwatered_farmland_available = 0
 
-        for tile in context.npc.soil_layer.map.values():
+        for tile in context.npc.soil_layer.tiles.values():
             if tile.hoed and not tile.planted:
                 unplanted_farmland_available += 1
             if tile.planted and not tile.watered:
@@ -140,7 +140,7 @@ class NPCBehaviourTree:
         """
         possible_coordinates = []
 
-        for pos, tile in context.npc.soil_layer.map.items():
+        for pos, tile in context.npc.soil_layer.tiles.items():
             if tile.hoed and not tile.planted:
                 possible_coordinates.append(pos)
 
@@ -166,7 +166,7 @@ class NPCBehaviourTree:
         """
         possible_coordinates = []
 
-        for pos, tile in context.npc.soil_layer.map.items():
+        for pos, tile in context.npc.soil_layer.tiles.items():
             if tile.planted and not tile.watered:
                 possible_coordinates.append(pos)
 

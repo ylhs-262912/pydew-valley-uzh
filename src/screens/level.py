@@ -267,7 +267,6 @@ class Level:
             for npc in self.npcs.values():
                 current_distance = ((player_pos[0] - npc.rect.center[0]) ** 2 +
                                     (player_pos[1] - npc.rect.center[1]) ** 2) ** .5
-                print(current_distance / SCALED_TILE_SIZE)
                 if current_distance < distance_to_player:
                     distance_to_player = current_distance
                     npc_to_focus = npc

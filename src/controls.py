@@ -81,6 +81,7 @@ class Controls(Control, Enum):
     NEXT_SEED = (ControlType.key, "Cycle Seeds")
     PLANT = (ControlType.key, "Plant Current Seed")
     INTERACT = (ControlType.key, "Interact")
+    EMOTE_WHEEL = (ControlType.key, "Toggle Emote Wheel")
 
     @classmethod
     def as_dict(cls) -> dict[str, dict[str, str | int]]:
@@ -143,4 +144,5 @@ DEFAULT_CONTROLS = {
     Controls.NEXT_SEED.get_name(): pygame.K_LSHIFT,
     Controls.PLANT.get_name(): pygame.K_RETURN,
     Controls.INTERACT.get_name(): pygame.K_i,
+    Controls.EMOTE_WHEEL.get_name(): pygame.K_e,
 }

@@ -314,15 +314,18 @@ def draw_aa_line(
 
 
 def get_entity_facing_direction(
-        direction: tuple[float, float] | pygame.math.Vector2
-) -> str:
+        direction: tuple[float, float] | pygame.math.Vector2,
+        default_value: Direction = Direction.RIGHT
+) -> Direction:
     """
     :param direction: Direction to use.
+    :param default_value: Default direction to use.
     :return: String of the direction the entity is facing
     """
     # prioritizes vertical animations, flip if statements to get horizontal
     # ones
     if direction[0]:
-        return 'right' if direction[0] > 0 else 'left'
+        return Direction.RIGHT if direction[0] > 0 else Direction.LEFT
     if direction[1]:
-        return 'down' if direction[1] > 0 else 'up'
+        return Direction.DOWN if direction[1] > 0 else Direction.UP
+    return default_value

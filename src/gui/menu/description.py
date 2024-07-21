@@ -5,7 +5,6 @@ from pygame.math import Vector2 as vector
 
 from src.controls import Controls, ControlType
 from src.gui.menu.components import Button, Slider, KeySetup
-from src.settings import KEYBINDS
 from src.support import load_data, save_data, resource_path
 
 

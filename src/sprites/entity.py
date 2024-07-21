@@ -6,7 +6,7 @@ from src import settings
 from src.enums import Direction, EntityState
 from src.gui.interface import indicators
 from src.settings import EMOTE_LAYER
-from src.sprites.base import CollideableSprite, LAYERS
+from src.sprites.base import CollideableSprite, LAYERS, Sprite
 from src.support import screen_to_tile, get_entity_facing_direction
 
 
@@ -61,7 +61,9 @@ class Entity(CollideableSprite, ABC):
         self.state = EntityState.WALK if self.direction else EntityState.IDLE
 
     def get_facing_direction(self):
-        self.facing_direction = get_entity_facing_direction(self.direction)
+        self.facing_direction = get_entity_facing_direction(
+            self.direction, self.facing_direction
+        )
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
@@ -124,23 +126,6 @@ class Entity(CollideableSprite, ABC):
             self.facing_direction
         ]
         self.frame_index += 4 * dt
-        if not self.tool_active:
-            self.image = current_animation[int(
-                self.frame_index) % len(current_animation)]
-        else:
-            tool_animation = self.frames[self.available_tools[self.tool_index]
-                                         ][self.facing_direction]
-            if self.frame_index < len(tool_animation):
-                self.image = tool_animation[min(
-                    (round(self.frame_index), len(tool_animation) - 1))]
-                if round(self.frame_index) == len(tool_animation) - \
-                        1 and not self.just_used_tool:
-                    self.just_used_tool = True
-                    self.use_tool(ItemToUse.REGULAR_TOOL)
-            else:
-                self.state = 'idle'
-                self.tool_active = False
-                self.just_used_tool = False
 
     def update(self, dt: float):
         if self.focused_indicator:

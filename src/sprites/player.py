@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Type
 
 import pygame  # noqa
 
@@ -9,9 +9,9 @@ from src.controls import Controls, ControlType
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import AniFrames, Coordinate, SoundDict, SCALE_FACTOR
+from src.settings import AniFrames, Coordinate, SoundDict
 from src.sprites.character import Character
-
+from src.sprites.entity import Entity
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
@@ -23,7 +23,7 @@ _INV_DEFAULT_AMOUNTS = (
 
 class Player(Character):
     keybinds: dict
-    controls: dict
+    controls: Type[Controls]
 
     blocked: bool
     paused: bool
@@ -66,7 +66,7 @@ class Player(Character):
         self.interact = interact
 
         self.emote_manager = emote_manager
-        self.focused_entity: NPCBase = None
+        self.focused_entity: NPCBase | None = None
 
         # load saved tools
         self.current_tool = save_data.get(
@@ -144,15 +144,29 @@ class Player(Character):
         self.update_controls()
 
         # movement
-        if not self.tool_active and not self.blocked and not self.emote_manager.emote_wheel.visible:
-            self.direction.x = int(self.controls.RIGHT.pressed) - int(self.controls.LEFT.pressed)
-            self.direction.y = int(self.controls.DOWN.pressed) - int(self.controls.UP.pressed)
-            self.direction = self.direction.normalize() if self.direction else self.direction
+        if (not self.tool_active
+                and not self.blocked
+                and not self.emote_manager.emote_wheel.visible):
+
+            self.direction.x = (int(self.controls.RIGHT.pressed)
+                                - int(self.controls.LEFT.pressed))
+
+            self.direction.y = (int(self.controls.DOWN.pressed)
+                                - int(self.controls.UP.pressed))
+
+            if self.direction:
+                self.direction = self.direction.normalize()
 
             # tool switch
             if self.controls.NEXT_TOOL.just_pressed:
-                self.tool_index = (self.tool_index + 1) % len(self.available_tools)
-                self.current_tool = FarmingTool(self.tool_index + FarmingTool.get_first_tool_id())
+                tool_index = (
+                        (self.current_tool.value
+                         - FarmingTool.get_first_tool_id().value + 1)
+                        % FarmingTool.get_tool_count()
+                )
+                self.current_tool = FarmingTool(
+                    tool_index + FarmingTool.get_first_tool_id()
+                )
 
             # tool use
             if self.controls.USE.just_pressed:
@@ -164,8 +178,14 @@ class Player(Character):
 
             # seed switch
             if self.controls.NEXT_SEED.just_pressed:
-                self.seed_index = (self.seed_index + 1) % len(self.available_seeds)
-                self.current_seed = FarmingTool(self.seed_index + FarmingTool.get_first_seed_id())
+                seed_index = (
+                        (self.current_seed.value
+                         - FarmingTool.get_first_seed_id().value + 1)
+                        % FarmingTool.get_seed_count()
+                )
+                self.current_seed = FarmingTool(
+                    seed_index + FarmingTool.get_first_seed_id()
+                )
 
             # seed used
             if self.controls.PLANT.just_pressed:
@@ -177,20 +197,22 @@ class Player(Character):
 
         # emotes
         if not self.blocked:
-            if self.controls["emote wheel"]:
+            if self.controls.EMOTE_WHEEL.just_pressed:
                 self.emote_manager.toggle_emote_wheel()
                 if self.emote_manager.emote_wheel.visible:
                     self.direction = pygame.Vector2()
 
             if self.emote_manager.emote_wheel.visible:
-                if self.controls["key_right"]:
+                if self.controls.RIGHT.just_pressed:
                     self.emote_manager.emote_wheel.emote_index += 1
 
-                if self.controls["key_left"]:
+                if self.controls.LEFT.just_pressed:
                     self.emote_manager.emote_wheel.emote_index -= 1
 
-                if self.controls["use"]:
-                    self.emote_manager.show_emote(self, self.emote_manager.emote_wheel._current_emote)
+                if self.controls.USE.just_pressed:
+                    self.emote_manager.show_emote(
+                        self, self.emote_manager.emote_wheel._current_emote
+                    )
                     self.emote_manager.toggle_emote_wheel()
 
     def move(self, dt: float):

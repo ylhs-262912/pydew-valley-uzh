@@ -3,11 +3,10 @@ import sys
 import pygame
 from pytmx import TiledMap
 
-from src import settings
 from src import support
 from src.enums import GameState, Direction
 from src.gui.setup import setup_gui
-from src.interface.dialog import DialogueManager
+from src.gui.interface.dialog import DialogueManager
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
@@ -16,7 +15,7 @@ from src.screens.shop import ShopMenu
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
     CHAR_TILE_SIZE,
-    AniFrames, MapDict, SoundDict
+    AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
 from src.gui.health_bar import HealthProgressBar
 
@@ -87,10 +86,15 @@ class Game:
         self.tmx_maps = support.tmx_importer('data/maps')
 
         # frames
-        self.character_frames = support.character_importer('images/characters')
+        self.character_frames = support.entity_importer(
+            'images/characters', 48,
+            [Direction.DOWN, Direction.UP, Direction.RIGHT]
+        )
 
-        self.emotes = support.animation_importer("images/ui/emotes/sprout_lands",
-                                                 frame_size=EMOTE_SIZE, resize=EMOTE_SIZE)
+        self.emotes = support.animation_importer(
+            "images/ui/emotes/sprout_lands",
+            frame_size=EMOTE_SIZE, resize=EMOTE_SIZE
+        )
 
         self.level_frames = {
             'animations': support.animation_importer('images', 'animations'),
