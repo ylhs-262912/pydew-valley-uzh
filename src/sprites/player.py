@@ -30,7 +30,6 @@ class Player(Character):
     def __init__(
             self,
             pos: Coordinate,
-            game,
             frames: dict[str, AniFrames],
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
@@ -41,8 +40,6 @@ class Player(Character):
             sounds: SoundDict,
             font: pygame.font.Font
     ):
-        self.game = game
-
         save_data = savefile.load_savefile()
 
         super().__init__(

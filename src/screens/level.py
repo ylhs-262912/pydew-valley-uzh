@@ -34,9 +34,7 @@ from src.support import map_coords_to_tile, load_data, resource_path
 
 
 class Level:
-    def __init__(self, game, switch, tmx_maps: MapDict, frames, sounds):
-        self.game = game
-
+    def __init__(self, switch, tmx_maps: MapDict, frames, sounds):
         # main setup
         self.display_surface = pygame.display.get_surface()
         self.switch_screen = switch
@@ -191,7 +189,6 @@ class Level:
     def setup_entities(self, pos, obj):
         self.entities[obj.name] = Player(
             pos=pos,
-            game=self.game,
             frames=self.frames['character']['rabbit'],
             groups=(self.all_sprites, self.collision_sprites),
             collision_sprites=self.collision_sprites,
