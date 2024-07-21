@@ -1,5 +1,5 @@
 from ..support import resource_path
-from ..settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, TB_LAYER
+from ..settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, LAYERS
 from ..timer import Timer
 import pygame
 import json
@@ -40,7 +40,7 @@ class TextBox(pygame.sprite.Sprite):
         :param text: The dialogue the character is supposed to say.
         :param font: The font used to render this dialogue."""
         super().__init__()
-        self.z: int = TB_LAYER
+        self.z: int = LAYERS['text box']
         self.font: pygame.Font = font
         self.cname: str = character_name
         self.text: str = textwrap.fill(text, width=CHARS_PER_LINE)
