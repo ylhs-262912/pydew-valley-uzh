@@ -1,7 +1,9 @@
 import pygame
-from src.support import resource_path
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
+
+from src.controls import Control, ControlType
+from src.support import resource_path
 
 
 class Component:
@@ -129,12 +131,12 @@ class Button(Component):
 
 
 class KeySetup(Component):
-    def __init__(self, name, unicode, params, pos, image):
+    def __init__(self, name: str, control: Control, unicode: str, pos: tuple[int, int], image: pygame.Surface):
         # params
         self.name = name
-        self.type = params['type']
-        self.value = params['value']
-        self.title = params['text']
+        self.type = control.control_type
+        self.value = control.value
+        self.title = control.text
         self.unicode = unicode
 
         # design
@@ -154,7 +156,18 @@ class KeySetup(Component):
         midright = self.rect.midright - vector(10, 0)
         self.symbol_image_rect = self.symbol_image.get_rect(midright=midright)
 
-    def hover(self, offset):
+    @property
+    def type(self) -> str:
+        return self._type
+
+    @type.setter
+    def type(self, value: ControlType | str):
+        if isinstance(value, ControlType):
+            self._type = value.value
+        else:
+            self._type = value
+
+    def hover(self, offset: pygame.math.Vector2):
         self.offset = vector(offset)
         self.hover_active = self.rect.collidepoint(mouse_pos() - self.offset)
         return self.hover_active
@@ -174,7 +187,7 @@ class KeySetup(Component):
         self.surface.blit(self.symbol_image, self.symbol_image_rect)
         self.surface.blit(text_surf, text_rect)
 
-    def draw(self, surface):
+    def draw(self, surface: pygame.Surface):
         self.surface = surface
         pygame.draw.rect(self.surface, self.bg_color, self.rect, 0, 4)
         self.draw_key_name()
@@ -205,21 +218,28 @@ class Slider:
         return self.value
 
     # events
-    def handle_event(self, event):
+    def handle_event(self, event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(mouse_pos() - self.offset):
                 self.drag_active = True
+                return True
 
-        if event.type == pygame.MOUSEBUTTONUP:
-            self.drag_active = False
+        if self.drag_active:
 
-        if event.type == pygame.MOUSEMOTION and self.drag_active:
-            diff = self.max_value - self.min_value
-            origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
-            size = self.rect.width - 10
-            self.value = self.min_value + diff * origin_x / size
-            self.value = max(self.min_value, min(self.max_value, self.value))
-            self.update_volume()
+            if event.type == pygame.MOUSEBUTTONUP:
+                self.drag_active = False
+                return True
+
+            if event.type == pygame.MOUSEMOTION:
+                diff = self.max_value - self.min_value
+                origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
+                size = self.rect.width - 10
+                self.value = self.min_value + diff * origin_x / size
+                self.value = max(self.min_value, min(self.max_value, self.value))
+                self.update_volume()
+                return True
+
+        return False
 
     def update_volume(self):
         self.sounds['music'].set_volume(min((self.value / 1000), 0.4))

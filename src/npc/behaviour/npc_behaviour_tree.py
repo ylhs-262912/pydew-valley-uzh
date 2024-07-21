@@ -139,6 +139,7 @@ class NPCBehaviourTree:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
+
         for pos, tile in context.npc.soil_layer.map.items():
             if tile.hoed and not tile.planted:
                 possible_coordinates.append(pos)
@@ -164,6 +165,7 @@ class NPCBehaviourTree:
         :return: True if path has successfully been created, otherwise False
         """
         possible_coordinates = []
+
         for pos, tile in context.npc.soil_layer.map.items():
             if tile.planted and not tile.watered:
                 possible_coordinates.append(pos)

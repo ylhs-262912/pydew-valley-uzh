@@ -1,3 +1,5 @@
+import sys
+
 import pygame
 
 from src import settings
@@ -5,14 +7,14 @@ from src.screens.shop import ShopMenu
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CHAR_TILE_SIZE
 from src.enums import GameState, Direction
 from src import support
-
-from src.screens.level import Level
 from src.npc.dialog import DialogueManager, prepare_tb_image
-from src.screens.menu import MainMenu
-from src.screens.pause import PauseMenu
-from src.screens.settings import SettingsMenu
+from src.screens.level import Level
+from src.screens.menu_main import MainMenu
+from src.screens.menu_pause import PauseMenu
+from src.screens.menu_settings import SettingsMenu
+from src.screens.shop import ShopMenu
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.gui.health_bar import HealthProgressBar
-
 
 class Game:
     def __init__(self):
@@ -32,7 +34,7 @@ class Game:
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps = None
+        self.tmx_maps = {}
         self.sounds = None
         self.font = None
         self._tb_base = None
@@ -48,10 +50,12 @@ class Game:
 
         # screens
         self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.player = self.level.player
+
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.level)
-        self.shop_menu = ShopMenu(self.level.player, self.switch_state, self.font)
+        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
+        self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
 
         # dialog
         self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
@@ -62,15 +66,20 @@ class Game:
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
-            GameState.LEVEL: self.level
+            # GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
         # progress bar
         self.health_bar = HealthProgressBar(100)
 
-    def switch_state(self, state):
+    def switch_state(self, state: GameState):
         self.current_state = state
+        if self.game_paused():
+            self.player.blocked = True
+            self.player.direction.update((0, 0))
+        else:
+            self.player.blocked = False
 
     def load_assets(self):
         self.tmx_maps = support.tmx_importer('data/maps')
@@ -125,18 +134,37 @@ class Game:
     def game_paused(self):
         return self.current_state != GameState.LEVEL
 
+    # events
+    def event_loop(self):
+        for event in pygame.event.get():
+            if self.handle_event(event):
+                continue
+
+            if self.game_paused():
+                if self.menus[self.current_state].handle_event(event):
+                    continue
+
+            if self.level.handle_event(event):
+                continue
+
+    def handle_event(self, event: pygame.event.Event) -> bool:
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        return False
+
     def run(self):
         while self.running:
             dt = self.clock.tick() / 1000
 
+            self.event_loop()
 
-            # removing level update because it makes two times for event in pygame.event.get() so it makes the game laggy
-            # self.level.update(dt)
-
-            # if self.game_paused():
-            self.menus[self.current_state].update(dt)
+            self.level.update(dt)
 
             self.health_bar.update(self.display_surface, dt)
+
+            if self.game_paused():
+                self.menus[self.current_state].update(dt)
 
             pygame.display.update()
 

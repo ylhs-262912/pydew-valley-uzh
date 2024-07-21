@@ -1,16 +1,23 @@
+from collections.abc import Callable
 
-import sys
 import pygame
+from pygame.math import Vector2 as vector
+from pygame.mouse import get_pressed as mouse_buttons
+
+from src.enums import GameState
+from src.gui.components import Button
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.support import resource_path
-from src.gui.components import Button
-from src.enums import GameState
-from pygame.mouse import get_pressed as mouse_buttons
-from pygame.math import Vector2 as vector
 
 
 class GeneralMenu:
-    def __init__(self,  title, options, switch, size, center=vector()):
+    def __init__(
+            self, title: str, options: list[str], switch: Callable[[GameState], None],
+            size: tuple[int, int], center: vector = None
+    ):
+        if center is None:
+            center = vector()
+
         # general setup
         self.display_surface = pygame.display.get_surface()
         self.buttons_surface = pygame.Surface(size)
@@ -59,31 +66,12 @@ class GeneralMenu:
             self.buttons.append(button)
             generic_button_rect = rect.move(0, button_height + space)
 
-    # events
-    def event_loop(self):
-        self.mouse_hover()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.quit_game()
-
-            self.click(event)
-            self.handle_events(event)
-
-    def handle_events(self, event):
-        pass
-    
-
-    def get_hovered_button(self):
-        for button in self.buttons:
-            if button.mouse_hover():
-                return button
-        return None
-
-    def click(self, event):
+    def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
             self.pressed_button = self.get_hovered_button()
             if self.pressed_button:
                 self.pressed_button.start_press_animation()
+                return True
 
         if event.type == pygame.MOUSEBUTTONUP:
             if self.pressed_button:
@@ -94,6 +82,15 @@ class GeneralMenu:
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
                 self.pressed_button = None
+                return True
+
+        return False
+
+    def get_hovered_button(self):
+        for button in self.buttons:
+            if button.mouse_hover():
+                return button
+        return None
 
     def mouse_hover(self):
         for button in self.buttons:
@@ -102,15 +99,14 @@ class GeneralMenu:
                 return
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
-    def button_action(self, text):
+    def button_action(self, text: str):
         if text == 'Play':
             self.switch_screen(GameState.LEVEL)
         if text == 'Quit':
             self.quit_game()
 
     def quit_game(self):
-        pygame.quit()
-        sys.exit()
+        pygame.event.post(pygame.event.Event(pygame.QUIT))
 
     # draw
     def draw_title(self):
@@ -136,11 +132,11 @@ class GeneralMenu:
         self.draw_buttons()
 
     # update
-    def update_buttons(self, dt):
+    def update_buttons(self, dt: float):
         for button in self.buttons:
             button.update(dt)
 
-    def update(self, dt):
-        self.event_loop()
+    def update(self, dt: float):
+        self.mouse_hover()
         self.update_buttons(dt)
         self.draw()
