@@ -40,14 +40,7 @@ class Player(Entity):
             apply_tool
         )
 
-        first_frame_hitbox = (self.assets[self.state][self.facing_direction]
-                              .get_hitbox(self.frame_index))
-
-        self.hitbox_rect = pygame.FRect(
-            self.rect.left + first_frame_hitbox.x,
-            self.rect.top + first_frame_hitbox.y,
-            first_frame_hitbox.w, first_frame_hitbox.h
-        )
+        self.hitbox_rect = pygame.FRect()
 
         # movement
         self.keybinds = self.import_controls()
@@ -160,13 +153,10 @@ class Player(Entity):
                 self.interact()
 
     def move(self, dt):
-        current_hitbox = (self.assets[self.state][self.facing_direction]
-                          .get_hitbox(int(self.frame_index)))
-
         self.hitbox_rect.update(
-            (self.rect.x + current_hitbox.x,
-             self.rect.y + current_hitbox.y),
-            current_hitbox.size
+            (self.rect.x + self._current_hitbox.x,
+             self.rect.y + self._current_hitbox.y),
+            self._current_hitbox.size
         )
 
         self.hitbox_rect.x += self.direction.x * self.speed * dt
@@ -174,8 +164,8 @@ class Player(Entity):
         self.check_collision()
 
         self.rect.update(
-            (self.hitbox_rect.x - current_hitbox.x,
-             self.hitbox_rect.y - current_hitbox.y), self.rect.size)
+            (self.hitbox_rect.x - self._current_hitbox.x,
+             self.hitbox_rect.y - self._current_hitbox.y), self.rect.size)
 
     def get_current_tool_string(self):
         return self.available_tools[self.tool_index]

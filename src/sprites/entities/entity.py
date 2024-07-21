@@ -21,9 +21,13 @@ class Entity(CollideableSprite, ABC):
             z=LAYERS['main']):
 
         self.assets = assets
+
+        self._current_frame = None
+        self._current_hitbox = None
+
+        self._state = EntityState.IDLE
+        self._facing_direction = Direction.DOWN
         self.frame_index = 0
-        self.state = EntityState.IDLE
-        self.facing_direction = Direction.DOWN
 
         super().__init__(
             pos,
@@ -65,8 +69,44 @@ class Entity(CollideableSprite, ABC):
         # Not all Entities can go to the market, so those that can't should not have money either
         self.money = 0
 
+    def update_frame(self):
+        self._current_frame = self.assets[self.state][
+            self.facing_direction
+        ].get_frame(self.frame_index)
+
+        self._current_hitbox = self.assets[self.state][
+            self.facing_direction
+        ].get_hitbox(self.frame_index)
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, state: EntityState):
+        self._state = state
+        self.update_frame()
+
+    @property
+    def facing_direction(self):
+        return self._facing_direction
+
+    @facing_direction.setter
+    def facing_direction(self, direction: Direction):
+        self._facing_direction = direction
+        self.update_frame()
+
+    @property
+    def frame_index(self):
+        return self._frame_index
+
+    @frame_index.setter
+    def frame_index(self, frame_index: int):
+        self._frame_index = frame_index
+        self.update_frame()
+
     def get_state(self):
-        self.state = 'walk' if self.direction else 'idle'
+        self.state = EntityState.WALK if self.direction else EntityState.IDLE
 
     def get_facing_direction(self):
         # prioritizes vertical animations, flip if statements to get horizontal
@@ -134,11 +174,9 @@ class Entity(CollideableSprite, ABC):
         self.is_colliding = bool(colliding_rect)
 
     def animate(self, dt):
-        current_animation = self.assets[self.state][self.facing_direction]
-
         self.frame_index += 4 * dt
         if not self.tool_active:
-            self.image = current_animation.get_frame(self.frame_index)
+            self.image = self._current_frame
         else:
             tool_animation = self.assets[
                 EntityState(self.available_tools[self.tool_index])
