@@ -108,6 +108,10 @@ class TextBox(pygame.sprite.Sprite):
             (text_surf, text_rect)
         ]
         self.image.fblits(blit_list)
+    
+    def draw(self, screen, offset):
+        screen.blit(self.image, self.rect)
+
 
 
 def prepare_tb_image(cname_surf: pygame.Surface, txt_surf: pygame.Surface):
@@ -194,5 +198,3 @@ class DialogueManager:
     def __getitem__(self, item):
         return self.dialogues[item]
     
-    def draw(self, screen, offset):
-        screen.blit(self.image, self.rect)
