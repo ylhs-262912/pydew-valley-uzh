@@ -11,6 +11,7 @@ from src.npc.dialog import DialogueManager, prepare_tb_image
 from src.screens.menu import MainMenu
 from src.screens.pause import PauseMenu
 from src.screens.settings import SettingsMenu
+from src.gui.health_bar import HealthProgressBar
 
 
 class Game:
@@ -64,6 +65,9 @@ class Game:
             GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
+
+        # progress bar
+        self.health_bar = HealthProgressBar(100)
 
     def switch_state(self, state):
         self.current_state = state
@@ -131,6 +135,8 @@ class Game:
 
             # if self.game_paused():
             self.menus[self.current_state].update(dt)
+
+            self.health_bar.update(self.display_surface, dt)
 
             pygame.display.update()
 
