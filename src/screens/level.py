@@ -9,6 +9,7 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 from src.enums import FarmingTool, GameState
 from src.groups import AllSprites
+from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow
 from src.npc.npc import NPC
@@ -18,8 +19,10 @@ from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.settings import (
+    TILE_SIZE,
     LAYERS,
     SCALE_FACTOR,
+    SCALED_TILE_SIZE,
     TEST_ANIMALS,
     TILE_SIZE,
     MapDict,
@@ -51,8 +54,8 @@ class Level:
         self.pf_finder = PF_AStarFinder()
 
         # sprite groups
-        self.entities = {}
-        self.npcs = {}
+        self.entities: dict[str, Player] = {}
+        self.npcs: dict[str, NPC] = {}
         self.animals = []
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
@@ -77,6 +80,12 @@ class Level:
         self.sky = Sky()
         self.rain = Rain(self.all_sprites, frames['level'], self.get_map_size())
         self.raining = False
+
+        # emotes
+        self.emotes = self.frames["emotes"]
+        self.player_emote_manager = PlayerEmoteManager(self.all_sprites, self.emotes)
+
+        self.npc_emote_manager = NPCEmoteManager(self.all_sprites, self.emotes)
 
         # setup map
         self.setup()
@@ -129,6 +138,7 @@ class Level:
 
         if ENABLE_NPCS:
             self.setup_object_layer('NPCs', self.setup_npc)
+            self.setup_emote_interactions()
 
         if TEST_ANIMALS:
             self.setup_object_layer("Animals", self.setup_animal)
@@ -204,6 +214,7 @@ class Level:
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             interact=self.interact,
+            emote_manager=self.player_emote_manager,
             sounds=self.sounds,
             font=self.font
         )
@@ -216,6 +227,7 @@ class Level:
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             soil_layer=self.soil_layer,
+            emote_manager=self.npc_emote_manager,
         )
 
     def setup_animal(self, pos, obj):
@@ -238,8 +250,36 @@ class Level:
         else:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")
 
+    def setup_emote_interactions(self):
+        @self.player_emote_manager.on_show_emote
+        def on_show_emote(emote: str):
+            if self.player.focused_entity:
+                npc = self.player.focused_entity
+                npc.abort_path()
+
+                self.npc_emote_manager.show_emote(npc, emote)
+
+        @self.player_emote_manager.on_emote_wheel_opened
+        def on_emote_wheel_opened():
+            player_pos = self.player.rect.center
+            distance_to_player = 5 * SCALED_TILE_SIZE
+            npc_to_focus = None
+            for npc in self.npcs.values():
+                current_distance = ((player_pos[0] - npc.rect.center[0]) ** 2 +
+                                    (player_pos[1] - npc.rect.center[1]) ** 2) ** .5
+                if current_distance < distance_to_player:
+                    distance_to_player = current_distance
+                    npc_to_focus = npc
+            if npc_to_focus:
+                self.player.focus_entity(npc_to_focus)
+
+        @self.player_emote_manager.on_emote_wheel_closed
+        def on_emote_wheel_closed():
+            self.player.unfocus_entity()
+
     def get_map_size(self):
-        return self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR, self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR
+        return (self.tmx_maps['main'].width * TILE_SIZE * SCALE_FACTOR,
+                self.tmx_maps['main'].height * TILE_SIZE * SCALE_FACTOR)
 
     def activate_music(self):
         volume = 0.1
@@ -266,7 +306,9 @@ class Level:
 
                     # update grid
                     x, y = map_coords_to_tile(plant.rect.center)
-                    self.soil_layer.grid[y][x].remove('P')
+                    tile = self.soil_layer.tiles.get((x, y))
+                    if tile:
+                        tile.planted = False
 
                     # remove plant
                     plant.kill()
@@ -312,17 +354,22 @@ class Level:
     def reset(self):
         self.current_day += 1
 
-        # plants
-        self.soil_layer.update_plants()
-
         self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
 
-        # soil
-        self.soil_layer.remove_water()
+        # plants + soil
+        for tile in self.soil_layer.tiles.values():
+            if tile.plant:
+                tile.plant.grow()
+            tile.watered = False
+            for sprite in self.soil_layer.water_sprites:
+                sprite.kill()
+
         self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining
         if self.raining:
-            self.soil_layer.water_all()
+            for pos, tile in self.soil_layer.tiles.items():
+                self.soil_layer.water(pos, play_sound=False)
+                self.soil_layer.update_tile_image(tile, pos)
 
         # apples on the trees
 

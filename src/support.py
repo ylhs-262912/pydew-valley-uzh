@@ -4,11 +4,13 @@ import os
 import sys
 
 import pygame
+import pygame.gfxdraw
 import pytmx
 
 from src import settings
 from src.enums import Direction
 from src.settings import (
+    CHAR_TILE_SIZE,
     SCALE_FACTOR,
     TILE_SIZE,
 )
@@ -18,7 +20,7 @@ def resource_path(relative_path: str):
     """Get absolute path to resource, works for dev and for PyInstaller"""
     relative_path = relative_path.replace("/", os.sep)
     try:
-        base_path = sys._MEIPASS
+        base_path = sys._MEIPASS  # noqa
     except AttributeError:
         base_path = os.path.dirname(os.path.abspath(sys.argv[0]))
     return os.path.join(base_path, relative_path)
@@ -69,21 +71,32 @@ def tmx_importer(tmx_path: str) -> settings.MapDict:
     return files
 
 
-def animation_importer(*ani_path: str) -> dict[str, settings.AniFrames]:
+def animation_importer(*ani_path: str, frame_size: int = None, resize: int = None) -> settings.AniFrames:
+    if frame_size is None:
+        frame_size = TILE_SIZE
+
     animation_dict = {}
     for folder_path, _, file_names in os.walk(os.path.join(*ani_path)):
         for file_name in file_names:
             full_path = os.path.join(folder_path, file_name)
             surf = pygame.image.load(full_path).convert_alpha()
-            animation_dict[file_name.split('.')[0]] = []
-            for col in range(surf.get_width() // TILE_SIZE):
+            animation_dict[str(file_name.split('.')[0])] = []
+            for col in range(surf.get_width() // frame_size):
                 cutout_surf = pygame.Surface(
-                    (TILE_SIZE, TILE_SIZE), pygame.SRCALPHA)
+                    (frame_size, frame_size), pygame.SRCALPHA)
                 cutout_rect = pygame.Rect(
-                    col * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE)
+                    col * frame_size, 0, frame_size, frame_size)
                 cutout_surf.blit(surf, (0, 0), cutout_rect)
-                animation_dict[file_name.split('.')[0]].append(
-                    pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
+
+                if resize:
+                    animation_dict[str(file_name.split('.')[0])].append(
+                        pygame.transform.scale(cutout_surf, (resize, resize))
+                    )
+                else:
+                    animation_dict[str(file_name.split('.')[0])].append(
+                        pygame.transform.scale_by(cutout_surf, SCALE_FACTOR)
+                    )
+
     return animation_dict
 
 
@@ -277,3 +290,42 @@ def get_flight_matrix(
                 matrix[y][x] = 1
 
     return matrix
+
+
+def draw_aa_line(
+        surface: pygame.Surface,
+        center_pos: tuple[float, float],
+        thickness: int,
+        length: int,
+        deg: float,
+        color: tuple[int, int, int],
+):
+        ul = (center_pos[0] + (length / 2.) * math.cos(deg) - (thickness / 2.) * math.sin(deg),
+              center_pos[1] + (thickness / 2.) * math.cos(deg) + (length / 2.) * math.sin(deg))
+        ur = (center_pos[0] - (length / 2.) * math.cos(deg) - (thickness / 2.) * math.sin(deg),
+              center_pos[1] + (thickness / 2.) * math.cos(deg) - (length / 2.) * math.sin(deg))
+        bl = (center_pos[0] + (length / 2.) * math.cos(deg) + (thickness / 2.) * math.sin(deg),
+              center_pos[1] - (thickness / 2.) * math.cos(deg) + (length / 2.) * math.sin(deg))
+        br = (center_pos[0] - (length / 2.) * math.cos(deg) + (thickness / 2.) * math.sin(deg),
+              center_pos[1] - (thickness / 2.) * math.cos(deg) - (length / 2.) * math.sin(deg))
+
+        pygame.gfxdraw.aapolygon(surface, (ul, ur, br, bl), color)
+        pygame.gfxdraw.filled_polygon(surface, (ul, ur, br, bl), color)
+
+
+def get_entity_facing_direction(
+        direction: tuple[float, float] | pygame.math.Vector2,
+        default_value: Direction = Direction.RIGHT
+) -> Direction:
+    """
+    :param direction: Direction to use.
+    :param default_value: Default direction to use.
+    :return: String of the direction the entity is facing
+    """
+    # prioritizes vertical animations, flip if statements to get horizontal
+    # ones
+    if direction[0]:
+        return Direction.RIGHT if direction[0] > 0 else Direction.LEFT
+    if direction[1]:
+        return Direction.DOWN if direction[1] > 0 else Direction.UP
+    return default_value

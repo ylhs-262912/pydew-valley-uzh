@@ -13,7 +13,9 @@ TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
 SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
-TB_LAYER = 11
+
+EMOTE_LAYER = 11
+TB_LAYER = 12
 
 LAYERS = {
     'water': 0,
@@ -27,13 +29,16 @@ LAYERS = {
     'fruit': 8,
     'rain drops': 9,
     'particles': 10,
-    "TextBox": TB_LAYER
+    "emotes": EMOTE_LAYER,
+    "TextBox": TB_LAYER,
 }
 
 ENABLE_NPCS = True
 TEST_ANIMALS = True
 
 SETUP_PATHFINDING = any((ENABLE_NPCS, TEST_ANIMALS))
+
+EMOTE_SIZE = 48
 
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 

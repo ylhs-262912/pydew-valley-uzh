@@ -3,7 +3,7 @@ from collections.abc import Callable
 import pygame
 
 from src.enums import GameState
-from src.gui.general_menu import GeneralMenu
+from src.gui.menu.general_menu import GeneralMenu
 
 
 class MainMenu(GeneralMenu):

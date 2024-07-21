@@ -88,11 +88,12 @@ class SoilLayer:
             self.sounds["hoe"].play()
             self.update_tile_image(tile, pos)
 
-    def water(self, pos):
+    def water(self, pos, play_sound: bool = True):
         tile = self.tiles.get(pos)
         if tile and tile.hoed and not tile.watered:
             tile.watered = True
-            self.sounds["water"].play()
+            if play_sound:
+                self.sounds["water"].play()
 
             water_frames = list(self.level_frames["soil water"].values())
             water_frame = choice(water_frames)

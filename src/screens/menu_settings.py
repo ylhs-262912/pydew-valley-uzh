@@ -7,8 +7,8 @@ from pygame.math import Vector2 as vector
 from src import settings
 from src.controls import Controls
 from src.enums import GameState
-from src.gui.description import KeybindsDescription, VolumeDescription
-from src.gui.general_menu import GeneralMenu
+from src.gui.menu.description import KeybindsDescription, VolumeDescription
+from src.gui.menu.general_menu import GeneralMenu
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 
 

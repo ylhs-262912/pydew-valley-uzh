@@ -1,19 +1,22 @@
 import sys
 
 import pygame
+from pytmx import TiledMap
 
-from src import settings
-from src.screens.shop import ShopMenu
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, CHAR_TILE_SIZE
-from src.enums import GameState, Direction
 from src import support
-from src.npc.dialog import DialogueManager, prepare_tb_image
+from src.enums import GameState, Direction
+from src.gui.setup import setup_gui
+from src.gui.interface.dialog import DialogueManager
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.settings import (
+    SCREEN_WIDTH, SCREEN_HEIGHT,
+    CHAR_TILE_SIZE,
+    AniFrames, MapDict, SoundDict, EMOTE_SIZE
+)
 from src.gui.health_bar import HealthProgressBar
 
 class Game:
@@ -25,23 +28,21 @@ class Game:
         pygame.display.set_caption('PyDew')
 
         # frames
-        self.character_frames: dict[str, settings.AniFrames] | None = None
-        self.chicken_frames: dict[str, settings.AniFrames] | None = None
-        self.cow_frames: dict[str, settings.AniFrames] | None = None
+        self.character_frames: dict[str, AniFrames] | None = None
+        self.chicken_frames: dict[str, AniFrames] | None = None
+        self.cow_frames: dict[str, AniFrames] | None = None
         self.level_frames: dict | None = None
-        self.tmx_maps: settings.MapDict | None = None
+        self.tmx_maps: MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps = {}
-        self.sounds = None
-        self.font = None
-        self._tb_base = None
-        self.tb_main_text_base_surf: pygame.Surface | None = None
-        self.tb_cname_base_surf: pygame.Surface | None = None
+        self.tmx_maps: dict[str, TiledMap] | None = {}
+
+        self.emotes: AniFrames | None = None
+
         self.font: pygame.font.Font | None = None
-        self.sounds: settings.SoundDict | None = None
+        self.sounds: SoundDict | None = None
 
         # main setup
         self.running = True
@@ -58,7 +59,7 @@ class Game:
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
 
         # dialog
-        self.dm = DialogueManager(self.level.all_sprites, self.tb_cname_base_surf, self.tb_main_text_base_surf)
+        self.dm = DialogueManager(self.level.all_sprites)
 
         # screens
         self.menus = {
@@ -85,6 +86,16 @@ class Game:
         self.tmx_maps = support.tmx_importer('data/maps')
 
         # frames
+        self.character_frames = support.entity_importer(
+            'images/characters', 48,
+            [Direction.DOWN, Direction.UP, Direction.RIGHT]
+        )
+
+        self.emotes = support.animation_importer(
+            "images/ui/emotes/sprout_lands",
+            frame_size=EMOTE_SIZE, resize=EMOTE_SIZE
+        )
+
         self.level_frames = {
             'animations': support.animation_importer('images', 'animations'),
             'soil': support.import_folder_dict('images/soil'),
@@ -108,6 +119,7 @@ class Game:
         )
         self.frames = {
             'character': self.character_frames,
+            "emotes": self.emotes,
             "entities": {
                 "chicken": self.chicken_frames,
                 "cow": self.cow_frames
@@ -121,10 +133,7 @@ class Game:
         self.frames["entities"]["chicken"]["idle"][Direction.LEFT].pop(1)
         self.frames["entities"]["chicken"]["idle"][Direction.RIGHT].pop(1)
 
-        self._tb_base = pygame.image.load(support.resource_path("images/textbox.png")).convert_alpha()
-        self.tb_cname_base_surf = self._tb_base.subsurface(pygame.Rect(0, 0, 212, 67))
-        self.tb_main_text_base_surf = self._tb_base.subsurface(pygame.Rect(0, 74, 391, 202))
-        prepare_tb_image(self.tb_cname_base_surf, self.tb_main_text_base_surf)
+        setup_gui()
 
         # sounds
         self.sounds = support.sound_importer('audio', default_volume=0.25)

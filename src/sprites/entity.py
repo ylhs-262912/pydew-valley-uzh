@@ -4,8 +4,10 @@ import pygame
 
 from src import settings
 from src.enums import Direction, EntityState
-from src.sprites.base import CollideableSprite, LAYERS
-from src.support import screen_to_tile
+from src.gui.interface import indicators
+from src.settings import EMOTE_LAYER
+from src.sprites.base import CollideableSprite, LAYERS, Sprite
+from src.support import screen_to_tile, get_entity_facing_direction
 
 
 class Entity(CollideableSprite, ABC):
@@ -36,6 +38,9 @@ class Entity(CollideableSprite, ABC):
         self.state = EntityState.IDLE
         self.facing_direction = Direction.RIGHT
 
+        self.focused = False
+        self.focused_indicator = None
+
         super().__init__(
             pos,
             self.frames[self.state.value][
@@ -56,21 +61,22 @@ class Entity(CollideableSprite, ABC):
         self.state = EntityState.WALK if self.direction else EntityState.IDLE
 
     def get_facing_direction(self):
-        # prioritizes vertical animations,
-        # flip if statements to get horizontal ones
-        if self.direction.x:
-            if self.direction.x > 0:
-                self.facing_direction = Direction.RIGHT
-            else:
-                self.facing_direction = Direction.LEFT
-        if self.direction.y:
-            if self.direction.y > 0:
-                self.facing_direction = Direction.DOWN
-            else:
-                self.facing_direction = Direction.UP
+        self.facing_direction = get_entity_facing_direction(
+            self.direction, self.facing_direction
+        )
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
+
+    def focus(self):
+        self.focused = True
+        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], EMOTE_LAYER)
+
+    def unfocus(self):
+        self.focused = False
+        if self.focused_indicator:
+            self.focused_indicator.kill()
+            self.focused_indicator = None
 
     @abstractmethod
     def move(self, dt: float):
@@ -122,6 +128,10 @@ class Entity(CollideableSprite, ABC):
         self.frame_index += 4 * dt
 
     def update(self, dt: float):
+        if self.focused_indicator:
+            self.focused_indicator.rect.update((self.rect.centerx - self.focused_indicator.rect.width / 2,
+                                                self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
+                                               self.focused_indicator.rect.size)
         self.get_state()
         self.get_facing_direction()
         self.move(dt)

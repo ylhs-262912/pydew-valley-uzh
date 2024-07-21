@@ -1,10 +1,10 @@
 import pygame 
 from src.settings import LAYERS, SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
-from src.npc.dialog import TextBox
+from src.gui.interface.dialog import TextBox
 
 
 # TODO : we could replace this with pygame.sprite.LayeredUpdates, as that
-# is a subclass of pygame.sprite.Group that natively supports layers
+#  is a subclass of pygame.sprite.Group that natively supports layers
 
 
 class AllSprites(pygame.sprite.Group):
