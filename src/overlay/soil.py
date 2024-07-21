@@ -1,15 +1,26 @@
 import pygame
 from random import choice
 
+from pytmx import TiledMap
+
 from src.enums import SeedType
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
 from src.sprites.plant import Plant
-from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR
+from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR, SoundDict
 
 
 class Tile(Sprite):
-    def __init__(self, pos, group):
+    pos: tuple[int, int]
+
+    farmable: bool
+    hoed: bool
+    planted: bool
+    watered: bool
+
+    plant: Plant | None
+
+    def __init__(self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]):
         size = TILE_SIZE * SCALE_FACTOR
         surf = pygame.Surface((size, size))
         surf.fill("green")
@@ -25,7 +36,18 @@ class Tile(Sprite):
 
 
 class SoilLayer:
-    def __init__(self, all_sprites, tmx_map, frames, sounds):
+    all_sprites: pygame.sprite.Group
+    level_frames: dict
+
+    soil_sprites: pygame.sprite.Group
+    water_sprites: pygame.sprite.Group
+    plant_sprites: pygame.sprite.Group
+
+    tiles: dict[tuple[int, int], Tile]
+    sounds: SoundDict
+    neighbor_directions: list[tuple[int, int]]
+
+    def __init__(self, all_sprites: pygame.sprite.Group, tmx_map: TiledMap, frames: dict, sounds: SoundDict):
         self.all_sprites = all_sprites
         self.level_frames = frames
 
@@ -34,17 +56,17 @@ class SoilLayer:
         self.plant_sprites = pygame.sprite.Group()
 
         self.tiles = {}
-        self.create_soil_map(tmx_map)
+        self.create_soil_tiles(tmx_map)
         self.sounds = sounds
         self.neighbor_directions = [
             (0, -1), (1, -1), (1, 0), (1, 1),
             (0, 1), (-1, 1), (-1, 0), (-1, -1)
         ]
 
-    def create_soil_map(self, tmx_map):
+    def create_soil_tiles(self, tmx_map):
         farmable_layer = tmx_map.get_layer_by_name("Farmable")
         for x, y, _ in farmable_layer.tiles():
-            tile = Tile((x, y), [self.all_sprites, self.soil_sprites])
+            tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
             tile.farmable = True
             self.tiles[(x, y)] = tile
 
@@ -78,7 +100,7 @@ class SoilLayer:
             Sprite(
                 tile_to_screen(pos),
                 water_frame,
-                [self.all_sprites, self.water_sprites],
+                (self.all_sprites, self.water_sprites),
                 LAYERS["soil water"],
             )
 
@@ -91,7 +113,7 @@ class SoilLayer:
             tile.planted = True
             seed_name = seed_type.as_plant_name()
             frames = self.level_frames[seed_name]
-            groups = [self.all_sprites, self.plant_sprites]
+            groups = (self.all_sprites, self.plant_sprites)
             tile.plant = Plant(seed_type, groups, tile, frames)
             inventory[seed] -= 1
             self.sounds["plant"].play()

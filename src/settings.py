@@ -1,3 +1,4 @@
+import pygame  # noqa
 import pygame.freetype
 import pytmx
 from src.import_checks import *
@@ -49,24 +50,3 @@ APPLE_POS = {
 
 CHARS_PER_LINE = 45
 TB_SIZE = (493, 264)
-
-KEYBINDS = {
-    'up': {'type': "key", 'value': pygame.K_UP, 'text': "Up"},
-    'down': {'type': "key", 'value': pygame.K_DOWN, 'text': "Down"},
-    'left': {'type': "key", 'value': pygame.K_LEFT, 'text': "Left"},
-    'right': {'type': "key", 'value': pygame.K_RIGHT, 'text': "Right"},
-
-    # References to the arrow keys that will only be True in Player.update_controls() when they are first pressed,
-    #  contrary to the first reference which is True as long as the buttons are being held down
-    'key_up': {'type': "key", 'value': pygame.K_UP, 'text': "Up"},
-    'key_down': {'type': "key", 'value': pygame.K_DOWN, 'text': "Down"},
-    'key_left': {'type': "key", 'value': pygame.K_LEFT, 'text': "Left"},
-    'key_right': {'type': "key", 'value': pygame.K_RIGHT, 'text': "Right"},
-
-    'use': {'type': "key", 'value': pygame.K_SPACE, 'text': "Use"},
-    'next tool': {'type': "key", 'value': pygame.K_TAB, 'text': "Cycle Tools"},
-    'next seed': {'type': "key", 'value': pygame.K_LSHIFT, 'text': "Cycle Seeds"},
-    'plant': {'type': "key", 'value': pygame.K_RETURN, 'text': "Plant Current Seed"},
-    'interact': {'type': "key", 'value': pygame.K_i, 'text': "Interact"},
-    "emote wheel": {"type": "key", "value": pygame.K_e, 'text': "Open Emote Wheel"}
-}
