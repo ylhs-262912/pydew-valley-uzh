@@ -107,14 +107,14 @@ class Level:
             self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
             self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
 
-        self.setup_layer_tiles('Lower ground', self.setup_environment)
-        self.setup_layer_tiles('Upper ground', self.setup_environment)
-        self.setup_layer_tiles('Water', self.setup_water)
+        self.setup_tile_layer('Lower ground', self.setup_environment)
+        self.setup_tile_layer('Upper ground', self.setup_environment)
+        self.setup_tile_layer('Water', self.setup_water)
 
         self.setup_object_layer('Collidable objects', self.setup_collideable_object)
         self.setup_object_layer('Collisions', self.setup_collision)
         self.setup_object_layer('Interactions', self.setup_interaction)
-        self.setup_object_layer('Entities', self.setup_entities)
+        self.setup_object_layer('Entities', self.setup_entity)
 
         if ENABLE_NPCS:
             self.pf_grid = PF_Grid(matrix=self.pf_matrix)
