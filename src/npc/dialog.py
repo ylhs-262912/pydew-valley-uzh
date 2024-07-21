@@ -193,3 +193,6 @@ class DialogueManager:
 
     def __getitem__(self, item):
         return self.dialogues[item]
+    
+    def draw(self, screen, offset):
+        screen.blit(self.image, self.rect)

@@ -12,7 +12,6 @@ TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
 SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
-TB_LAYER = 11
 
 LAYERS = {
     'water': 0,
@@ -26,7 +25,7 @@ LAYERS = {
     'fruit': 8,
     'rain drops': 9,
     'particles': 10,
-    "TextBox": TB_LAYER
+    "text box": 11,
 }
 
 ENABLE_NPCS = False

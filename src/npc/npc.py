@@ -176,7 +176,3 @@ class NPC(NPCBase):
             # NPC has reached the end of the path
             self.direction.x, self.direction.y = 0, 0
             return
-        next_point = self.pf_path[0]
-        current_point = screen_to_tile(self.rect.center)
-        dx = next_point[0] - current_point[0]
-        dy = next_point[1] - current_point[1]
