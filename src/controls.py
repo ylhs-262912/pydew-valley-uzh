@@ -6,7 +6,7 @@ from typing import Self
 import pygame
 
 
-@dataclass
+@dataclass(eq=False)
 class Control:
     """
     Instances of this dataclass refer to an individual Control / Keybind and
