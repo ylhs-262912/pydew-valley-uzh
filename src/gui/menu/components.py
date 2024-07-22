@@ -2,7 +2,7 @@ import pygame
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
 
-from src.controls import Control, ControlType
+from src.controls import Control
 from src.support import resource_path
 
 
@@ -134,8 +134,7 @@ class KeySetup(Component):
     def __init__(self, name: str, control: Control, unicode: str, pos: tuple[int, int], image: pygame.Surface):
         # params
         self.name = name
-        self.type = control.control_type
-        self.value = control.value
+        self.value = control.control_value
         self.title = control.text
         self.unicode = unicode
 
@@ -155,17 +154,6 @@ class KeySetup(Component):
         self.symbol_image = pygame.transform.scale(self.symbol_image, (40, 40))
         midright = self.rect.midright - vector(10, 0)
         self.symbol_image_rect = self.symbol_image.get_rect(midright=midright)
-
-    @property
-    def type(self) -> str:
-        return self._type
-
-    @type.setter
-    def type(self, value: ControlType | str):
-        if isinstance(value, ControlType):
-            self._type = value.value
-        else:
-            self._type = value
 
     def hover(self, offset: pygame.math.Vector2):
         self.offset = vector(offset)

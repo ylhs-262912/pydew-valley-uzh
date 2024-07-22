@@ -3,7 +3,7 @@ from typing import Type
 import pygame
 from pygame.math import Vector2 as vector
 
-from src.controls import Controls, ControlType
+from src.controls import Controls
 from src.gui.menu.components import Button, Slider, KeySetup
 from src.support import load_data, save_data, resource_path
 
@@ -99,7 +99,7 @@ class KeybindsDescription(Description):
 
     def save_data(self):
         for key in self.keys_group:
-            self.controls[key.name].value = key.value
+            self.controls[key.name].control_value = key.value
 
         save_data(self.controls.as_dict(), 'keybinds.json')
 
@@ -109,8 +109,8 @@ class KeybindsDescription(Description):
         for control in self.controls.all_controls():
             name = self.controls(control).name
 
-            unicode = self.value_to_unicode(control.value)
-            path = self.get_path(control.value)
+            unicode = self.value_to_unicode(control.control_value)
+            path = self.get_path(control.control_value)
 
             image = pygame.image.load(path)
             image = pygame.transform.scale(image, (40, 40))
@@ -169,34 +169,37 @@ class KeybindsDescription(Description):
             s1_pos = self.description_rect.topleft
             s2_pos = self.description_slider_rect.topleft
             offset = vector(s1_pos) + vector(s2_pos)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button in [1, 3]:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.selection_key.hover(offset):
                     rpath = resource_path('images/keys/rclick.png')
                     lpath = resource_path('images/keys/lclick.png')
-                    path = lpath if event.button == 1 else rpath
-                    value = 0 if event.button == 1 else 2
-                    k_type = ControlType.mouse
+                    unknown = resource_path('images/keys/generic.png')
+                    if event.button == pygame.BUTTON_LEFT:
+                        path = lpath
+                    elif event.button == pygame.BUTTON_RIGHT:
+                        path = rpath
+                    else:
+                        path = unknown
+                    value = event.button
                     unicode = None
-                    self.update_key_value(path, value, k_type, unicode)
+                    self.update_key_value(path, value, unicode)
                     return True
 
             if event.type == pygame.KEYDOWN:
                 path = self.get_path(event.key)
                 value = event.key
-                k_type = ControlType.key
                 unicode = event.unicode.upper()
-                self.update_key_value(path, value, k_type, unicode)
+                self.update_key_value(path, value, unicode)
                 return True
 
         return False
 
-    def update_key_value(self, path: str, value: int, k_type: ControlType, unicode: str | None):
+    def update_key_value(self, path: str, value: int, unicode: str | None):
         image = pygame.image.load(path)
         image = pygame.transform.scale(image, (40, 40))
 
         k_unicode = unicode if self.is_generic(unicode) else None
         self.selection_key.unicode = k_unicode
-        self.selection_key.control_type = k_type
         self.selection_key.symbol_image = image
         self.selection_key.value = value
 
@@ -221,9 +224,9 @@ class KeybindsDescription(Description):
 
     @staticmethod
     def get_path(keydown: int):
-        if keydown == 0:
+        if keydown == pygame.BUTTON_LEFT:
             return resource_path("images/keys/lclick.png")
-        if keydown == 2:
+        if keydown == pygame.BUTTON_RIGHT:
             return resource_path("images/keys/rclick.png")
 
         special_keys = {
