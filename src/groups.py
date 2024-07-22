@@ -1,6 +1,5 @@
 import pygame 
 from src.settings import LAYERS, SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
-from src.npc.dialog import TextBox
 
 
 # TODO : we could replace this with pygame.sprite.LayeredUpdates, as that
