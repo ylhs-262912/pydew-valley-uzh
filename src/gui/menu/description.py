@@ -170,6 +170,9 @@ class KeybindsDescription(Description):
             s2_pos = self.description_slider_rect.topleft
             offset = vector(s1_pos) + vector(s2_pos)
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button > pygame.BUTTON_RIGHT:
+                    # Scrolling should not be allowed as keybind
+                    return False
                 if self.selection_key.hover(offset):
                     rpath = resource_path('images/keys/rclick.png')
                     lpath = resource_path('images/keys/lclick.png')
