@@ -57,6 +57,24 @@ class Entity(CollideableSprite, ABC):
         self.collision_sprites = collision_sprites
         self.plant_collide_rect = self.hitbox_rect.inflate(10, 10)
 
+        # Axe hitbox, which allows for independent usage of the axe by any entity (player or NPC)
+        self.axe_hitbox = pygame.Rect(0, 0, 32, 32)
+
+    def _update_axe_hitbox(self):
+        match self.facing_direction:
+            case "down":
+                self.axe_hitbox.x = self.rect.centerx - 24
+                self.axe_hitbox.y = self.rect.centery + 24
+            case "up":
+                self.axe_hitbox.x = self.rect.centerx - 8
+                self.axe_hitbox.bottom = self.rect.centery - 24
+            case "left":
+                self.axe_hitbox.right = self.rect.centerx - 16
+                self.axe_hitbox.y = self.rect.centery + 8
+            case "right":
+                self.axe_hitbox.x = self.rect.centerx + 16
+                self.axe_hitbox.y = self.rect.centery + 8
+
     def get_state(self):
         self.state = EntityState.WALK if self.direction else EntityState.IDLE
 
@@ -64,6 +82,7 @@ class Entity(CollideableSprite, ABC):
         self.facing_direction = get_entity_facing_direction(
             self.direction, self.facing_direction
         )
+        self._update_axe_hitbox()
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
