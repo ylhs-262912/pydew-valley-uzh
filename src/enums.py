@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, StrEnum, nonmember  # noqa
+from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
 
 class PlayerState(IntEnum):
@@ -211,3 +211,20 @@ class Direction(StrEnum):
 class EntityState(StrEnum):
     IDLE = "idle"
     WALK = "walk"
+
+
+class LAYER(IntEnum):
+    WATER = auto()
+    LOWER_GROUND = auto()
+    UPPER_GROUND = auto()
+    SOIL = auto()
+    SOIL_WATER = auto()
+    RAIN_FLOOR = auto()
+    PLANT = auto()
+    MAIN = auto()
+    FRUIT = auto()
+    BORDER = auto()
+    RAIN_DROPS = auto()
+    PARTICLES = auto()
+    EMOTES = auto()
+    TEXT_BOX = auto()

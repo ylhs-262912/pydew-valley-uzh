@@ -14,25 +14,6 @@ CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
 SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
 
-EMOTE_LAYER = 11
-TB_LAYER = 12
-
-LAYERS = {
-    'water': 0,
-    'lower ground': 1,
-    'upper ground': 2,
-    'soil': 3,
-    'soil water': 4,
-    'rain floor': 5,
-    'plant': 6,
-    'main': 7,
-    'fruit': 8,
-    'rain drops': 9,
-    'particles': 10,
-    "emotes": EMOTE_LAYER,
-    "TextBox": TB_LAYER,
-}
-
 ENABLE_NPCS = True
 TEST_ANIMALS = True
 
