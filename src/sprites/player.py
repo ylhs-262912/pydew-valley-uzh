@@ -5,7 +5,7 @@ from typing import Callable, Type
 import pygame  # noqa
 
 from src import savefile, support
-from src.controls import Controls, ControlType
+from src.controls import Controls
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
@@ -133,12 +133,12 @@ class Player(Character):
         mouse_pressed = pygame.mouse.get_pressed()
 
         for control in self.controls.all_controls():
-            if control.control_type == ControlType.key:
-                control.just_pressed = keys_just_pressed[control.value]
-                control.pressed = keys_pressed[control.value]
-
-            if control.control_type == ControlType.mouse:
-                control.pressed = mouse_pressed[control.value]
+            mouse_event = 1 <= control.control_value <= len(mouse_pressed)
+            if mouse_event:
+                control.hold = mouse_pressed[control.control_value - 1]
+            else:
+                control.click = keys_just_pressed[control.control_value]
+                control.hold = keys_pressed[control.control_value]
 
     def handle_controls(self):
         self.update_controls()
@@ -148,17 +148,17 @@ class Player(Character):
                 and not self.blocked
                 and not self.emote_manager.emote_wheel.visible):
 
-            self.direction.x = (int(self.controls.RIGHT.pressed)
-                                - int(self.controls.LEFT.pressed))
+            self.direction.x = (int(self.controls.RIGHT.hold)
+                                - int(self.controls.LEFT.hold))
 
-            self.direction.y = (int(self.controls.DOWN.pressed)
-                                - int(self.controls.UP.pressed))
+            self.direction.y = (int(self.controls.DOWN.hold)
+                                - int(self.controls.UP.hold))
 
             if self.direction:
                 self.direction = self.direction.normalize()
 
             # tool switch
-            if self.controls.NEXT_TOOL.just_pressed:
+            if self.controls.NEXT_TOOL.click:
                 tool_index = (
                         (self.current_tool.value
                          - FarmingTool.get_first_tool_id().value + 1)
@@ -169,7 +169,7 @@ class Player(Character):
                 )
 
             # tool use
-            if self.controls.USE.just_pressed:
+            if self.controls.USE.click:
                 self.tool_active = True
                 self.frame_index = 0
                 self.direction = pygame.Vector2()
@@ -177,7 +177,7 @@ class Player(Character):
                     self.sounds['swing'].play()
 
             # seed switch
-            if self.controls.NEXT_SEED.just_pressed:
+            if self.controls.NEXT_SEED.click:
                 seed_index = (
                         (self.current_seed.value
                          - FarmingTool.get_first_seed_id().value + 1)
@@ -188,28 +188,28 @@ class Player(Character):
                 )
 
             # seed used
-            if self.controls.PLANT.just_pressed:
+            if self.controls.PLANT.click:
                 self.use_tool(ItemToUse.SEED)
 
             # interact
-            if self.controls.INTERACT.just_pressed:
+            if self.controls.INTERACT.click:
                 self.interact()
 
         # emotes
         if not self.blocked:
-            if self.controls.EMOTE_WHEEL.just_pressed:
+            if self.controls.EMOTE_WHEEL.click:
                 self.emote_manager.toggle_emote_wheel()
                 if self.emote_manager.emote_wheel.visible:
                     self.direction = pygame.Vector2()
 
             if self.emote_manager.emote_wheel.visible:
-                if self.controls.RIGHT.just_pressed:
+                if self.controls.RIGHT.click:
                     self.emote_manager.emote_wheel.emote_index += 1
 
-                if self.controls.LEFT.just_pressed:
+                if self.controls.LEFT.click:
                     self.emote_manager.emote_wheel.emote_index -= 1
 
-                if self.controls.USE.just_pressed:
+                if self.controls.USE.click:
                     self.emote_manager.show_emote(
                         self, self.emote_manager.emote_wheel._current_emote
                     )
