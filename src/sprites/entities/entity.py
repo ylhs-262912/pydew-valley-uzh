@@ -22,12 +22,16 @@ class Entity(CollideableSprite, ABC):
 
         self.assets = assets
 
-        self._current_frame = None
+        self._current_ani = None
         self._current_hitbox = None
+        self._current_frame = None
 
-        self._state = EntityState.IDLE
+        # Because the following three attributes are properties that depend on
+        # each other, the first two of them must be set without calling their
+        # property setter
+        self._frame_index = 0
         self._facing_direction = Direction.DOWN
-        self.frame_index = 0
+        self.state = EntityState.IDLE
 
         super().__init__(
             pos,
@@ -71,14 +75,14 @@ class Entity(CollideableSprite, ABC):
         # Not all Entities can go to the market, so those that can't should not have money either
         self.money = 0
 
-    def update_frame(self):
-        self._current_frame = self.assets[self.state][
-            self.facing_direction
-        ].get_frame(self.frame_index)
+    def update_animation(self):
+        self._current_ani = self.assets[self.state][self.facing_direction]
 
-        self._current_hitbox = self.assets[self.state][
-            self.facing_direction
-        ].get_hitbox(self.frame_index)
+    def update_hitbox(self):
+        self._current_hitbox = self._current_ani.get_hitbox()
+
+    def update_frame(self):
+        self._current_frame = self._current_ani.get_frame(self.frame_index)
 
     @property
     def state(self):
@@ -87,6 +91,8 @@ class Entity(CollideableSprite, ABC):
     @state.setter
     def state(self, state: EntityState):
         self._state = state
+        self.update_animation()
+        self.update_hitbox()
         self.update_frame()
 
     @property
@@ -96,6 +102,8 @@ class Entity(CollideableSprite, ABC):
     @facing_direction.setter
     def facing_direction(self, direction: Direction):
         self._facing_direction = direction
+        self.update_animation()
+        self.update_hitbox()
         self.update_frame()
 
     @property
@@ -108,7 +116,12 @@ class Entity(CollideableSprite, ABC):
         self.update_frame()
 
     def get_state(self):
-        self.state = EntityState.WALK if self.direction else EntityState.IDLE
+        if self.tool_active:
+            self.state = EntityState(self.available_tools[self.tool_index])
+        elif self.direction:
+            self.state = EntityState.WALK
+        else:
+            self.state = EntityState.IDLE
 
     def get_facing_direction(self):
         # prioritizes vertical animations, flip if statements to get horizontal
@@ -138,7 +151,6 @@ class Entity(CollideableSprite, ABC):
 
         self.check_collision()
 
-    # FIXME: Sometimes NPCs get stuck inside the player's hitbox
     def check_collision(self):
         """
         :return: true: Entity collides with a sprite in self.collision_sprites, otherwise false
@@ -181,25 +193,21 @@ class Entity(CollideableSprite, ABC):
 
     def animate(self, dt):
         self.frame_index += 4 * dt
-        if not self.tool_active:
-            self.image = self._current_frame
-        else:
-            tool_animation = self.assets[
-                EntityState(self.available_tools[self.tool_index])
-            ][self.facing_direction]
-            if self.frame_index < len(tool_animation):
-                self.image = tool_animation.get_frame(
-                    min(round(self.frame_index), len(tool_animation) - 1)
-                )
-                if (round(self.frame_index) == len(tool_animation) - 1
+
+        if self.tool_active:
+            if self.frame_index > len(self._current_ani):
+                self.tool_active = False
+                self.just_used_tool = False
+                # The state has to be changed to prevent the first image from
+                # being displayed a second time, because the state updates
+                # before the call to Entity.animate
+                self.state = EntityState.IDLE
+            else:
+                if (round(self.frame_index) == len(self._current_ani) - 1
                         and not self.just_used_tool):
                     self.just_used_tool = True
                     self.use_tool(ItemToUse.REGULAR_TOOL)
-            else:
-                # self.use_tool('tool')
-                self.state = 'idle'
-                self.tool_active = False
-                self.just_used_tool = False
+        self.image = self._current_frame
 
     def use_tool(self, option: ItemToUse):
         self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)

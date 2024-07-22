@@ -10,16 +10,13 @@ from src.settings import SCALE_FACTOR
 @dataclass
 class _AniFrames:
     frames: list[pygame.Surface]
-    hitboxes: list[pygame.Rect] | pygame.Rect | None = None
+    hitbox: pygame.Rect
 
     def get_frame(self, index: int) -> pygame.Surface:
         return self.frames[int(index % len(self.frames))]
 
-    def get_hitbox(self, index: int) -> pygame.Rect:
-        if isinstance(self.hitboxes, pygame.Rect):
-            return self.hitboxes
-        else:
-            return self.hitboxes[int(index % len(self.frames))]
+    def get_hitbox(self) -> pygame.Rect:
+        return self.hitbox
 
     def __len__(self) -> int:
         return len(self.frames)
@@ -41,24 +38,117 @@ class EntityAsset:
         return self._data[state]
 
 
+class _Hitbox:
+    default: pygame.Rect
+
+    _state_exceptions: dict[EntityState, pygame.Rect]
+    _direction_exceptions: dict[Direction, pygame.Rect]
+    _exceptions: dict[tuple[EntityState, Direction], pygame.Rect]
+
+    def __init__(self, default: pygame.Rect):
+        """
+        This class can be used to specify custom Sprite hitboxes.
+
+        Use this classes methods to specify exceptions (conditions under which
+        a hitbox different to the default one should be used)
+
+        :param default: The default hitbox to use, when no hitbox has been
+                        found for a specific state / direction
+        """
+
+        self.default = default
+
+        self._state_exceptions = {}
+        self._direction_exceptions = {}
+        self._exceptions = {}
+
+    def set_direction_exception(
+            self, direction: Direction, rect: pygame.Rect
+    ) -> None:
+        """
+        Tell the class, in which direction a hitbox should be used that differs
+        from the default one.
+
+        Hitboxes that were stored through this method will be used before any
+        hitbox specific to the current Entity state is considered.
+        """
+        self._direction_exceptions[direction] = rect
+
+    def set_state_exception(
+            self, state: EntityState, rect: pygame.Rect
+    ) -> None:
+        """
+        Tell the class, in which state a hitbox should be used that differs
+        from the default one.
+        """
+        self._state_exceptions[state] = rect
+
+    def set_exception(
+            self, state: EntityState, direction: Direction, rect: pygame.Rect
+    ) -> None:
+        """
+        Tell the class, in which state a hitbox should be used that differs
+        from the default one.
+
+        Hitboxes that were stored through this method will be used before any
+        hitbox specific to the current Entity state or direction is considered.
+        """
+        self._exceptions[(state, direction)] = rect
+
+    def get_hitbox(
+            self, state: EntityState, direction: Direction
+    ) -> pygame.Rect:
+        state_exception = self._state_exceptions.get(state)
+        direction_exception = self._direction_exceptions.get(direction)
+        exception = self._exceptions.get((state, direction))
+        if not exception:
+            if not direction_exception:
+                if not state_exception:
+                    return self.default
+                return state_exception
+            return direction_exception
+        return exception
+
+    def scale_hitboxes(self, factor: float) -> None:
+        print(self._state_exceptions, self._direction_exceptions, self._exceptions, self.default)
+        for item in [self._state_exceptions.values(),
+                     self._direction_exceptions.values(),
+                     self._exceptions.values(),
+                     [self.default]]:
+            for hitbox in item:
+                hitbox.update(
+                    hitbox.left * factor,
+                    hitbox.top * factor,
+                    hitbox.width * factor,
+                    hitbox.height * factor
+                )
+
+
 class EntityAssets:
     Rabbit: EntityAsset
 
     @classmethod
     def setup(cls):
 
-        rabbit_hitboxes = {
-            Direction.LEFT: pygame.Rect(20, 26, 8, 6),
-            Direction.UP: pygame.Rect(18, 26, 12, 6),
-            Direction.RIGHT: pygame.Rect(20, 26, 8, 6),
-            Direction.DOWN: pygame.Rect(18, 26, 12, 6),
-        }
+        rabbit_hitbox = _Hitbox(pygame.Rect(18, 26, 12, 6))
+        rabbit_hitbox.set_direction_exception(
+            Direction.LEFT, pygame.Rect(20, 26, 8, 6)
+        )
+        rabbit_hitbox.set_direction_exception(
+            Direction.RIGHT, pygame.Rect(20, 26, 8, 6)
+        )
+        rabbit_hitbox.set_exception(
+            EntityState.AXE, Direction.LEFT, pygame.Rect(24, 26, 8, 6)
+        )
+        rabbit_hitbox.set_exception(
+            EntityState.AXE, Direction.RIGHT, pygame.Rect(16, 26, 8, 6)
+        )
 
         rabbit_asset = entity_importer(
             path="images/characters/rabbit",
             size=48,
             directions=[Direction.DOWN, Direction.UP, Direction.LEFT],
-            hitboxes=rabbit_hitboxes
+            hitbox=rabbit_hitbox
         )
 
         cls.Rabbit = EntityAsset(
@@ -73,8 +163,8 @@ _StateHitboxTypes = (
 
 
 def state_importer(
-        path: str, size: int, directions: list[Direction],
-        hitboxes: _StateHitboxTypes
+        path: str, size: int, state: EntityState, directions: list[Direction],
+        hitbox: _Hitbox
 ) -> dict[Direction, _AniFrames]:
 
     directions_dict = {}
@@ -97,75 +187,44 @@ def state_importer(
             frames.append(
                 pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
 
-        if isinstance(hitboxes, pygame.Rect):
-            current_hitboxes = hitboxes
-        else:
-            current_hitboxes = hitboxes[direction]
+        current_hitbox = hitbox.get_hitbox(state, direction)
         directions_dict[direction] = _AniFrames(
-            frames, current_hitboxes
+            frames, current_hitbox
         )
 
     if Direction.LEFT in directions and Direction.RIGHT not in directions:
         frames = []
-        hitboxes = []
         for i in range(len(directions_dict[Direction.LEFT])):
             frame = directions_dict[Direction.LEFT].get_frame(i)
             frame = pygame.transform.flip(frame, True, False)
             frames.append(frame)
-            hitboxes.append(directions_dict[Direction.LEFT].get_hitbox(i))
-        directions_dict[Direction.RIGHT] = _AniFrames(frames, hitboxes)
+        hitbox = hitbox.get_hitbox(state, Direction.RIGHT)
+        directions_dict[Direction.RIGHT] = _AniFrames(frames, hitbox)
     elif Direction.RIGHT in directions and Direction.LEFT not in directions:
-        directions_dict[Direction.LEFT] = [
-            pygame.transform.flip(surf, True, False)
-            for surf in directions_dict[Direction.RIGHT]
-        ]
+        frames = []
+        for i in range(len(directions_dict[Direction.LEFT])):
+            frame = directions_dict[Direction.LEFT].get_frame(i)
+            frame = pygame.transform.flip(frame, True, False)
+            frames.append(frame)
+        hitbox = hitbox.get_hitbox(state, Direction.LEFT)
+        directions_dict[Direction.RIGHT] = _AniFrames(frames, hitbox)
     return directions_dict
-
-
-def scale_nested_rects(item: dict | list | pygame.Rect, factor: int):
-    if isinstance(item, dict):
-        for value in item.values():
-            scale_nested_rects(value, factor)
-    elif isinstance(item, list):
-        for i in item:
-            scale_nested_rects(i, factor)
-    elif isinstance(item, pygame.Rect):
-        item.update(
-            item.left * factor,
-            item.top * factor,
-            item.width * factor,
-            item.height * factor
-        )
-
-
-_EntityHitboxTypes = (
-        dict[EntityState, dict[Direction, list[pygame.Rect] | pygame.Rect]]
-        | dict[Direction, list[pygame.Rect] | pygame.Rect]
-        | pygame.Rect
-)
 
 
 def entity_importer(
         path: str, size: int, directions: list[Direction],
-        hitboxes: _EntityHitboxTypes
+        hitbox: _Hitbox
 ) -> dict[EntityState, dict[Direction, _AniFrames]]:
-    scale_nested_rects(hitboxes, SCALE_FACTOR)
+    hitbox.scale_hitboxes(SCALE_FACTOR)
     states = {}
     for folder_path, sub_folders, file_names in os.walk(path):
         for file_name in file_names:
             current_state = EntityState(file_name.split(".")[0])
-            if isinstance(hitboxes, pygame.Rect):
-                states[current_state] = state_importer(
-                    os.path.join(folder_path, file_name),
-                    size=size,
-                    directions=directions,
-                    hitboxes=hitboxes,
-                )
-            else:
-                states[current_state] = state_importer(
-                    os.path.join(folder_path, file_name),
-                    size=size,
-                    directions=directions,
-                    hitboxes=(hitboxes.get(current_state) or hitboxes),
-                )
+            states[current_state] = state_importer(
+                path=os.path.join(folder_path, file_name),
+                size=size,
+                state=current_state,
+                directions=directions,
+                hitbox=hitbox,
+            )
     return states
