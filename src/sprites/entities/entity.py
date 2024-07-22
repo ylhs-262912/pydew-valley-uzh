@@ -42,6 +42,8 @@ class Entity(CollideableSprite, ABC):
         self.collision_sprites = collision_sprites
         self.is_colliding = False
 
+        self.last_hitbox_rect = self.hitbox_rect
+
         # tools
         self.available_tools = ['axe', 'hoe', 'water']
         self.current_tool = FarmingTool.get_first_tool_id()
@@ -146,21 +148,25 @@ class Entity(CollideableSprite, ABC):
         for sprite in self.collision_sprites:
             if sprite is not self:
 
-                # Entities should collide with their hitbox_rects to make them able to approach
-                #  each other further than the empty space on their sprite images would allow
-                if isinstance(sprite, CollideableSprite):
-                    if sprite.hitbox_rect.colliderect(self.hitbox_rect):
-                        colliding_rect = sprite.hitbox_rect
-                elif sprite.rect.colliderect(self.hitbox_rect):
-                    colliding_rect = sprite.rect
+                if sprite.hitbox_rect.colliderect(self.hitbox_rect):
+                    colliding_rect = sprite.hitbox_rect
+                    distances_rect = colliding_rect
 
-                if colliding_rect:
+                    if isinstance(sprite, Entity):
+                        # When colliding with another entity, the hitbox to
+                        # compare to will also reflect its last-frame's state
+                        distances_rect = sprite.last_hitbox_rect
+
+                    # Compares each point of the last-frame's hitbox to the
+                    # hitbox the Entity collided with, to check at which
+                    # direction the collision happened first
                     distances = (
-                        abs(self.hitbox_rect.right - colliding_rect.left),
-                        abs(self.hitbox_rect.left - colliding_rect.right),
-                        abs(self.hitbox_rect.bottom - colliding_rect.top),
-                        abs(self.hitbox_rect.top - colliding_rect.bottom)
+                        abs(self.last_hitbox_rect.right - distances_rect.left),
+                        abs(self.last_hitbox_rect.left - distances_rect.right),
+                        abs(self.last_hitbox_rect.bottom - distances_rect.top),
+                        abs(self.last_hitbox_rect.top - distances_rect.bottom)
                     )
+
                     shortest_distance = min(distances)
                     if shortest_distance == distances[0]:
                         self.hitbox_rect.right = colliding_rect.left
@@ -201,9 +207,14 @@ class Entity(CollideableSprite, ABC):
     def add_resource(self, resource, amount=1):
         self.inventory[resource] += amount
 
-    def update(self, dt):
+    def prepare_for_update(self):
+        # Updating all attributes necessary for updating the Entity
+        self.last_hitbox_rect.update(self.hitbox_rect)
         self.get_state()
         self.get_facing_direction()
+
+    def update(self, dt):
+        self.prepare_for_update()
         self.move(dt)
         self.animate(dt)
 
