@@ -72,8 +72,7 @@ class Level:
         self.soil_layer = SoilLayer(
             self.all_sprites,
             tmx_maps['main'],
-            frames["level"],
-            sounds
+            frames["level"]
         )
 
         # weather
@@ -295,27 +294,21 @@ class Level:
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
 
-                is_player_near = plant.rect.colliderect(self.player.plant_collide_rect)
-
-                if plant.harvestable and is_player_near:
-
-                    # add resource
-                    ressource = plant.seed_type
-                    quantity = 3
-                    self.player.add_resource(ressource, quantity)
-
-                    # update grid
+                if plant.rect.colliderect(
+                        self.player.plant_collide_rect
+                ):
                     x, y = map_coords_to_tile(plant.rect.center)
-                    tile = self.soil_layer.tiles.get((x, y))
-                    if tile:
-                        tile.planted = False
-
-                    # remove plant
-                    plant.kill()
-                    self.create_particle(plant)
+                    self.soil_layer.harvest(
+                        (x, y),
+                        self.player.add_resource, self.create_particle
+                    )
 
     def create_particle(self, sprite: pygame.sprite.Sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
+
+    def _play_playeronly_sound(self, sound: str, entity: Character):
+        if isinstance(entity, Player):
+            self.sounds[sound].play()
 
     def apply_tool(
             self, tool: FarmingTool, pos: tuple[int, int], entity: Character
@@ -326,20 +319,28 @@ class Level:
                     entity,
                     self.tree_sprites,
                     False,
-                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(tree_spr.rect)
+                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(
+                        tree_spr.rect
+                    )
                 ):
                     tree.hit(entity)
-                    self.sounds["axe"].play()
+                    self._play_playeronly_sound("axe", entity)
             case FarmingTool.HOE:
-                self.soil_layer.hoe(pos)
+                if self.soil_layer.hoe(pos):
+                    self._play_playeronly_sound("hoe", entity)
             case FarmingTool.WATERING_CAN:
                 self.soil_layer.water(pos)
-                self.sounds['water'].play()
+                self._play_playeronly_sound("water", entity)
             case _:  # All seeds
-                self.soil_layer.plant(pos, tool, entity.inventory)
+                if self.soil_layer.plant(pos, tool, entity.remove_resource):
+                    self._play_playeronly_sound("plant", entity)
+                else:
+                    self._play_playeronly_sound("cant_plant", entity)
 
     def interact(self):
-        collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)
+        collided_interactions = pygame.sprite.spritecollide(
+            self.player, self.interaction_sprites, False
+        )
         if collided_interactions:
             if collided_interactions[0].name == 'Bed':
                 self.start_reset()
@@ -361,19 +362,10 @@ class Level:
         self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
 
         # plants + soil
-        for tile in self.soil_layer.tiles.values():
-            if tile.plant:
-                tile.plant.grow()
-            tile.watered = False
-            for sprite in self.soil_layer.water_sprites:
-                sprite.kill()
+        self.soil_layer.update()
 
         self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining
-        if self.raining:
-            for pos, tile in self.soil_layer.tiles.items():
-                self.soil_layer.water(pos, play_sound=False)
-                self.soil_layer.update_tile_image(tile, pos)
 
         # apples on the trees
 

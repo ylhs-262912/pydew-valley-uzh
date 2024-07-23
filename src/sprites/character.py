@@ -93,3 +93,9 @@ class Character(Entity, ABC):
 
     def add_resource(self, resource, amount=1):
         self.inventory[resource] += amount
+
+    def remove_resource(self, resource, amount=1) -> bool:
+        if self.inventory[resource] >= amount:
+            self.inventory[resource] -= amount
+            return True
+        return False

@@ -1,13 +1,15 @@
+from collections.abc import Callable
+
 import pygame
 from random import choice
 
 from pytmx import TiledMap
 
-from src.enums import SeedType
+from src.enums import SeedType, InventoryResource, FarmingTool
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
 from src.sprites.plant import Plant
-from src.settings import LAYERS, TILE_SIZE, SCALE_FACTOR, SoundDict
+from src.settings import LAYERS, SCALED_TILE_SIZE
 
 
 class Tile(Sprite):
@@ -20,11 +22,13 @@ class Tile(Sprite):
 
     plant: Plant | None
 
-    def __init__(self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]):
-        size = TILE_SIZE * SCALE_FACTOR
-        surf = pygame.Surface((size, size))
-        surf.fill("green")
-        surf.set_colorkey("green")
+    def __init__(
+            self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]
+    ):
+        surf = pygame.Surface(
+            (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
+        )
+
         super().__init__(tile_to_screen(pos), surf, group, LAYERS["soil"])
 
         self.pos = pos
@@ -44,10 +48,14 @@ class SoilLayer:
     plant_sprites: pygame.sprite.Group
 
     tiles: dict[tuple[int, int], Tile]
-    sounds: SoundDict
     neighbor_directions: list[tuple[int, int]]
 
-    def __init__(self, all_sprites: pygame.sprite.Group, tmx_map: TiledMap, frames: dict, sounds: SoundDict):
+    raining: bool
+
+    def __init__(
+            self, all_sprites: pygame.sprite.Group,
+            tmx_map: TiledMap, frames: dict
+    ):
         self.all_sprites = all_sprites
         self.level_frames = frames
 
@@ -57,11 +65,22 @@ class SoilLayer:
 
         self.tiles = {}
         self.create_soil_tiles(tmx_map)
-        self.sounds = sounds
         self.neighbor_directions = [
             (0, -1), (1, -1), (1, 0), (1, 1),
             (0, 1), (-1, 1), (-1, 0), (-1, -1)
         ]
+
+        self.raining = False
+
+    @property
+    def raining(self) -> bool:
+        return self._raining
+
+    @raining.setter
+    def raining(self, value: bool):
+        self._raining = value
+        if self._raining:
+            self.water_all()
 
     def create_soil_tiles(self, tmx_map):
         farmable_layer = tmx_map.get_layer_by_name("Farmable")
@@ -81,19 +100,20 @@ class SoilLayer:
         tile_type = self.determine_tile_type(pos)
         tile.image = self.level_frames["soil"][tile_type]
 
-    def hoe(self, pos):
+    def hoe(self, pos) -> bool:
+        """:return: Whether the tile was successfully hoed or not"""
         tile = self.tiles.get(pos)
         if tile and tile.farmable and not tile.hoed:
             tile.hoed = True
-            self.sounds["hoe"].play()
             self.update_tile_image(tile, pos)
+            return True
+        return False
 
-    def water(self, pos, play_sound: bool = True):
+    def water(self, pos):
+        """:return: Whether the tile was successfully watered or not"""
         tile = self.tiles.get(pos)
         if tile and tile.hoed and not tile.watered:
             tile.watered = True
-            if play_sound:
-                self.sounds["water"].play()
 
             water_frames = list(self.level_frames["soil water"].values())
             water_frame = choice(water_frames)
@@ -103,21 +123,90 @@ class SoilLayer:
                 (self.all_sprites, self.water_sprites),
                 LAYERS["soil water"],
             )
+            return True
 
-    def plant(self, pos, seed, inventory):
+        return False
+
+    def water_all(self):
+        for pos, tile in self.tiles.items():
+            if tile.hoed:
+                self.water(pos)
+                self.update_tile_image(tile, pos)
+
+    def update(self):
+        for tile in self.tiles.values():
+            if tile.plant:
+                tile.plant.grow()
+            tile.watered = False
+            for sprite in self.water_sprites:
+                sprite.kill()
+
+    def plant(
+            self, pos, seed,
+            remove_resource: Callable[[InventoryResource, int], bool]
+    ):
+        """:return: Whether the tile was successfully planted or not"""
         tile = self.tiles.get(pos)
-        seed_amount = inventory.get(seed)
+        seed_resource = FarmingTool.as_inventory_resource(seed)
         seed_type = SeedType.from_farming_tool(seed)
 
-        if tile and tile.hoed and not tile.planted and seed_amount > 0:
+        if tile and tile.hoed and not tile.planted:
+            if not remove_resource(seed_resource, 1):
+                return False
+
             tile.planted = True
             seed_name = seed_type.as_plant_name()
             frames = self.level_frames[seed_name]
             groups = (self.all_sprites, self.plant_sprites)
             tile.plant = Plant(seed_type, groups, tile, frames)
-            inventory[seed] -= 1
-            self.sounds["plant"].play()
-            # self.sounds['cant plant'].play()
+            return True
+
+        return False
+
+    def harvest(
+            self, pos, add_resource: Callable[[InventoryResource, int], None],
+            create_particle: Callable[[pygame.sprite.Sprite], None]
+    ) -> bool:
+        """:return: Whether the tile was successfully harvested or not"""
+
+        tile = self.tiles.get(pos)
+        plant = tile.plant
+        if tile and plant.harvestable:
+            # add resource
+            resource = SeedType.as_nonseed_ir(plant.seed_type)
+            quantity = 3
+
+            add_resource(resource, quantity)
+
+            tile.planted = False
+
+            # remove plant
+            plant.kill()
+            create_particle(plant)
+            return True
+
+        return False
+
+    def get_untilled_tiles(self) -> dict[tuple[int, int], Tile]:
+        untilled_tiles = {}
+        for pos, tile in self.tiles.items():
+            if not tile.hoed:
+                untilled_tiles[pos] = tile
+        return untilled_tiles
+
+    def get_unplanted_tiles(self) -> dict[tuple[int, int], Tile]:
+        unplanted_tiles = {}
+        for pos, tile in self.tiles.items():
+            if not tile.planted:
+                unplanted_tiles[pos] = tile
+        return unplanted_tiles
+
+    def get_unwatered_tiles(self) -> dict[tuple[int, int], Tile]:
+        unwatered_tiles = {}
+        for pos, tile in self.tiles.items():
+            if not tile.watered:
+                unwatered_tiles[pos] = tile
+        return unwatered_tiles
 
     def determine_tile_type(self, pos):
         x, y = pos
