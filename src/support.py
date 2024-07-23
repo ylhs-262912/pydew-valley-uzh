@@ -13,7 +13,8 @@ from src.enums import Direction
 from src.settings import (
     SCALE_FACTOR,
     TILE_SIZE,
-    Coordinate
+    Coordinate,
+    SCALED_TILE_SIZE
 )
 
 
@@ -129,7 +130,8 @@ def load_data(file_name):
 
 
 def map_coords_to_tile(pos):
-    return pos[0] // (TILE_SIZE * SCALE_FACTOR), pos[1] // (TILE_SIZE * SCALE_FACTOR)
+    return (pos[0] // SCALED_TILE_SIZE,
+            pos[1] // SCALED_TILE_SIZE)
 
 
 def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
