@@ -1,6 +1,6 @@
 import pygame
 
-from src.enums import LAYER
+from src.enums import Layer
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
 from src.gui.interface.dialog import TextBox
 
@@ -23,7 +23,7 @@ class AllSprites(pygame.sprite.Group):
         sorted_sprites = sorted(self.sprites(),
                                 key=lambda spr: spr.rect.centery)
 
-        for layer in LAYER:
+        for layer in Layer:
             for sprite in sorted_sprites:
                 if sprite.z == layer:
                     self.display_surface.blit(

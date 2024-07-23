@@ -3,7 +3,7 @@ import random
 
 import pygame
 
-from src.enums import LAYER
+from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.cow_behaviour_tree import (
     CowBehaviourTree,
@@ -39,7 +39,7 @@ class Cow(CowBase):
             pf_grid=AIData.Grid,
             pf_finder=AIData.CowPathFinder,
 
-            z=LAYER.MAIN
+            z=Layer.MAIN
         )
 
         self.player = player

@@ -7,7 +7,7 @@ import pygame
 from src import settings
 from src.enums import (
     FarmingTool, InventoryResource, ItemToUse, EntityState,
-    LAYER
+    Layer
 )
 from src.settings import SCALE_FACTOR
 from src.sprites.entity import Entity
@@ -30,7 +30,7 @@ class Character(Entity, ABC):
             apply_tool: Callable[
                 [FarmingTool, tuple[float, float], Self], None
             ],
-            z=LAYER.MAIN
+            z=Layer.MAIN
     ):
         Entity.__init__(
             self,

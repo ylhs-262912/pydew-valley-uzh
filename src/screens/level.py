@@ -7,7 +7,7 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.enums import FarmingTool, GameState, LAYER, Map
+from src.enums import FarmingTool, GameState, Layer, Map
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.npc.chicken import Chicken
@@ -180,19 +180,19 @@ class Level:
 
     def setup_environment(self, pos: tuple[int, int], surf: pygame.Surface):
         image = pygame.transform.scale_by(surf, SCALE_FACTOR)
-        Sprite(pos, image, self.all_sprites, LAYER.LOWER_GROUND)
+        Sprite(pos, image, self.all_sprites, Layer.LOWER_GROUND)
 
     def setup_house(self, pos: tuple[int, int], surf: pygame.Surface):
         image = pygame.transform.scale_by(surf, SCALE_FACTOR)
-        Sprite(pos, image, self.all_sprites, LAYER.MAIN)
+        Sprite(pos, image, self.all_sprites, Layer.MAIN)
 
     def setup_border(self, pos: tuple[int, int], surf: pygame.Surface):
         image = pygame.transform.scale_by(surf, SCALE_FACTOR)
-        Sprite(pos, image, (self.all_sprites, self.collision_sprites), LAYER.BORDER)
+        Sprite(pos, image, (self.all_sprites, self.collision_sprites), Layer.BORDER)
 
     def setup_water(self, pos: tuple[int, int], surf: pygame.Surface):
         image = self.frames['level']['animations']['water']
-        AnimatedSprite(pos, image, self.all_sprites, LAYER.WATER)
+        AnimatedSprite(pos, image, self.all_sprites, Layer.WATER)
 
     def setup_object_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pytmx.TiledObject], None]):
         for obj in self.tmx_maps[self.current_map].get_layer_by_name(layer):
@@ -240,7 +240,7 @@ class Level:
     def setup_interaction(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
-        Sprite(pos, image, self.interaction_sprites, LAYER.MAIN, obj.name)
+        Sprite(pos, image, self.interaction_sprites, Layer.MAIN, obj.name)
 
     def setup_entity(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.entities[obj.name] = Player(

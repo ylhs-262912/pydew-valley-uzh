@@ -213,8 +213,8 @@ class EntityState(StrEnum):
     WALK = "walk"
 
 
-class LAYER(IntEnum):
-    WATER = auto()
+class Layer(IntEnum):
+    WATER = 0
     LOWER_GROUND = auto()
     UPPER_GROUND = auto()
     SOIL = auto()

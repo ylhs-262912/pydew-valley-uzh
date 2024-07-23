@@ -5,7 +5,7 @@ from typing import Callable
 
 import pygame
 
-from src.enums import FarmingTool, InventoryResource, LAYER
+from src.enums import FarmingTool, InventoryResource, Layer
 from src.gui.interface.emotes import NPCEmoteManager
 from src.npc.bases.npc_base import NPCBase
 from src.npc.behaviour.npc_behaviour_tree import (
@@ -50,7 +50,7 @@ class NPC(NPCBase):
             pf_grid=AIData.Grid,
             pf_finder=AIData.ChickenPathFinder,
 
-            z=LAYER.MAIN
+            z=Layer.MAIN
         )
 
         # TODO: Ensure that the NPC always has all needed seeds it needs

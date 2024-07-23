@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import pygame
 
 from src import settings
-from src.enums import Direction, EntityState, LAYER
+from src.enums import Direction, EntityState, Layer
 from src.gui.interface import indicators
 from src.sprites.base import CollideableSprite, Sprite
 from src.support import screen_to_tile, get_entity_facing_direction
@@ -29,7 +29,7 @@ class Entity(CollideableSprite, ABC):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             shrink: tuple[int, int],
-            z=LAYER.MAIN):
+            z=Layer.MAIN):
 
         self.frames = frames
         self.frame_index = 0
@@ -88,7 +88,7 @@ class Entity(CollideableSprite, ABC):
 
     def focus(self):
         self.focused = True
-        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], LAYER.EMOTES)
+        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], Layer.EMOTES)
 
     def unfocus(self):
         self.focused = False

@@ -3,7 +3,7 @@ from random import choice
 
 from pytmx import TiledMap
 
-from src.enums import SeedType, LAYER
+from src.enums import SeedType, Layer
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
 from src.sprites.plant import Plant
@@ -25,7 +25,7 @@ class Tile(Sprite):
         surf = pygame.Surface((size, size))
         surf.fill("green")
         surf.set_colorkey("green")
-        super().__init__(tile_to_screen(pos), surf, group, LAYER.SOIL)
+        super().__init__(tile_to_screen(pos), surf, group, Layer.SOIL)
 
         self.pos = pos
         self.hoed = False
@@ -104,7 +104,7 @@ class SoilLayer:
                 tile_to_screen(pos),
                 water_frame,
                 (self.all_sprites, self.water_sprites),
-                LAYER.SOIL_WATER,
+                Layer.SOIL_WATER,
             )
 
     def plant(self, pos, seed, inventory):

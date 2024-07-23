@@ -5,7 +5,7 @@ from src.sprites.base import CollideableSprite, Sprite
 from src import timer
 from src.settings import SCALE_FACTOR, APPLE_POS
 from src.support import generate_particle_surf
-from src.enums import InventoryResource, LAYER
+from src.enums import InventoryResource, Layer
 
 
 class Tree(CollideableSprite):
@@ -45,7 +45,7 @@ class Tree(CollideableSprite):
                 x = pos[0] + self.rect.left
                 y = pos[1] + self.rect.top
                 Sprite((x, y), self.apple_surf, (self.apple_sprites,
-                       self.groups()[0]), LAYER.FRUIT)
+                       self.groups()[0]), Layer.FRUIT)
 
     def update(self, dt):
         self.timer.update()

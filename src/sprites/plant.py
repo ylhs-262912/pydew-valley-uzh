@@ -1,4 +1,4 @@
-from src.enums import LAYER
+from src.enums import Layer
 from src.settings import GROW_SPEED, SCALE_FACTOR
 from src.sprites.base import CollideableSprite
 from pygame.math import Vector2 as vector
@@ -7,7 +7,7 @@ from pygame.math import Vector2 as vector
 class Plant(CollideableSprite):
     def __init__(self, seed_type, groups, tile, frames):
         super().__init__(tile.rect.center,
-                         frames[0], groups, (0, 0), LAYER.PLANT)
+                         frames[0], groups, (0, 0), Layer.PLANT)
         self.rect.center = tile.rect.center + \
             vector(0.5, -3) * SCALE_FACTOR
         self.tile = tile
@@ -25,7 +25,7 @@ class Plant(CollideableSprite):
             self.age += self.grow_speed
 
             if int(self.age) > 0:
-                self.z = LAYER.MAIN
+                self.z = Layer.MAIN
                 self.hitbox = self.rect.inflate(-26, -self.rect.height * 0.4)
 
             if self.age >= self.max_age:

@@ -1,7 +1,7 @@
 
 import pygame
 
-from src.enums import LAYER
+from src.enums import Layer
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -10,7 +10,7 @@ class Sprite(pygame.sprite.Sprite):
                             int | float],
                  surf: pygame.Surface,
                  groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
-                 z: int = LAYER.MAIN,
+                 z: int = Layer.MAIN,
                  name: str | None = None):
         super().__init__(groups)
         self.surf = surf
@@ -21,13 +21,13 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class CollideableSprite(Sprite):
-    def __init__(self, pos, surf, groups, shrink, z=LAYER.MAIN):
+    def __init__(self, pos, surf, groups, shrink, z=Layer.MAIN):
         super().__init__(pos, surf, groups, z)
         self.hitbox_rect = self.rect.inflate(-shrink[0], -shrink[1])
 
 
 class AnimatedSprite(Sprite):
-    def __init__(self, pos, frames, groups, z=LAYER.MAIN):
+    def __init__(self, pos, frames, groups, z=Layer.MAIN):
         self.frames, self.frame_index = frames, 0
         super().__init__(pos, frames[0], groups, z)
 
