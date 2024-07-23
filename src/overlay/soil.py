@@ -64,7 +64,10 @@ class SoilLayer:
         ]
 
     def create_soil_tiles(self, tmx_map):
-        farmable_layer = tmx_map.get_layer_by_name("Farmable")
+        try:
+            farmable_layer = tmx_map.get_layer_by_name("Farmable")
+        except ValueError:
+            return
         for x, y, _ in farmable_layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
             tile.farmable = True

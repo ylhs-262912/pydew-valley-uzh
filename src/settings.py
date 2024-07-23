@@ -1,6 +1,8 @@
 import pygame  # noqa
 import pygame.freetype
 import pytmx
+
+from src.enums import Map
 from src.import_checks import *
 
 type Coordinate = tuple[int | float, int | float]
@@ -13,6 +15,8 @@ TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
 SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
+
+GAME_MAP = Map.FOREST
 
 ENABLE_NPCS = True
 TEST_ANIMALS = True

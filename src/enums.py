@@ -228,3 +228,8 @@ class LAYER(IntEnum):
     PARTICLES = auto()
     EMOTES = auto()
     TEXT_BOX = auto()
+
+
+class Map(StrEnum):
+    FARM = "farm"
+    FOREST = "forest"
