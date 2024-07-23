@@ -1,5 +1,7 @@
-import pygame 
-from src.settings import LAYERS, SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
+import pygame
+
+from src.enums import Layer
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
 from src.gui.interface.dialog import TextBox
 
 
@@ -18,11 +20,16 @@ class AllSprites(pygame.sprite.Group):
         self.offset.x = -(target_pos[0] - SCREEN_WIDTH / 2)
         self.offset.y = -(target_pos[1] - SCREEN_HEIGHT / 2)
 
-        for layer in LAYERS.values():
+        sorted_sprites = sorted(self.sprites(),
+                                key=lambda spr: spr.rect.centery)
 
-            for sprite in sorted(
-                    self.sprites(),
-                    key=lambda spr: spr.rect.centery):
+        for layer in Layer:
+            for sprite in sorted_sprites:
                 if sprite.z == layer:
                     self.display_surface.blit(
-                        sprite.image, sprite.rect.topleft + (self.offset if not isinstance(sprite, TextBox) else (0, 0)))
+                        sprite.image,
+                        sprite.rect.topleft + (
+                            self.offset if not isinstance(sprite, TextBox)
+                            else (0, 0)
+                        )
+                    )

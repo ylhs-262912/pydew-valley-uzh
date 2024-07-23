@@ -5,8 +5,9 @@ from collections.abc import Callable
 import pygame
 import pygame.gfxdraw
 
+from src.enums import Layer
 from src.gui.interface.emotes_base import EmoteBoxBase, EmoteManagerBase, EmoteWheelBase
-from src.settings import EMOTE_LAYER, TB_LAYER, EMOTE_SIZE
+from src.settings import EMOTE_SIZE
 from src.support import draw_aa_line
 from src.timer import Timer
 
@@ -24,7 +25,7 @@ class EmoteBox(EmoteBoxBase):
         :param emote: List of all frames of the Emote animation
         """
         super().__init__()
-        self.z = EMOTE_LAYER
+        self.z = Layer.EMOTES
 
         self.image = EmoteBox.EMOTE_DIALOG_BOX
 
@@ -264,7 +265,7 @@ class EmoteWheel(EmoteWheelBase):
     @visible.setter
     def visible(self, value: bool):
         if value:
-            self.z = TB_LAYER
+            self.z = Layer.TEXT_BOX
             self._visible = True
         else:
             self.z = -1

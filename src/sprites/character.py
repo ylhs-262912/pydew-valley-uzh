@@ -5,8 +5,11 @@ from typing import Self
 import pygame
 
 from src import settings
-from src.enums import FarmingTool, InventoryResource, ItemToUse, EntityState
-from src.settings import LAYERS, SCALE_FACTOR
+from src.enums import (
+    FarmingTool, InventoryResource, ItemToUse, EntityState,
+    Layer
+)
+from src.settings import SCALE_FACTOR
 from src.sprites.entity import Entity
 
 
@@ -27,7 +30,7 @@ class Character(Entity, ABC):
             apply_tool: Callable[
                 [FarmingTool, tuple[float, float], Self], None
             ],
-            z=LAYERS['main']
+            z=Layer.MAIN
     ):
         Entity.__init__(
             self,

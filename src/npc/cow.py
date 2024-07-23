@@ -3,6 +3,7 @@ import random
 
 import pygame
 
+from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.cow_behaviour_tree import (
     CowBehaviourTree,
@@ -13,7 +14,7 @@ from src.npc.behaviour.cow_flee_behaviour_tree import (
     CowFleeBehaviourTreeContext
 )
 from src.npc.setup import AIData
-from src.settings import Coordinate, AniFrames, LAYERS, SCALED_TILE_SIZE
+from src.settings import Coordinate, AniFrames, SCALED_TILE_SIZE
 from src.sprites.character import Character
 from src.support import get_flight_matrix
 
@@ -38,7 +39,7 @@ class Cow(CowBase):
             pf_grid=AIData.Grid,
             pf_finder=AIData.CowPathFinder,
 
-            z=LAYERS["main"]
+            z=Layer.MAIN
         )
 
         self.player = player
