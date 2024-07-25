@@ -1,5 +1,4 @@
 from collections.abc import Callable
-from typing import Self, Any
 
 import pygame
 from random import choice
@@ -36,10 +35,16 @@ class Tile(Sprite):
         super().__init__(tile_to_screen(pos), surf, group, Layer.SOIL)
 
         self.pos = pos
+
+        self._on_farmable_funcs = []
+        self._on_hoed_funcs = []
+        self._on_plant_funcs = []
+        self._on_plant_harvestable_funcs = []
+        self._on_watered_funcs = []
+
         self.farmable = False
         self.hoed = False
         self.plant = None
-        self.plant_harvestable = False
         self.watered = False
         self.pf_weight = 0
 
@@ -47,22 +52,76 @@ class Tile(Sprite):
     def planted(self):
         return self.plant is not None
 
-    def grow_plant(self):
-        if self.planted:
-            self.plant.grow()
-            if self.plant.age == self.plant.max_age:
-                self.plant_harvestable = True
+    @property
+    def farmable(self):
+        return self._farmable
 
-    def register_callback(self, callback: Callable[[Self, str, Any], None]):
-        self._callback = callback
+    @farmable.setter
+    def farmable(self, value: bool):
+        for func in self._on_farmable_funcs:
+            func(value)
 
-    def __setattr__(self, key, value):
+        self._farmable = value
+
+    def on_farmable(self, func):
+        self._on_farmable_funcs.append(func)
+
+    @property
+    def hoed(self):
+        return self._hoed
+
+    @hoed.setter
+    def hoed(self, value: bool):
+        for func in self._on_hoed_funcs:
+            func(value)
+
+        self._hoed = value
+
+    def on_hoed(self, func):
+        self._on_hoed_funcs.append(func)
+
+    @property
+    def plant(self):
+        return self._plant
+
+    @plant.setter
+    def plant(self, value: Plant | None):
+        for func in self._on_plant_funcs:
+            func(value)
+
         try:
-            self._callback(self, key, value)
+            self.plant.harvestable = False
+            self.plant.kill()
         except (AttributeError, TypeError):
             pass
 
-        super().__setattr__(key, value)
+        self._plant = value
+
+        if self.plant:
+            @self.plant.on_harvestable
+            def on_harvestable(inner_value: bool):
+                for inner_func in self._on_plant_harvestable_funcs:
+                    inner_func(inner_value)
+
+    def on_plant(self, func):
+        self._on_plant_funcs.append(func)
+
+    def on_plant_harvestable(self, func):
+        self._on_plant_harvestable_funcs.append(func)
+
+    @property
+    def watered(self):
+        return self._watered
+
+    @watered.setter
+    def watered(self, value: bool):
+        for func in self._on_watered_funcs:
+            func(value)
+
+        self._watered = value
+
+    def on_watered(self, func):
+        self._on_watered_funcs.append(func)
 
 
 class SoilLayer:
@@ -94,6 +153,7 @@ class SoilLayer:
         self._untilled_tiles = set(self.tiles.keys())
         self._unplanted_tiles = set()
         self._unwatered_tiles = set()
+        self._harvestable_tiles = set()
         self.planted_types = {
             i: 0 for i in SeedType
         }
@@ -129,43 +189,60 @@ class SoilLayer:
     def unwatered_tiles(self):
         return self._unwatered_tiles
 
-    def on_tile_update(self, tile: Tile, attr_name: str, attr_value: Any):
-        match attr_name:
-            case "farmable":
-                if attr_value:
-                    if not tile.hoed:
-                        self._untilled_tiles.add(tile.pos)
-                else:
-                    self._untilled_tiles.discard(tile.pos)
-            case "hoed":
-                if attr_value:
-                    self._untilled_tiles.discard(tile.pos)
-                    if not tile.planted:
-                        self._unplanted_tiles.add(tile.pos)
-                else:
-                    self._unplanted_tiles.discard(tile.pos)
-                    if tile.farmable:
-                        self.untilled_tiles.add(tile.pos)
-            case "plant":
-                if attr_value:
-                    self.planted_types[attr_value.seed_type] += 1
+    @property
+    def harvestable_tiles(self):
+        return self._harvestable_tiles
 
-                    self._unplanted_tiles.discard(tile.pos)
-                    if not tile.watered:
-                        self._unwatered_tiles.add(tile.pos)
-                else:
-                    if tile.plant:
-                        self.planted_types[tile.plant.seed_type] -= 1
+    def _setup_tile(self, tile: Tile):
+        @tile.on_farmable
+        def on_farmable(value: bool):
+            if value:
+                if not tile.hoed:
+                    self._untilled_tiles.add(tile.pos)
+            else:
+                self._untilled_tiles.discard(tile.pos)
 
-                    self._unwatered_tiles.discard(tile.pos)
-                    if tile.hoed:
-                        self._unplanted_tiles.add(tile.pos)
-            case "watered":
-                if attr_value:
-                    self._unwatered_tiles.discard(tile.pos)
-                else:
-                    if tile.planted:
-                        self._unwatered_tiles.add(tile.pos)
+        @tile.on_hoed
+        def on_hoed(value: bool):
+            if value:
+                self._untilled_tiles.discard(tile.pos)
+                if not tile.planted:
+                    self._unplanted_tiles.add(tile.pos)
+            else:
+                self._unplanted_tiles.discard(tile.pos)
+                if tile.farmable:
+                    self.untilled_tiles.add(tile.pos)
+
+        @tile.on_plant
+        def on_plant(value: Plant | None):
+            if value:
+                self.planted_types[value.seed_type] += 1
+
+                self._unplanted_tiles.discard(tile.pos)
+                if not tile.watered:
+                    self._unwatered_tiles.add(tile.pos)
+            else:
+                if tile.plant:
+                    self.planted_types[tile.plant.seed_type] -= 1
+
+                self._unwatered_tiles.discard(tile.pos)
+                if tile.hoed:
+                    self._unplanted_tiles.add(tile.pos)
+
+        @tile.on_plant_harvestable
+        def on_plant_harvestable(value: bool):
+            if value:
+                self._harvestable_tiles.add(tile.pos)
+            else:
+                self._harvestable_tiles.discard(tile.pos)
+
+        @tile.on_watered
+        def on_watered(value: bool):
+            if value:
+                self._unwatered_tiles.discard(tile.pos)
+            else:
+                if tile.planted:
+                    self._unwatered_tiles.add(tile.pos)
 
     def create_soil_tiles(self, tmx_map):
         try:
@@ -174,8 +251,11 @@ class SoilLayer:
             return
         for x, y, _ in farmable_layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
-            tile.register_callback(self.on_tile_update)
+
+            self._setup_tile(tile)
+
             tile.farmable = True
+
             self.tiles[(x, y)] = tile
 
     def update_tile_image(self, tile, pos):
@@ -243,7 +323,6 @@ class SoilLayer:
             if not remove_resource(seed_resource, 1):
                 return False
 
-            tile.planted = True
             seed_name = seed_type.as_plant_name()
             frames = self.level_frames[seed_name]
             groups = (self.all_sprites, self.plant_sprites)
@@ -267,7 +346,6 @@ class SoilLayer:
             add_resource(resource, quantity)
 
             # remove plant
-            tile.plant.kill()
             create_particle(tile.plant)
             tile.plant = None
             return True

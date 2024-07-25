@@ -13,12 +13,15 @@ from src.settings import SCALED_TILE_SIZE
 from src.support import near_tiles
 
 
+class NPCSharedContext:
+    targets = set()
+
+
 @dataclass
 class NPCBehaviourTreeContext(Context):
     npc: NPCBase
 
 
-# TODO: NPCs can not harvest fully grown crops on their own yet
 class NPCBehaviourTree(BehaviourTreeBase):
     tree = None
 
@@ -28,6 +31,10 @@ class NPCBehaviourTree(BehaviourTreeBase):
             Sequence([
                 Condition(cls.will_farm),
                 Selector([
+                    Sequence([
+                        Condition(cls.will_harvest_plant),
+                        Action(cls.harvest_plant)
+                    ]),
                     Sequence([
                         Condition(cls.will_create_new_farmland),
                         Action(cls.create_new_farmland)
@@ -48,7 +55,37 @@ class NPCBehaviourTree(BehaviourTreeBase):
         1 in 3 chance to go farming instead of wandering around
         :return: 1/3 true | 2/3 false
         """
-        return random.randint(0, 2) == 0
+        return True  # random.randint(0, 2) == 0
+
+    @staticmethod
+    def will_harvest_plant(context: NPCBehaviourTreeContext) -> bool:
+        return len(context.npc.soil_layer.harvestable_tiles) and random.randint(0, 2) == 2
+
+    @staticmethod
+    def harvest_plant(context: NPCBehaviourTreeContext) -> bool:
+        """
+        Finds a random harvestable tile in a radius of 5 around the
+        NPC, makes the NPC walk to and harvest it.
+        :return: True if such a Tile has been found and the NPC successfully
+                 created a path towards it, otherwise False
+        """
+        soil_layer = context.npc.soil_layer
+        if not len(soil_layer.harvestable_tiles):
+            return False
+
+        radius = 5
+
+        tile_coord = context.npc.get_tile_pos()
+
+        for pos in near_tiles(tile_coord, radius):
+            if pos in soil_layer.harvestable_tiles:
+                path_created = NPCBehaviourTree.wander_to_interact(
+                    context, pos, lambda: None
+                )
+                if path_created:
+                    return True
+
+        return False
 
     @staticmethod
     def will_create_new_farmland(context: NPCBehaviourTreeContext) -> bool:
@@ -261,6 +298,9 @@ class NPCBehaviourTree(BehaviourTreeBase):
         :return: True if path has successfully been created, otherwise False
         """
 
+        if target_position in NPCSharedContext.targets:
+            return False
+
         if context.npc.create_path_to_tile(target_position):
             if len(context.npc.pf_path) > 1:
                 facing = (
@@ -279,13 +319,21 @@ class NPCBehaviourTree(BehaviourTreeBase):
                 if abs(facing[0]) > abs(facing[1])\
                 else (0, facing[1])
 
+            NPCSharedContext.targets.add(target_position)
+
             @context.npc.on_path_completion
             def inner():
                 context.npc.direction.update(facing)
                 context.npc.get_facing_direction()
                 context.npc.direction.update((0, 0))
 
+                NPCSharedContext.targets.discard(target_position)
+
                 on_path_completion()
+
+            @context.npc.on_path_abortion
+            def inner():
+                NPCSharedContext.targets.discard(target_position)
 
             return True
         return False
