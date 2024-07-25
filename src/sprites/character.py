@@ -53,6 +53,8 @@ class Character(Entity, ABC):
         # seeds
         self.current_seed = FarmingTool(FarmingTool.get_first_seed_id())
 
+        self.plant_collision = plant_collision
+
         # inventory
         self.inventory = {
             InventoryResource.WOOD: 0,
@@ -102,3 +104,7 @@ class Character(Entity, ABC):
             self.inventory[resource] -= amount
             return True
         return False
+
+    def update(self, dt: float):
+        super().update(dt)
+        self.plant_collision(self)
