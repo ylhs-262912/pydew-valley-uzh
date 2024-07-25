@@ -6,7 +6,9 @@ from dataclasses import dataclass
 import pygame
 
 from src.npc.bases.chicken_base import ChickenBase
-from src.npc.behaviour.ai_behaviour_tree_base import Context, Selector, Action
+from src.npc.behaviour.ai_behaviour_tree_base import (
+    Context, Selector, Action, BehaviourTreeBase
+)
 from src.settings import SCALED_TILE_SIZE
 
 
@@ -15,20 +17,11 @@ class ChickenBehaviourTreeContext(Context):
     chicken: ChickenBase
 
 
-class ChickenBehaviourTree:
-    """
-    Group of methods used for Chicken behaviour.
-
-    Attributes:
-        tree:   Default behaviour tree
-    """
+class ChickenBehaviourTree(BehaviourTreeBase):
     tree = None
 
     @classmethod
     def init(cls):
-        """
-        Initialises the behaviour tree.
-        """
         cls.tree = Selector([
             Action(cls.wander)
         ])

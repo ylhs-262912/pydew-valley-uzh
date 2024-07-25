@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.ai_behaviour_tree_base import (
-    Context, Selector, Sequence, Condition, Action
+    Context, Selector, Sequence, Condition, Action, BehaviourTreeBase
 )
 from src.settings import SCALED_TILE_SIZE
 from src.sprites.character import Character
@@ -14,21 +14,11 @@ class CowFleeBehaviourTreeContext(Context):
     player: Character
 
 
-class CowFleeBehaviourTree:
-    """
-    Group of methods used for Cow flee behaviour.
-    Contrary to other trees, this behaviour tree will be run every tick.
-
-    Attributes:
-        tree:   Default behaviour tree
-    """
+class CowFleeBehaviourTree(BehaviourTreeBase):
     tree = None
 
     @classmethod
     def init(cls):
-        """
-        Initialises the behaviour tree.
-        """
         cls.tree = Selector([
             Sequence([
                 Condition(cls.player_nearby),
