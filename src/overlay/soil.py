@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from typing import Self, Any
 
 import pygame
 from random import choice
@@ -17,14 +18,17 @@ class Tile(Sprite):
 
     farmable: bool
     hoed: bool
+    plant: Plant | None
     planted: bool
     watered: bool
 
-    plant: Plant | None
+    pf_weight: float
 
     def __init__(
             self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]
     ):
+        self._callback = None
+
         surf = pygame.Surface(
             (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
         )
@@ -32,11 +36,33 @@ class Tile(Sprite):
         super().__init__(tile_to_screen(pos), surf, group, LAYERS["soil"])
 
         self.pos = pos
-        self.hoed = False
-        self.watered = False
-        self.planted = False
         self.farmable = False
+        self.hoed = False
         self.plant = None
+        self.plant_harvestable = False
+        self.watered = False
+        self.pf_weight = 0
+
+    @property
+    def planted(self):
+        return self.plant is not None
+
+    def grow_plant(self):
+        if self.planted:
+            self.plant.grow()
+            if self.plant.age == self.plant.max_age:
+                self.plant_harvestable = True
+
+    def register_callback(self, callback: Callable[[Self, str, Any], None]):
+        self._callback = callback
+
+    def __setattr__(self, key, value):
+        try:
+            self._callback(self, key, value)
+        except (AttributeError, TypeError):
+            pass
+
+        super().__setattr__(key, value)
 
 
 class SoilLayer:
@@ -64,7 +90,16 @@ class SoilLayer:
         self.plant_sprites = pygame.sprite.Group()
 
         self.tiles = {}
+
+        self._untilled_tiles = set(self.tiles.keys())
+        self._unplanted_tiles = set()
+        self._unwatered_tiles = set()
+        self.planted_types = {
+            i: 0 for i in SeedType
+        }
+
         self.create_soil_tiles(tmx_map)
+
         self.neighbor_directions = [
             (0, -1), (1, -1), (1, 0), (1, 1),
             (0, 1), (-1, 1), (-1, 0), (-1, -1)
@@ -82,23 +117,82 @@ class SoilLayer:
         if self._raining:
             self.water_all()
 
+    @property
+    def untilled_tiles(self):
+        return self._untilled_tiles
+
+    @property
+    def unplanted_tiles(self):
+        return self._unplanted_tiles
+
+    @property
+    def unwatered_tiles(self):
+        return self._unwatered_tiles
+
+    def on_tile_update(self, tile: Tile, attr_name: str, attr_value: Any):
+        match attr_name:
+            case "farmable":
+                if attr_value:
+                    if not tile.hoed:
+                        self._untilled_tiles.add(tile.pos)
+                else:
+                    self._untilled_tiles.discard(tile.pos)
+            case "hoed":
+                if attr_value:
+                    self._untilled_tiles.discard(tile.pos)
+                    if not tile.planted:
+                        self._unplanted_tiles.add(tile.pos)
+                else:
+                    self._unplanted_tiles.discard(tile.pos)
+                    if tile.farmable:
+                        self.untilled_tiles.add(tile.pos)
+            case "plant":
+                if attr_value:
+                    self.planted_types[attr_value.seed_type] += 1
+
+                    self._unplanted_tiles.discard(tile.pos)
+                    if not tile.watered:
+                        self._unwatered_tiles.add(tile.pos)
+                else:
+                    if tile.plant:
+                        self.planted_types[tile.plant.seed_type] -= 1
+
+                    self._unwatered_tiles.discard(tile.pos)
+                    if tile.hoed:
+                        self._unplanted_tiles.add(tile.pos)
+            case "watered":
+                if attr_value:
+                    self._unwatered_tiles.discard(tile.pos)
+                else:
+                    if tile.planted:
+                        self._unwatered_tiles.add(tile.pos)
+
     def create_soil_tiles(self, tmx_map):
         farmable_layer = tmx_map.get_layer_by_name("Farmable")
         for x, y, _ in farmable_layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
+            tile.register_callback(self.on_tile_update)
             tile.farmable = True
             self.tiles[(x, y)] = tile
 
     def update_tile_image(self, tile, pos):
         for dx, dy in self.neighbor_directions:
             neighbor = self.tiles.get((pos[0] + dx, pos[1] + dy))
-            if neighbor and neighbor.hoed:
+            if neighbor:
                 neighbor_pos = (pos[0] + dx, pos[1] + dy)
                 neighbor_type = self.determine_tile_type(neighbor_pos)
-                neighbor.image = self.level_frames["soil"][neighbor_type]
+                if neighbor.hoed:
+                    neighbor.image = self.level_frames["soil"][neighbor_type]
+                    neighbor.pf_weight = 0
+                else:
+                    neighbor.pf_weight = int(neighbor_type != "o")
 
         tile_type = self.determine_tile_type(pos)
-        tile.image = self.level_frames["soil"][tile_type]
+        if tile.hoed:
+            tile.image = self.level_frames["soil"][tile_type]
+            tile.pf_weight = 0
+        else:
+            tile.pf_weight = int(tile_type != "o")
 
     def hoe(self, pos) -> bool:
         """:return: Whether the tile was successfully hoed or not"""
@@ -170,43 +264,30 @@ class SoilLayer:
         """:return: Whether the tile was successfully harvested or not"""
 
         tile = self.tiles.get(pos)
-        plant = tile.plant
-        if tile and plant.harvestable:
+        if tile and tile.plant.harvestable:
             # add resource
-            resource = SeedType.as_nonseed_ir(plant.seed_type)
+            resource = SeedType.as_nonseed_ir(tile.plant.seed_type)
             quantity = 3
 
             add_resource(resource, quantity)
 
-            tile.planted = False
-
             # remove plant
             plant.kill()
             create_particle(plant)
+            tile.plant.kill()
+            create_particle(tile.plant)
+            tile.plant = None
             return True
 
         return False
 
-    def get_untilled_tiles(self) -> dict[tuple[int, int], Tile]:
-        untilled_tiles = {}
-        for pos, tile in self.tiles.items():
-            if not tile.hoed:
-                untilled_tiles[pos] = tile
-        return untilled_tiles
-
-    def get_unplanted_tiles(self) -> dict[tuple[int, int], Tile]:
-        unplanted_tiles = {}
-        for pos, tile in self.tiles.items():
-            if not tile.planted:
-                unplanted_tiles[pos] = tile
-        return unplanted_tiles
-
-    def get_unwatered_tiles(self) -> dict[tuple[int, int], Tile]:
-        unwatered_tiles = {}
-        for pos, tile in self.tiles.items():
-            if not tile.watered:
-                unwatered_tiles[pos] = tile
-        return unwatered_tiles
+    def update(self):
+        for tile in self.tiles.values():
+            if tile.plant:
+                tile.plant.grow()
+            tile.watered = False
+            for sprite in self.water_sprites:
+                sprite.kill()
 
     def determine_tile_type(self, pos):
         x, y = pos

@@ -5,7 +5,7 @@ import pygame
 from src import settings
 from src.enums import Direction, EntityState
 from src.gui.interface import indicators
-from src.settings import EMOTE_LAYER
+from src.settings import EMOTE_LAYER, SCALED_TILE_SIZE
 from src.sprites.base import CollideableSprite, LAYERS, Sprite
 from src.support import screen_to_tile, get_entity_facing_direction
 
@@ -86,6 +86,10 @@ class Entity(CollideableSprite, ABC):
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
+
+    def get_tile_pos(self) -> tuple[int, int]:
+        return (int(self.rect.centerx / SCALED_TILE_SIZE),
+                int(self.rect.centery / SCALED_TILE_SIZE))
 
     def focus(self):
         self.focused = True

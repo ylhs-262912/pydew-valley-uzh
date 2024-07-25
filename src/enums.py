@@ -209,6 +209,9 @@ class SeedType(IntEnum):
     def as_nonseed_ir(self):
         return self._AS_NS_IRS[self]
 
+    def as_farming_tool(self):
+        return self._AS_FTS[self]
+
     def as_plant_name(self):
         return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
 

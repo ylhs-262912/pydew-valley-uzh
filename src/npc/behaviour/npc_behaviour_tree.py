@@ -4,14 +4,13 @@ import random
 from dataclasses import dataclass
 from typing import Callable
 
-import pygame
-
-from src.enums import FarmingTool, ItemToUse
+from src.enums import FarmingTool, ItemToUse, SeedType
 from src.npc.behaviour.ai_behaviour_tree_base import (
     Context, Selector, Sequence, Condition, Action
 )
 from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
+from src.support import near_tiles
 
 
 @dataclass
@@ -44,7 +43,7 @@ class NPCBehaviourTree:
                     ]),
                     Sequence([
                         Condition(cls.will_plant_tilled_farmland),
-                        Action(cls.plant_random_seed)
+                        Action(cls.plant_adjacent_or_random_seed)
                     ]),
                     Action(cls.water_farmland)
                 ])
@@ -66,20 +65,13 @@ class NPCBehaviourTree:
         :return: True: untilled farmland available AND
         (all other farmland planted and watered OR 1/3), otherwise False
         """
-        empty_farmland_available = 0
-        unplanted_farmland_available = 0
-        unwatered_farmland_available = 0
+        soil_layer = context.npc.soil_layer
 
-        for tile in context.npc.soil_layer.tiles.values():
-            if tile.farmable and not tile.hoed:
-                empty_farmland_available += 1
-            if tile.hoed and not tile.planted:
-                unplanted_farmland_available += 1
-            if tile.planted and not tile.watered:
-                unwatered_farmland_available += 1
-
-        if empty_farmland_available <= 0:
+        if not len(soil_layer.untilled_tiles):
             return False
+
+        unplanted_farmland_available = len(soil_layer.unplanted_tiles)
+        unwatered_farmland_available = len(soil_layer.unwatered_tiles)
 
         return (
                 unplanted_farmland_available == 0
@@ -89,17 +81,42 @@ class NPCBehaviourTree:
     @staticmethod
     def create_new_farmland(context: NPCBehaviourTreeContext) -> bool:
         """
-        Finds a random untilled but farmable tile,
-        makes the NPC walk to and till it.
-        :return: True if path has successfully been created, otherwise False
+        Finds a random untilled but farmable tile in a radius of 5 around the
+        NPC. Will prefer Tiles that are adjacent to already tilled Tiles in 6/7
+        of all cases.
+        :return: True if such a Tile has been found and the NPC successfully
+                 created a path towards it, otherwise False
         """
-        possible_coordinates = []
-        for pos, tile in context.npc.soil_layer.tiles.items():
-            if tile.farmable and not tile.hoed:
-                possible_coordinates.append(pos)
-
-        if not possible_coordinates:
+        if not len(context.npc.soil_layer.untilled_tiles):
             return False
+
+        radius = 5
+
+        # current NPC position on the tilemap
+        tile_coord = context.npc.get_tile_pos()
+
+        weighted_coords = []
+        coords = []
+
+        for pos in near_tiles(tile_coord, radius):
+            if pos in context.npc.soil_layer.untilled_tiles:
+                if context.npc.soil_layer.tiles.get(pos).pf_weight:
+                    weighted_coords.append(pos)
+                else:
+                    coords.append(pos)
+
+        w_coords: list[tuple[float, tuple[int, int]]] = []
+
+        for pos in weighted_coords:
+            w_coords.append((1 * len(weighted_coords), pos))
+
+        for pos in coords:
+            w_coords.append((7 * len(coords), pos))
+
+        order = sorted(
+            range(len(w_coords)),
+            key=lambda i: random.random() ** (1.0 / w_coords[i][0])
+        )
 
         def on_path_completion():
             context.npc.tool_active = True
@@ -107,9 +124,14 @@ class NPCBehaviourTree:
             context.npc.tool_index = context.npc.current_tool.value - 1
             context.npc.frame_index = 0
 
-        return NPCBehaviourTree.wander_to_interact(
-            context, random.choice(possible_coordinates), on_path_completion
-        )
+        for pos in order:
+            path_created = NPCBehaviourTree.wander_to_interact(
+                context, w_coords[pos][1], on_path_completion
+            )
+            if path_created:
+                return True
+
+        return False
 
     @staticmethod
     def will_plant_tilled_farmland(context: NPCBehaviourTreeContext) -> bool:
@@ -117,61 +139,112 @@ class NPCBehaviourTree:
         :return: True if unplanted farmland available AND
         (all other farmland watered OR 3/4), otherwise False
         """
-        unplanted_farmland_available = 0
-        unwatered_farmland_available = 0
+        soil_layer = context.npc.soil_layer
 
-        for tile in context.npc.soil_layer.tiles.values():
-            if tile.hoed and not tile.planted:
-                unplanted_farmland_available += 1
-            if tile.planted and not tile.watered:
-                unwatered_farmland_available += 1
-
-        if unplanted_farmland_available <= 0:
+        if not len(soil_layer.unplanted_tiles):
             return False
+
+        unwatered_farmland_available = len(soil_layer.unwatered_tiles)
 
         return unwatered_farmland_available == 0 or random.randint(0, 3) <= 2
 
     @staticmethod
-    def plant_random_seed(context: NPCBehaviourTreeContext) -> bool:
+    def plant_adjacent_or_random_seed(
+            context: NPCBehaviourTreeContext
+    ) -> bool:
         """
-        Finds a random unplanted but tilled tile,
-        makes the NPC walk to and plant a random seed on it.
-        :return: True if path has successfully been created, otherwise False
+        Finds a random unplanted but tilled tile in a radius of 5 around the
+        NPC, makes the NPC walk to and plant a seed on it.
+        The seed selected is dependent on the respective amount of planted
+        seeds from all seed types, as well as the seed types that have been
+        planted on tiles adjacent to the randomly selected tile.
+        :return: True if such a Tile has been found and the NPC successfully
+                 created a path towards it, otherwise False
         """
-        possible_coordinates = []
+        soil_layer = context.npc.soil_layer
 
-        for pos, tile in context.npc.soil_layer.tiles.items():
-            if tile.hoed and not tile.planted:
-                possible_coordinates.append(pos)
-
-        if not possible_coordinates:
+        if not len(soil_layer.unplanted_tiles):
             return False
 
+        radius = 5
+
+        tile_coord = context.npc.get_tile_pos()
+
         def on_path_completion():
-            context.npc.current_seed = FarmingTool.CORN_SEED
+            seed_type: FarmingTool | None = None
+
+            # NPCs will only plant a seed from an adjacent tile if every seed
+            # type is planted on at least
+            # 1/(number of available seed types * 1.5)
+            # of all planted tiles
+            total_planted = sum(soil_layer.planted_types.values())
+            seed_types_count = len(soil_layer.planted_types.keys())
+
+            threshold = total_planted / (seed_types_count * 1.5)
+
+            will_plant_adjacent_seed = (
+                not total_planted or
+                all([seed_type > threshold
+                     for seed_type in soil_layer.planted_types.values()])
+            )
+
+            if will_plant_adjacent_seed:
+                adjacent_seed_types = set()
+                for dx, dy in soil_layer.neighbor_directions:
+                    neighbor_pos = (pos[0] + dx, pos[1] + dy)
+                    neighbor = soil_layer.tiles.get(neighbor_pos)
+                    if neighbor and neighbor.plant:
+                        neighbor_seed_type = neighbor.plant.seed_type
+                        adjacent_seed_types.add(
+                            (soil_layer.planted_types[neighbor_seed_type],
+                             neighbor_seed_type.as_farming_tool())
+                        )
+
+                # If multiple adjacent seed types are found, the one that has
+                # been planted the least is used
+                if adjacent_seed_types:
+                    seed_type = min(
+                        adjacent_seed_types,
+                        key=lambda i: i[0]
+                    )[1]
+
+            # If no adjacent seed type has been found, the type with that has
+            # been planted the least is used
+            if not seed_type:
+                seed_type = min(
+                    SeedType, key=lambda x: soil_layer.planted_types[x]
+                ).as_farming_tool()
+
+            context.npc.current_seed = seed_type
             context.npc.seed_index = (context.npc.current_seed.value
                                       - FarmingTool.get_first_seed_id().value)
-            context.npc.use_tool(ItemToUse(1))
+            context.npc.use_tool(ItemToUse.SEED)
 
-        return NPCBehaviourTree.wander_to_interact(
-            context, random.choice(possible_coordinates), on_path_completion
-        )
+        for pos in near_tiles(tile_coord, radius, shuffle=True):
+            if pos in soil_layer.unplanted_tiles:
+                path_created = NPCBehaviourTree.wander_to_interact(
+                    context, pos, on_path_completion
+                )
+                if path_created:
+                    return True
+
+        return False
 
     @staticmethod
     def water_farmland(context: NPCBehaviourTreeContext) -> bool:
         """
-        Finds a random unwatered but planted tile,
-        makes the NPC walk to and water it.
-        :return: True if path has successfully been created, otherwise False
+        Finds a random unwatered but planted tile in a radius of 5 around the
+        NPC, makes the NPC walk to and water it.
+        :return: True if such a Tile has been found and the NPC successfully
+                 created a path towards it, otherwise False
         """
-        possible_coordinates = []
-
-        for pos, tile in context.npc.soil_layer.tiles.items():
-            if tile.planted and not tile.watered:
-                possible_coordinates.append(pos)
-
-        if not possible_coordinates:
+        soil_layer = context.npc.soil_layer
+        if not len(soil_layer.unwatered_tiles):
             return False
+
+        radius = 5
+
+        tile_coord = context.npc.get_tile_pos()
 
         def on_path_completion():
             context.npc.tool_active = True
@@ -179,9 +252,15 @@ class NPCBehaviourTree:
             context.npc.tool_index = context.npc.current_tool.value - 1
             context.npc.frame_index = 0
 
-        return NPCBehaviourTree.wander_to_interact(
-            context, random.choice(possible_coordinates), on_path_completion
-        )
+        for pos in near_tiles(tile_coord, radius):
+            if pos in soil_layer.unwatered_tiles:
+                path_created = NPCBehaviourTree.wander_to_interact(
+                    context, pos, on_path_completion
+                )
+                if path_created:
+                    return True
+
+        return False
 
     @staticmethod
     def wander_to_interact(context: NPCBehaviourTreeContext,
@@ -228,35 +307,10 @@ class NPCBehaviourTree:
         """
 
         # current NPC position on the tilemap
-        tile_coord = pygame.Vector2(
-            context.npc.rect.centerx,
-            context.npc.rect.centery
-        ) / SCALED_TILE_SIZE
+        tile_coord = context.npc.get_tile_pos()
 
-        # To limit the required computing power, NPCs currently only try to
-        # navigate to 11 random points in their immediate vicinity
-        # (5 tile radius)
-        avail_x_coords = list(range(
-            max(0, int(tile_coord.x) - 5),
-            min(int(tile_coord.x) + 5, context.npc.pf_grid.width - 1) + 1
-        ))
-
-        avail_y_coords = list(range(
-            max(0, int(tile_coord.y) - 5),
-            min(int(tile_coord.y) + 5, context.npc.pf_grid.height - 1) + 1
-        ))
-
-        for i in range(min(len(avail_x_coords), len(avail_y_coords))):
-            pos = (
-                random.choice(avail_x_coords),
-                random.choice(avail_y_coords)
-            )
-            avail_x_coords.remove(pos[0])
-            avail_y_coords.remove(pos[1])
-
+        for pos in near_tiles(tile_coord, 3, shuffle=True):
             if context.npc.create_path_to_tile(pos):
-                break
-        else:
-            context.npc.abort_path()
-            return False
-        return True
+                return True
+
+        return False

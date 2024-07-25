@@ -48,7 +48,7 @@ class NPC(NPCBase):
 
             pf_matrix=AIData.Matrix,
             pf_grid=AIData.Grid,
-            pf_finder=AIData.ChickenPathFinder,
+            pf_finder=AIData.NPCPathFinder,
 
             z=LAYERS["main"]
         )

@@ -1,7 +1,9 @@
 import json
 import math
 import os
+import random
 import sys
+from collections.abc import Generator
 
 import pygame
 import pygame.gfxdraw
@@ -330,3 +332,28 @@ def get_entity_facing_direction(
     if direction[1]:
         return Direction.DOWN if direction[1] > 0 else Direction.UP
     return default_value
+
+
+def near_tiles(
+        pos: tuple[int, int], radius: int, shuffle: bool = False
+) -> Generator[tuple[int, int], None, None]:
+    """
+    :param pos: The centre of the generated positions
+    :param radius: The radius of the square
+    :param shuffle: Whether the positions should be yielded in a random order
+    :return: Generator for all positions within a square of the width and
+    height of radius * 2 + 1 around the given position
+    """
+    horizontal = list(range(radius * 2 + 1))
+    vertical = list(range(radius * 2 + 1))
+
+    horizontal.pop(radius)
+    vertical.pop(radius)
+
+    if shuffle:
+        random.shuffle(horizontal)
+        random.shuffle(vertical)
+
+    for i in horizontal:
+        for j in vertical:
+            yield int(pos[0] - radius + i), int(pos[1] - radius + j)
