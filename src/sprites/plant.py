@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from src.settings import LAYERS, GROW_SPEED, SCALE_FACTOR
 from src.sprites.base import CollideableSprite
 from pygame.math import Vector2 as vector
@@ -17,7 +19,23 @@ class Plant(CollideableSprite):
         self.age = 0
         self.max_age = len(self.frames) - 1
         self.grow_speed = GROW_SPEED[seed_type.as_plant_name()]
+
+        self._on_harvestable_funcs = []
         self.harvestable = False
+
+    @property
+    def harvestable(self):
+        return self._harvestable
+
+    @harvestable.setter
+    def harvestable(self, value):
+        for func in self._on_harvestable_funcs:
+            func(value)
+
+        self._harvestable = value
+
+    def on_harvestable(self, func: Callable[[bool], None]):
+        self._on_harvestable_funcs.append(func)
 
     def grow(self):
         if self.tile.watered:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 from typing import Callable
 
 import pygame
@@ -15,7 +14,6 @@ from src.npc.behaviour.npc_behaviour_tree import (
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import (
-    SCALE_FACTOR, SCALED_TILE_SIZE,
     Coordinate, AniFrames, LAYERS
 )
 from src.sprites.character import Character
@@ -31,6 +29,9 @@ class NPC(NPCBase):
             apply_tool: Callable[
                 [FarmingTool, tuple[int, int], Character], None
             ],
+            plant_collision: Callable[
+                [Character], None
+            ],
             soil_layer: SoilLayer,
             emote_manager: NPCEmoteManager
     ):
@@ -45,6 +46,7 @@ class NPC(NPCBase):
             collision_sprites=collision_sprites,
 
             apply_tool=apply_tool,
+            plant_collision=plant_collision,
 
             pf_matrix=AIData.Matrix,
             pf_grid=AIData.Grid,

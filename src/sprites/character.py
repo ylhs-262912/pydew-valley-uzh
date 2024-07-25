@@ -27,6 +27,9 @@ class Character(Entity, ABC):
             apply_tool: Callable[
                 [FarmingTool, tuple[float, float], Self], None
             ],
+            plant_collision: Callable[
+                [Self], None
+            ],
             z=LAYERS['main']
     ):
         Entity.__init__(

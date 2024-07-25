@@ -40,6 +40,9 @@ class Player(Character):
             apply_tool: Callable[
                 [FarmingTool, tuple[int, int], Character], None
             ],
+            plant_collision: Callable[
+                [Character], None
+            ],
             interact: Callable[[], None],
             emote_manager: PlayerEmoteManager,
             sounds: SoundDict,
@@ -53,7 +56,8 @@ class Player(Character):
             frames=frames,
             groups=groups,
             collision_sprites=collision_sprites,
-            apply_tool=apply_tool
+            apply_tool=apply_tool,
+            plant_collision=plant_collision
         )
 
         # movement

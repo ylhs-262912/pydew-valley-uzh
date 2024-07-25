@@ -19,7 +19,6 @@ from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.settings import (
-    TILE_SIZE,
     LAYERS,
     SCALE_FACTOR,
     SCALED_TILE_SIZE,
@@ -212,6 +211,7 @@ class Level:
             groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
+            plant_collision=self.plant_collision,
             interact=self.interact,
             emote_manager=self.player_emote_manager,
             sounds=self.sounds,
@@ -225,6 +225,7 @@ class Level:
             groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
+            plant_collision=self.plant_collision,
             soil_layer=self.soil_layer,
             emote_manager=self.npc_emote_manager,
         )
@@ -290,17 +291,16 @@ class Level:
         self.sounds["music"].play(-1)
 
     # plant collision
-    def plant_collision(self):
+    def plant_collision(self, character: Character):
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
-
                 if plant.rect.colliderect(
-                        self.player.plant_collide_rect
+                        character.plant_collide_rect
                 ):
                     x, y = map_coords_to_tile(plant.rect.center)
                     self.soil_layer.harvest(
                         (x, y),
-                        self.player.add_resource, self.create_particle
+                        character.add_resource, self.create_particle
                     )
 
     def create_particle(self, sprite: pygame.sprite.Sprite):
@@ -413,7 +413,6 @@ class Level:
 
     def update(self, dt: float):
         # update
-        self.plant_collision()
         self.update_rain()
         self.update_day()
         self.all_sprites.update(dt)

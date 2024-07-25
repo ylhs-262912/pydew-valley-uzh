@@ -27,6 +27,9 @@ class NPCBase(Character, AIBehaviour, ABC):
             apply_tool: Callable[
                 [FarmingTool, tuple[float, float], Character], None
             ],
+            plant_collision: Callable[
+                [Character], None
+            ],
 
             pf_matrix: list[list[int]],
             pf_grid: Grid,
@@ -42,6 +45,7 @@ class NPCBase(Character, AIBehaviour, ABC):
             collision_sprites=collision_sprites,
 
             apply_tool=apply_tool,
+            plant_collision=plant_collision,
             z=z
         )
         AIBehaviour.__init__(
