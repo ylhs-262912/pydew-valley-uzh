@@ -6,7 +6,7 @@ from typing import Callable
 
 from src.enums import FarmingTool, ItemToUse, SeedType
 from src.npc.behaviour.ai_behaviour_tree_base import (
-    Context, Selector, Sequence, Condition, Action
+    Context, Selector, Sequence, Condition, Action, BehaviourTreeBase
 )
 from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
@@ -19,20 +19,11 @@ class NPCBehaviourTreeContext(Context):
 
 
 # TODO: NPCs can not harvest fully grown crops on their own yet
-class NPCBehaviourTree:
-    """
-    Group of methods used for NPC behaviour.
-
-    Attributes:
-        tree:   Default NPC behaviour tree
-    """
+class NPCBehaviourTree(BehaviourTreeBase):
     tree = None
 
     @classmethod
     def init(cls):
-        """
-        Initialises the behaviour tree.
-        """
         cls.tree = Selector([
             Sequence([
                 Condition(cls.will_farm),

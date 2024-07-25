@@ -230,14 +230,6 @@ class SoilLayer:
                 self.water(pos)
                 self.update_tile_image(tile, pos)
 
-    def update(self):
-        for tile in self.tiles.values():
-            if tile.plant:
-                tile.plant.grow()
-            tile.watered = False
-            for sprite in self.water_sprites:
-                sprite.kill()
-
     def plant(
             self, pos, seed,
             remove_resource: Callable[[InventoryResource, int], bool]
@@ -275,8 +267,6 @@ class SoilLayer:
             add_resource(resource, quantity)
 
             # remove plant
-            plant.kill()
-            create_particle(plant)
             tile.plant.kill()
             create_particle(tile.plant)
             tile.plant = None

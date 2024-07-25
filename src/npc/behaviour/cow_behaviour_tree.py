@@ -6,7 +6,9 @@ from dataclasses import dataclass
 import pygame
 
 from src.npc.bases.cow_base import CowBase
-from src.npc.behaviour.ai_behaviour_tree_base import Context, Selector, Action
+from src.npc.behaviour.ai_behaviour_tree_base import (
+    Context, Selector, Action, BehaviourTreeBase
+)
 from src.settings import SCALED_TILE_SIZE
 
 
@@ -15,20 +17,11 @@ class CowBehaviourTreeContext(Context):
     cow: CowBase
 
 
-class CowBehaviourTree:
-    """
-    Group of classes used for Cow behaviour.
-
-    Attributes:
-        tree:   Default behaviour tree
-    """
+class CowBehaviourTree(BehaviourTreeBase):
     tree = None
 
     @classmethod
     def init(cls):
-        """
-        Initialises the behaviour tree.
-        """
         cls.tree = Selector([
             Action(cls.wander)
         ])
@@ -39,7 +32,6 @@ class CowBehaviourTree:
         Makes the Cow wander to a random location in a 5 tile radius.
         :return: True if path has successfully been created, otherwise False
         """
-
         # current position on the tilemap
         tile_coord = pygame.Vector2(
             context.cow.rect.centerx,
