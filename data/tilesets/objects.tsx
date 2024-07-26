@@ -113,9 +113,9 @@
   <image source="../../images/objects/weed_3.png" width="16" height="13"/>
  </tile>
  <tile id="46">
-  <image source="../../../../clear skies maps/Objects/coop_blue.png" width="30" height="42"/>
+  <image source="../../images/objects/coop_blue.png" width="30" height="42"/>
  </tile>
  <tile id="47">
-  <image source="../../../../clear skies maps/Objects/coop_green.png" width="30" height="42"/>
+  <image source="../../images/objects/coop_green.png" width="30" height="42"/>
  </tile>
 </tileset>
