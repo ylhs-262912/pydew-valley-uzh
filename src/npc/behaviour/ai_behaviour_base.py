@@ -46,6 +46,7 @@ class AIBehaviourBase(Entity, ABC):
         pass
 
     @conditional_behaviour_tree.setter
+    @abstractmethod
     def conditional_behaviour_tree(self, value: NodeWrapper | None):
         pass
 
@@ -55,6 +56,7 @@ class AIBehaviourBase(Entity, ABC):
         pass
 
     @continuous_behaviour_tree.setter
+    @abstractmethod
     def continuous_behaviour_tree(self, value: NodeWrapper | None):
         pass
 
