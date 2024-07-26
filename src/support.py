@@ -329,3 +329,10 @@ def get_entity_facing_direction(
     if direction[1]:
         return Direction.DOWN if direction[1] > 0 else Direction.UP
     return default_value
+
+def oscilating_lerp(a: float | int, b: float | int, t: float) -> float:
+    """returns a value smoothly iterpolated from a to b and back to a"""
+    angle =  0 + math.pi * t
+    # the sine of this range of angles (0 to pi) gives a value from 0 to 1 to 0
+    t = math.sin(angle)
+    return pygame.math.lerp(a, b, t)
