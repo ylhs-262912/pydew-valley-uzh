@@ -2,8 +2,9 @@ from abc import ABC
 
 import pygame
 
+from src.enums import Layer
 from src.mapobjects import MapObjectType
-from src.settings import LAYERS, SCALE_FACTOR
+from src.settings import SCALE_FACTOR
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -11,8 +12,8 @@ class Sprite(pygame.sprite.Sprite):
                  pos: tuple[int | float,
                             int | float],
                  surf: pygame.Surface,
-                 groups: tuple[pygame.sprite.Group] | pygame.sprite.Group,
-                 z: int = LAYERS['main'],
+                 groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+                 z: int = Layer.MAIN,
                  name: str | None = None):
         super().__init__(groups)
         self.surf = surf
@@ -26,7 +27,6 @@ class Sprite(pygame.sprite.Sprite):
         display_surface.blit(self.image, self.rect.topleft + offset)
 
 
-
 class CollideableSprite(Sprite, ABC):
     hitbox_rect: pygame.FRect
 
@@ -37,7 +37,7 @@ class CollideableMapObject(CollideableSprite):
             pos: tuple[int, int],
             object_type: MapObjectType,
             groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
-            z=LAYERS['main'],
+            z=Layer.MAIN,
             name=None
     ):
         self.object_type = object_type
@@ -50,7 +50,7 @@ class CollideableMapObject(CollideableSprite):
 
 
 class AnimatedSprite(Sprite):
-    def __init__(self, pos, frames, groups, z=LAYERS['main']):
+    def __init__(self, pos, frames, groups, z=Layer.MAIN):
         self.frames, self.frame_index = frames, 0
         super().__init__(pos, frames[0], groups, z)
 
@@ -60,4 +60,3 @@ class AnimatedSprite(Sprite):
 
     def update(self, dt):
         self.animate(dt)
-

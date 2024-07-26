@@ -1,4 +1,5 @@
-from src.settings import LAYERS, GROW_SPEED, SCALE_FACTOR
+from src.enums import Layer
+from src.settings import GROW_SPEED, SCALE_FACTOR
 from src.sprites.base import Sprite
 from pygame.math import Vector2 as vector
 
@@ -6,7 +7,7 @@ from pygame.math import Vector2 as vector
 class Plant(Sprite):
     def __init__(self, seed_type, groups, tile, frames):
         super().__init__(
-            tile.rect.center, frames[0], groups, LAYERS['plant']
+            tile.rect.center, frames[0], groups, Layer.PLANT
         )
         self.rect.center = tile.rect.center + \
             vector(0.5, -3) * SCALE_FACTOR
@@ -25,7 +26,7 @@ class Plant(Sprite):
             self.age += self.grow_speed
 
             if int(self.age) > 0:
-                self.z = LAYERS['main']
+                self.z = Layer.MAIN
                 self.hitbox = self.rect.inflate(-26, -self.rect.height * 0.4)
 
             if self.age >= self.max_age:
@@ -34,6 +35,6 @@ class Plant(Sprite):
 
             self.image = self.frames[int(self.age)]
             self.rect = self.image.get_frect(
-                midbottom=self.soil.rect.midbottom + vector(0, 2))
+                midbottom=self.tile.rect.midbottom + vector(0, 2))
     
 

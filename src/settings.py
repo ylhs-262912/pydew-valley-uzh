@@ -1,5 +1,8 @@
+import pygame  # noqa
 import pygame.freetype
 import pytmx
+
+from src.enums import Map
 from src.import_checks import *
 
 type Coordinate = tuple[int | float, int | float]
@@ -12,24 +15,15 @@ TILE_SIZE = 16
 CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
 SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
-TB_LAYER = 11
 
-LAYERS = {
-    'water': 0,
-    'lower ground': 1,
-    'upper ground': 2,
-    'soil': 3,
-    'soil water': 4,
-    'rain floor': 5,
-    'plant': 6,
-    'main': 7,
-    'fruit': 8,
-    'rain drops': 9,
-    'particles': 10,
-    "TextBox": TB_LAYER
-}
+GAME_MAP = Map.FARM
 
 ENABLE_NPCS = True
+TEST_ANIMALS = True
+
+SETUP_PATHFINDING = any((ENABLE_NPCS, TEST_ANIMALS))
+
+EMOTE_SIZE = 48
 
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 
@@ -44,16 +38,3 @@ APPLE_POS = {
 
 CHARS_PER_LINE = 45
 TB_SIZE = (493, 264)
-
-KEYBINDS = {
-    'up': {'type': "key", 'value': pygame.K_UP, 'text': "Up"},
-    'down': {'type': "key", 'value': pygame.K_DOWN, 'text': "Down"},
-    'left': {'type': "key", 'value': pygame.K_LEFT, 'text': "Left"},
-    'right': {'type': "key", 'value': pygame.K_RIGHT, 'text': "Right"},
-    'use': {'type': "key", 'value': pygame.K_SPACE, 'text': "Use"},
-    'next tool': {'type': "key", 'value': pygame.K_TAB, 'text': "Cycle Tools"},
-    'next seed': {'type': "key", 'value': pygame.K_LSHIFT, 'text': "Cycle Seeds"},
-    'plant': {'type': "key", 'value': pygame.K_RETURN, 'text': "Plant Current Seed"},
-    'interact': {'type': "key", 'value': pygame.K_i, 'text': "Interact"},
-    'hitbox': {'type': "key", 'value': pygame.K_h, 'text': "Show/Hide Hitboxes"},
-}

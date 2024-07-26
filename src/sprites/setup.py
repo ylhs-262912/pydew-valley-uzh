@@ -125,10 +125,43 @@ class _Hitbox:
 
 
 class EntityAssets:
+    Chicken: EntityAsset
+    Cow: EntityAsset
     Rabbit: EntityAsset
 
     @classmethod
     def setup(cls):
+        chicken_hitbox = _Hitbox(pygame.Rect(1, 11, 11, 3))
+        chicken_hitbox.set_direction_exception(
+            Direction.LEFT, pygame.Rect(4, 11, 11, 3)
+        )
+
+        chicken_asset = entity_importer(
+            path="images/entities/chicken",
+            size=16,
+            directions=[Direction.RIGHT],
+            hitbox=chicken_hitbox
+        )
+
+        cls.Chicken = EntityAsset(
+            chicken_asset
+        )
+
+        cow_hitbox = _Hitbox(pygame.Rect(6, 25, 16, 4))
+        cow_hitbox.set_direction_exception(
+            Direction.LEFT, pygame.Rect(10, 25, 16, 4)
+        )
+
+        cow_asset = entity_importer(
+            path="images/entities/cow",
+            size=32,
+            directions=[Direction.RIGHT],
+            hitbox=cow_hitbox
+        )
+
+        cls.Cow = EntityAsset(
+            cow_asset
+        )
 
         rabbit_hitbox = _Hitbox(pygame.Rect(18, 26, 12, 6))
         rabbit_hitbox.set_direction_exception(
@@ -202,8 +235,8 @@ def state_importer(
         directions_dict[Direction.RIGHT] = _AniFrames(frames, hitbox)
     elif Direction.RIGHT in directions and Direction.LEFT not in directions:
         frames = []
-        for i in range(len(directions_dict[Direction.LEFT])):
-            frame = directions_dict[Direction.LEFT].get_frame(i)
+        for i in range(len(directions_dict[Direction.RIGHT])):
+            frame = directions_dict[Direction.RIGHT].get_frame(i)
             frame = pygame.transform.flip(frame, True, False)
             frames.append(frame)
         hitbox = hitbox.get_hitbox(state, Direction.LEFT)

@@ -17,8 +17,8 @@ _FT_SERIALISED_STRINGS = (
     "axe",
     "hoe",
     "water",
-    "corn seed",
-    "tomato seed"
+    "corn_seed",
+    "tomato_seed"
 )
 
 
@@ -64,8 +64,8 @@ class InventoryResource(_SerialisableEnum):
             "apple",
             "corn",
             "tomato",
-            "corn seed",
-            "tomato seed"
+            "corn_seed",
+            "tomato_seed"
         )
     )
 
@@ -104,8 +104,8 @@ class FarmingTool(_SerialisableEnum):
             "axe",
             "hoe",
             "water",
-            "corn seed",
-            "tomato seed"
+            "corn_seed",
+            "tomato_seed"
         )
     )
 
@@ -198,7 +198,7 @@ class SeedType(IntEnum):
         return self._AS_NS_IRS[self]
 
     def as_plant_name(self):
-        return self._AS_FTS[self].as_serialised_string().removesuffix(" seed")
+        return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
 
 
 class Direction(IntEnum):
@@ -215,6 +215,28 @@ class EntityState(StrEnum):
     AXE = "axe"
     HOE = "hoe"
     WATER = "water"
+
+
+class Layer(IntEnum):
+    WATER = 0
+    LOWER_GROUND = auto()
+    UPPER_GROUND = auto()
+    SOIL = auto()
+    SOIL_WATER = auto()
+    RAIN_FLOOR = auto()
+    PLANT = auto()
+    MAIN = auto()
+    FRUIT = auto()
+    BORDER = auto()
+    RAIN_DROPS = auto()
+    PARTICLES = auto()
+    EMOTES = auto()
+    TEXT_BOX = auto()
+
+
+class Map(StrEnum):
+    FARM = "farm"
+    FOREST = "forest"
 
 
 class Tileset(StrEnum):

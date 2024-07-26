@@ -1,24 +1,35 @@
-from abc import ABC
-from typing import Callable
+from abc import ABC, abstractmethod
+
 import pygame
+
 from src import settings
-from src.sprites.base import CollideableSprite, LAYERS
-from src.enums import (
-    InventoryResource, FarmingTool, ItemToUse, Direction, EntityState
-)
+from src.enums import Direction, EntityState, Layer
+from src.gui.interface import indicators
+from src.sprites.base import CollideableSprite, Sprite
 from src.sprites.setup import EntityAsset
 from src.support import screen_to_tile
 
 
 class Entity(CollideableSprite, ABC):
+    frames: dict[str, settings.AniFrames]
+    frame_index: int
+    _current_ani_frame: list[pygame.Surface] | None
+
+    state: EntityState
+    facing_direction: Direction
+
+    direction: pygame.Vector2
+    speed: int
+    collision_sprites: pygame.sprite.Group
+    plant_collide_rect: pygame.Rect
+
     def __init__(
             self,
             pos: settings.Coordinate,
             assets: EntityAsset,
-            groups: tuple[pygame.sprite.Group],
+            groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable,
-            z=LAYERS['main']):
+            z=Layer.MAIN):
 
         self.assets = assets
 
@@ -30,14 +41,17 @@ class Entity(CollideableSprite, ABC):
         # each other, the first two of them must be set without calling their
         # property setter
         self._frame_index = 0
-        self._facing_direction = Direction.DOWN
+        self._facing_direction = Direction.RIGHT
         self.state = EntityState.IDLE
+
+        self.focused = False
+        self.focused_indicator = None
 
         super().__init__(
             pos,
             self.assets[self.state][self.facing_direction].get_frame(0),
             groups,
-            z=z,
+            z=z
         )
 
         # movement
@@ -48,32 +62,23 @@ class Entity(CollideableSprite, ABC):
 
         self.last_hitbox_rect = self.hitbox_rect
 
-        # tools
-        self.available_tools = ['axe', 'hoe', 'water']
-        self.current_tool = FarmingTool.get_first_tool_id()
-        self.tool_index = self.current_tool.value - FarmingTool.get_first_tool_id().value
+        # Axe hitbox, which allows for independent usage of the axe by any entity (player or NPC)
+        self.axe_hitbox = pygame.Rect(0, 0, 32, 32)
 
-        self.tool_active = False
-        self.just_used_tool = False
-        self.apply_tool = apply_tool
-
-        # seeds
-        self.available_seeds = ['corn', 'tomato']
-        self.current_seed = FarmingTool.get_first_seed_id()
-        self.seed_index = self.current_seed.value - FarmingTool.get_first_seed_id().value
-
-        # inventory
-        self.inventory = {
-            InventoryResource.WOOD: 0,
-            InventoryResource.APPLE: 0,
-            InventoryResource.CORN: 0,
-            InventoryResource.TOMATO: 0,
-            InventoryResource.CORN_SEED: 0,
-            InventoryResource.TOMATO_SEED: 0,
-        }
-
-        # Not all Entities can go to the market, so those that can't should not have money either
-        self.money = 0
+    def _update_axe_hitbox(self):
+        match self.facing_direction:
+            case "down":
+                self.axe_hitbox.x = self.rect.centerx - 24
+                self.axe_hitbox.y = self.rect.centery + 24
+            case "up":
+                self.axe_hitbox.x = self.rect.centerx - 8
+                self.axe_hitbox.bottom = self.rect.centery - 24
+            case "left":
+                self.axe_hitbox.right = self.rect.centerx - 16
+                self.axe_hitbox.y = self.rect.centery + 8
+            case "right":
+                self.axe_hitbox.x = self.rect.centerx + 16
+                self.axe_hitbox.y = self.rect.centery + 8
 
     def update_animation(self):
         self._current_ani = self.assets[self.state][self.facing_direction]
@@ -116,9 +121,7 @@ class Entity(CollideableSprite, ABC):
         self.update_frame()
 
     def get_state(self):
-        if self.tool_active:
-            self.state = EntityState(self.available_tools[self.tool_index])
-        elif self.direction:
+        if self.direction:
             self.state = EntityState.WALK
         else:
             self.state = EntityState.IDLE
@@ -140,7 +143,17 @@ class Entity(CollideableSprite, ABC):
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
 
-    def move(self, dt):
+    def focus(self):
+        self.focused = True
+        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], Layer.EMOTES)
+
+    def unfocus(self):
+        self.focused = False
+        if self.focused_indicator:
+            self.focused_indicator.kill()
+            self.focused_indicator = None
+
+    def move(self, dt: float):
         # x
         x_movement = self.direction.x * self.speed * dt
         self.rect.x += int(x_movement)
@@ -191,29 +204,13 @@ class Entity(CollideableSprite, ABC):
 
         self.is_colliding = bool(colliding_rect)
 
-    def animate(self, dt):
+    @abstractmethod
+    def animate(self, dt: float):
+        """
+        Animate the Entity. Child classes should implement method and
+        set current image based on self._current_ani_frame
+        """
         self.frame_index += 4 * dt
-
-        if self.tool_active:
-            if self.frame_index > len(self._current_ani):
-                self.tool_active = False
-                self.just_used_tool = False
-                # The state has to be changed to prevent the first image from
-                # being displayed a second time, because the state updates
-                # before the call to Entity.animate
-                self.state = EntityState.IDLE
-            else:
-                if (round(self.frame_index) == len(self._current_ani) - 1
-                        and not self.just_used_tool):
-                    self.just_used_tool = True
-                    self.use_tool(ItemToUse.REGULAR_TOOL)
-        self.image = self._current_frame
-
-    def use_tool(self, option: ItemToUse):
-        self.apply_tool((self.current_tool, self.current_seed)[option], self.get_target_pos(), self)
-
-    def add_resource(self, resource, amount=1):
-        self.inventory[resource] += amount
 
     def prepare_for_update(self):
         # Updating all attributes necessary for updating the Entity
@@ -221,8 +218,13 @@ class Entity(CollideableSprite, ABC):
         self.get_state()
         self.get_facing_direction()
 
-    def update(self, dt):
+    def update(self, dt: float):
         self.prepare_for_update()
+
+        if self.focused_indicator:
+            self.focused_indicator.rect.update((self.rect.centerx - self.focused_indicator.rect.width / 2,
+                                                self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
+                                               self.focused_indicator.rect.size)
         self.move(dt)
         self.animate(dt)
-
+        self.image = self._current_frame

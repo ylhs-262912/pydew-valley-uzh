@@ -3,9 +3,9 @@ import random
 import pygame
 
 from src import timer
-from src.enums import InventoryResource
+from src.enums import InventoryResource, Layer
 from src.mapobjects import MapObjectType
-from src.settings import LAYERS, APPLE_POS
+from src.settings import SCALE_FACTOR, APPLE_POS
 from src.sprites.base import Sprite, CollideableMapObject
 from src.support import generate_particle_surf
 
@@ -49,7 +49,8 @@ class Tree(CollideableMapObject):
             if random.randint(0, 10) < 6:
                 x = pos[0] + self.rect.left
                 y = pos[1] + self.rect.top
-                Sprite((x, y), self.apple_surf, (self.apple_sprites), LAYERS['fruit'])
+                Sprite((x, y), self.apple_surf, (self.apple_sprites,),
+                       Layer.FRUIT)
 
     def update(self, dt):
         self.timer.update()

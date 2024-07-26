@@ -3,60 +3,55 @@ from __future__ import annotations
 from typing import Callable
 
 import pygame
-import random
 
-from pathfinding.core.grid import Grid
-from pathfinding.finder.a_star import AStarFinder
-
-from src.npc.npc_base import NPCState, NPCBase
-from src.npc.npc_behaviour import NPCBehaviourContext, NPCBehaviourMethods
-from src.enums import InventoryResource
-from src.settings import SCALED_TILE_SIZE
+from src.enums import FarmingTool, InventoryResource, Layer
+from src.gui.interface.emotes import NPCEmoteManager
+from src.npc.bases.npc_base import NPCBase
+from src.npc.behaviour.npc_behaviour_tree import (
+    NPCBehaviourTree,
+    NPCBehaviourTreeContext
+)
+from src.npc.setup import AIData
+from src.overlay.soil import SoilLayer
 from src.settings import Coordinate
+from src.sprites.character import Character
 from src.sprites.setup import EntityAsset
-from src.support import screen_to_tile
 
 
 class NPC(NPCBase):
-
     def __init__(
             self,
             pos: Coordinate,
             assets: EntityAsset,
-            groups: tuple[pygame.sprite.Group],
+            groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable,
-            soil_layer,
-            pf_matrix: list[list[int]],
-            pf_grid: Grid,
-            pf_finder: AStarFinder):
-
+            apply_tool: Callable[
+                [FarmingTool, tuple[int, int], Character], None
+            ],
+            soil_layer: SoilLayer,
+            emote_manager: NPCEmoteManager
+    ):
         self.soil_layer = soil_layer
 
-        self.pf_matrix = pf_matrix
-        self.pf_grid = pf_grid
-        self.pf_finder = pf_finder
-        self.pf_state = NPCState.IDLE
-        self.pf_state_duration = 0
-        self.pf_path = []
-
-        self.__on_path_abortion_funcs = []
-        self.__on_path_completion_funcs = []
+        self.emote_manager = emote_manager
 
         super().__init__(
-            pos,
-            assets,
-            groups,
-            collision_sprites,
+            pos=pos,
+            assets=assets,
+            groups=groups,
+            collision_sprites=collision_sprites,
 
-            apply_tool
+            apply_tool=apply_tool,
+
+            pf_matrix=AIData.Matrix,
+            pf_grid=AIData.Grid,
+            pf_finder=AIData.ChickenPathFinder,
+
+            z=Layer.MAIN
         )
 
-        self.hitbox_rect = pygame.FRect()
-
-        self.speed = 250
-
-        # TODO: Ensure that the NPC always has all needed seeds it needs in its inventory
+        # TODO: Ensure that the NPC always has all needed seeds it needs
+        #  in its inventory
         self.inventory = {
             InventoryResource.WOOD: 0,
             InventoryResource.APPLE: 0,
@@ -66,121 +61,10 @@ class NPC(NPCBase):
             InventoryResource.TOMATO_SEED: 999,
         }
 
-    def on_path_abortion(self, func: Callable[[], None]):
-        self.__on_path_abortion_funcs.append(func)
-        return
+    def exit_idle(self):
+        NPCBehaviourTree.tree.run(NPCBehaviourTreeContext(self))
 
-    def abort_path(self):
-        self.pf_state = NPCState.IDLE
-        self.direction.update((0, 0))
-        self.pf_state_duration = 1
+    def update(self, dt):
+        super().update(dt)
 
-        for func in self.__on_path_abortion_funcs:
-            func()
-
-        self.__on_path_abortion_funcs.clear()
-        self.__on_path_completion_funcs.clear()
-        return
-
-    def on_path_completion(self, func: Callable[[], None]):
-        self.__on_path_completion_funcs.append(func)
-        return
-
-    def complete_path(self):
-        self.pf_state = NPCState.IDLE
-        self.direction.update((0, 0))
-        self.pf_state_duration = random.randint(2, 5)
-
-        for func in self.__on_path_completion_funcs:
-            func()
-
-        self.__on_path_abortion_funcs.clear()
-        self.__on_path_completion_funcs.clear()
-        return
-
-    def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
-        if not self.pf_grid.walkable(coord[0], coord[1]):
-            return False
-
-        # current NPC position on the tilemap
-        tile_coord = pygame.Vector2(self.rect.centerx, self.rect.centery) / SCALED_TILE_SIZE
-
-        self.pf_state = NPCState.MOVING
-        self.pf_state_duration = 0
-
-        self.pf_grid.cleanup()
-
-        start = self.pf_grid.node(int(tile_coord.x), int(tile_coord.y))
-        end = self.pf_grid.node(*[int(i) for i in coord])
-
-        path_raw = self.pf_finder.find_path(start, end, self.pf_grid)
-
-        # The first position in the path will always be removed as it is the same coordinate the NPC is already
-        #  standing on. Otherwise, if the NPC is just standing a little bit off the center of its current coordinate, it
-        #  may turn around quickly once it reaches it, if the second coordinate of the path points in the same direction
-        #  as where the NPC was just standing.
-        self.pf_path = [(i.x + .5, i.y + .5) for i in path_raw[0][1:]]
-
-        if not self.pf_path:
-            self.abort_path()
-            return False
-
-        return True
-
-    def move(self, dt):
-
-        self.hitbox_rect.update(
-            (self.rect.x + self._current_hitbox.x,
-             self.rect.y + self._current_hitbox.y),
-            self._current_hitbox.size
-        )
-
-        if self.pf_state == NPCState.IDLE:
-            self.update_state(dt)
-        elif self.pf_state == NPCState.MOVING:
-            self.update_direction()
-
-        super().move(dt)
-
-        if self.is_colliding:
-            self.abort_path()
-            return
-
-    def update_state(self, dt):
-        self.pf_state_duration -= dt
-        if self.pf_state_duration <= 0:
-            NPCBehaviourMethods.behaviour.run(NPCBehaviourContext(self))
-
-    def update_direction(self):
-        if not self.pf_path:
-            self.complete_path()
-            return
-
-        # Get the next point in the path
-        next_point = self.pf_path[0]
-        current_point = screen_to_tile(self.rect.center)
-
-        # Calculate the direction vector
-        dx = next_point[0] - current_point[0]
-        dy = next_point[1] - current_point[1]
-
-        # If the NPC is close enough to the next point, move to the next point
-        if abs(dx) < 1 and abs(dy) < 1:
-            self.next_path_point()
-
-
-        # Normalize the direction vector
-        magnitude = dx + dy
-        if magnitude:
-            self.direction.x = round(dx / magnitude)
-            self.direction.y = round(dy / magnitude)
-        else:
-            self.direction.xy = (0, 0)
-
-
-    def next_path_point(self):
-        self.pf_path.pop(0)
-        if not self.pf_path:
-            # NPC has reached the end of the path
-            self.direction.x, self.direction.y = 0, 0
-            return
+        self.emote_manager.update_obj(self, (self.rect.centerx - 47, self.rect.centery - 128))
