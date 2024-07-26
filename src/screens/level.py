@@ -93,8 +93,7 @@ class Level:
         self.player = self.entities['Player']
 
         # day night cycle
-        self.transition = Transition(self.reset, self.finish_reset)
-        self.day_transition = False
+        self.day_transition = Transition(self.reset, self.finish_reset, dur=3200)
         self.current_day = 0
 
         # weather
@@ -394,8 +393,6 @@ class Level:
     def reset(self):
         self.current_day += 1
 
-        self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
-
         # plants + soil
         for tile in self.soil_layer.tiles.values():
             if tile.plant:
@@ -422,14 +419,14 @@ class Level:
 
         # sky
         self.sky.start_color = [255, 255, 255]
+        self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
 
     def finish_reset(self):
-        self.day_transition = False
         for entity in self.entities.values():
             entity.blocked = False
 
     def start_reset(self):
-        self.day_transition = True
+        self.day_transition.activate()
         for entity in self.entities.values():
             entity.blocked = True
             entity.direction = pygame.Vector2(0, 0)
@@ -444,22 +441,18 @@ class Level:
         self.all_sprites.draw(self.player.rect.center)
         self.draw_overlay()
         self.sky.display(dt)
+        self.day_transition.draw()
 
     # update
     def update_rain(self):
         if self.raining and not self.shop_active:
             self.rain.update()
 
-    def update_day(self):
-        if self.day_transition:
-            self.transition.play()
-            self.sky.set_time(6, 0)   # set to 0600 hours upon sleeping
-
     def update(self, dt: float):
         # update
         self.plant_collision()
         self.update_rain()
-        self.update_day()
+        self.day_transition.update()
         self.all_sprites.update(dt)
 
         # draw
