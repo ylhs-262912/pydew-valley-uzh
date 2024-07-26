@@ -4,23 +4,42 @@ from typing import TypeVar
 
 import pygame
 
+from src.sprites.base import Sprite
 from src.timer import Timer
 
 
-class EmoteBoxBase(pygame.sprite.Sprite, ABC):
-    z: int
+class EmoteBoxBase(Sprite, ABC):
+    """
+    Base class to create emote boxes
+    Attributes:
+        emote: List of animation frames
+        _current_emote_image: Current animation frame
 
+        pos: Position property of the emote box
+
+        _ani_frame_count: Frame count of one animation cycle
+        _ani_cframe: Current frame of the animation
+        _ani_frame_length: Time until a new frame of the animation plays in
+                           seconds
+        _ani_length: Total time the animation will play
+        _ani_total_frames: Total frame count of the animation
+        ani_finished: Whether the animation has been finished or not
+        __on_finish_animation_funcs: List of functions that will be called when
+                                     the animation has finished
+
+        timer: Timer triggering the next animation frames
+    """
     emote: list[pygame.Surface]
     _current_emote_image = pygame.Surface
 
     pos: tuple[float, float]
 
-    _ani_frame_count: int  # Frame count of one animation cycle
-    _ani_cframe: int  # Current frame of the animation
-    _ani_frame_length: float  # Time until a new frame of the animation plays in seconds
-    _ani_length: float  # Total time the animation will play
-    _ani_total_frames: int  # Total frame count of the animation
-    ani_finished: bool  # Whether the animation has been finished or not
+    _ani_frame_count: int
+    _ani_cframe: int
+    _ani_frame_length: float
+    _ani_length: float
+    _ani_total_frames: int
+    ani_finished: bool
     __on_finish_animation_funcs: list[Callable[[], None]]
 
     timer: Timer
@@ -31,7 +50,7 @@ class EmoteBoxBase(pygame.sprite.Sprite, ABC):
         pass
 
     @abstractmethod
-    def on_finish_animation(self):
+    def on_finish_animation(self, func: Callable[[], None]):
         pass
 
     @abstractmethod
@@ -47,7 +66,7 @@ EmoteBoxType = TypeVar("EmoteBoxType", bound=EmoteBoxBase)
 
 
 class EmoteManagerBase:
-    sprite_group: pygame.sprite.Group
+    groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
 
     emotes: dict[str, list[pygame.Surface]]
 
@@ -86,12 +105,19 @@ class EmoteManagerBase:
         pass
 
 
-class EmoteWheelBase(pygame.sprite.Sprite):
+class EmoteWheelBase(Sprite):
+    """
+    Base class for the Player's emote wheel
+
+    Attributes:
+        _emotes: Names of all emotes on the emote wheel.
+                 Should be a selection of keys from EmoteManagerBase.emotes
+    """
+
     visible: bool
 
     _emote_manager: EmoteManagerBase
 
-    # Names of all emotes on the emote wheel. Should be a selection of keys from EmoteManagerBase.emotes
     _emotes: list[str]
 
     emote_index: int
