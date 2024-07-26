@@ -2,10 +2,8 @@ from pathfinding.core.diagonal_movement import DiagonalMovement
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
-from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
-from src.npc.behaviour.cow_behaviour_tree import CowBehaviourTree
-from src.npc.behaviour.cow_flee_behaviour_tree import CowFleeBehaviourTree
-from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
+from src.npc.behaviour.cow_behaviour_tree import CowSharedContext
+from src.sprites.character import Character
 
 
 class AIData:
@@ -17,11 +15,10 @@ class AIData:
     CowPathFinder: AStarFinder = None
 
     @classmethod
-    def setup(cls, pathfinding_matrix: list[list[int]]) -> None:
-        NPCBehaviourTree.init()
-        ChickenBehaviourTree.init()
-        CowBehaviourTree.init()
-        CowFleeBehaviourTree.init()
+    def setup(
+            cls, pathfinding_matrix: list[list[int]], player: Character
+    ) -> None:
+        CowSharedContext.player = player
 
         cls.Matrix = pathfinding_matrix
         cls.Grid = Grid(matrix=cls.Matrix)

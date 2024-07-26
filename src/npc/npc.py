@@ -7,10 +7,7 @@ import pygame
 from src.enums import FarmingTool, InventoryResource, Layer
 from src.gui.interface.emotes import NPCEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.npc.behaviour.npc_behaviour_tree import (
-    NPCBehaviourTree,
-    NPCBehaviourTreeContext
-)
+from src.npc.behaviour.npc_behaviour_tree import NPCIndividualContext
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate
@@ -51,6 +48,8 @@ class NPC(NPCBase):
             pf_grid=AIData.Grid,
             pf_finder=AIData.NPCPathFinder,
 
+            behaviour_tree_context=NPCIndividualContext(self),
+
             z=Layer.MAIN
         )
 
@@ -68,10 +67,9 @@ class NPC(NPCBase):
             InventoryResource.TOMATO_SEED: 999,
         }
 
-    def exit_idle(self):
-        NPCBehaviourTree.tree.run(NPCBehaviourTreeContext(self))
-
     def update(self, dt):
         super().update(dt)
 
-        self.emote_manager.update_obj(self, (self.rect.centerx - 47, self.rect.centery - 128))
+        self.emote_manager.update_obj(
+            self, (self.rect.centerx - 47, self.rect.centery - 128)
+        )

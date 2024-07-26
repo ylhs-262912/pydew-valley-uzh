@@ -23,6 +23,14 @@ class Node(ABC):
         pass
 
 
+@dataclass
+class NodeWrapper:
+    root_node: Node
+
+    def run(self, context: Context):
+        self.root_node.run(context)
+
+
 class Composite(Node, ABC):
     children: list[Node]
 
@@ -143,22 +151,3 @@ class Action(Leaf):
 
     def run(self, context: ContextType | None):
         return self.action_func(context)
-
-
-class BehaviourTreeBase:
-    """
-    Group of methods used for AI behaviour.
-
-    Attributes:
-        tree:   Default AI behaviour tree
-    """
-
-    tree: Node
-
-    @classmethod
-    @abstractmethod
-    def init(cls):
-        """
-        Initialises the behaviour tree.
-        """
-        pass

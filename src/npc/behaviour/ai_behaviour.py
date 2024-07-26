@@ -7,6 +7,7 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
+from src.npc.behaviour.ai_behaviour_tree_base import ContextType, NodeWrapper
 from src.settings import SCALED_TILE_SIZE
 
 
@@ -15,7 +16,9 @@ class AIBehaviour(AIBehaviourBase, ABC):
             self,
             pf_matrix: list[list[int]],
             pf_grid: Grid,
-            pf_finder: AStarFinder
+            pf_finder: AStarFinder,
+
+            behaviour_tree_context: ContextType,
     ):
         """
         !IMPORTANT! AIBehaviour doesn't call Entity.__init__ while still
@@ -33,8 +36,34 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         self.pf_path = []
 
+        self.behaviour_tree_context = behaviour_tree_context
+        self.conditional_behaviour_tree = None
+        self.continuous_behaviour_tree = None
+
         self.__on_path_abortion_funcs = []
         self.__on_path_completion_funcs = []
+
+        self.__on_stop_moving_funcs = []
+
+    @property
+    def conditional_behaviour_tree(self):
+        return self._conditional_behaviour_tree
+
+    @conditional_behaviour_tree.setter
+    def conditional_behaviour_tree(
+            self, value: NodeWrapper | None
+    ):
+        self._conditional_behaviour_tree = value
+
+    @property
+    def continuous_behaviour_tree(self):
+        return self._continuous_behaviour_tree
+
+    @continuous_behaviour_tree.setter
+    def continuous_behaviour_tree(
+            self, value: NodeWrapper | None
+    ):
+        self._continuous_behaviour_tree = value
 
     def on_path_abortion(self, func: Callable[[], None]):
         self.__on_path_abortion_funcs.append(func)
@@ -48,10 +77,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
         for func in self.__on_path_abortion_funcs:
             func()
 
-        self.__on_path_abortion_funcs.clear()
-        self.__on_path_completion_funcs.clear()
-
-        self.exit_moving()
+        self.stop_moving()
         return
 
     def on_path_completion(self, func: Callable[[], None]):
@@ -66,17 +92,25 @@ class AIBehaviour(AIBehaviourBase, ABC):
         for func in self.__on_path_completion_funcs:
             func()
 
-        self.__on_path_abortion_funcs.clear()
-        self.__on_path_completion_funcs.clear()
-
-        self.exit_moving()
+        self.stop_moving()
         return
 
     def exit_idle(self):
-        pass
+        if self.conditional_behaviour_tree is not None:
+            self.conditional_behaviour_tree.run(self.behaviour_tree_context)
 
-    def exit_moving(self):
-        pass
+    def on_stop_moving(self, func: Callable[[], None]):
+        self.__on_stop_moving_funcs.append(func)
+        return
+
+    def stop_moving(self):
+        for func in self.__on_stop_moving_funcs:
+            func()
+
+        self.__on_path_abortion_funcs.clear()
+        self.__on_path_completion_funcs.clear()
+        self.__on_stop_moving_funcs.clear()
+        return
 
     def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
         """
@@ -219,3 +253,9 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         if self.is_colliding:
             self.abort_path()
+
+    def update(self, dt: float):
+        if self.continuous_behaviour_tree is not None:
+            self.continuous_behaviour_tree.run(self.behaviour_tree_context)
+
+        super().update(dt)

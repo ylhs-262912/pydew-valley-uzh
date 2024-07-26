@@ -183,7 +183,8 @@ class Level:
         self.setup_object_layer('Entities', self.setup_entity)
 
         if SETUP_PATHFINDING:
-            AIData.setup(self.pf_matrix)
+            AIData.setup(pathfinding_matrix=self.pf_matrix,
+                         player=self.entities['Player'])
 
         if ENABLE_NPCS:
             self.setup_object_layer('NPCs', self.setup_npc)
@@ -287,6 +288,9 @@ class Level:
             soil_layer=self.soil_layer,
             emote_manager=self.npc_emote_manager,
         )
+        self.npcs[obj.name].conditional_behaviour_tree = (
+            NPCBehaviourTree.Farming
+        )
 
     def setup_animal(self, pos, obj):
         if obj.name == "Chicken":
@@ -296,6 +300,9 @@ class Level:
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
             ))
+            self.animals[-1].conditional_behaviour_tree = (
+                ChickenBehaviourTree.Wander
+            )
         elif obj.name == "Cow":
             self.animals.append(Cow(
                 pos=pos,
@@ -305,6 +312,12 @@ class Level:
 
                 player=self.entities['Player']
             ))
+            self.animals[-1].conditional_behaviour_tree = (
+                CowConditionalBehaviourTree.Wander
+            )
+            self.animals[-1].continuous_behaviour_tree = (
+                CowContinuousBehaviourTree.Flee
+            )
         else:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")
 
