@@ -84,9 +84,13 @@ class Level:
 
         # emotes
         self.emotes = self.frames["emotes"]
-        self.player_emote_manager = PlayerEmoteManager(self.all_sprites, self.emotes)
+        self.player_emote_manager = PlayerEmoteManager(
+            self.emotes, (self.all_sprites,)
+        )
 
-        self.npc_emote_manager = NPCEmoteManager(self.all_sprites, self.emotes)
+        self.npc_emote_manager = NPCEmoteManager(
+            self.emotes, (self.all_sprites,)
+        )
 
         # setup map
         self.setup()
