@@ -6,7 +6,7 @@ from pygame.math import Vector2 as vector
 from src import settings, savefile, support
 from src.sprites.entities.entity import Entity
 from src.enums import InventoryResource, FarmingTool, ItemToUse
-from src.settings import SCALE_FACTOR
+from src.sprites.setup import EntityAsset
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
@@ -21,7 +21,7 @@ class Player(Entity):
             self,
             game,
             pos: settings.Coordinate,
-            frames,
+            assets: EntityAsset,
             groups,
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable,
@@ -34,12 +34,13 @@ class Player(Entity):
 
         super().__init__(
             pos,
-            frames,
+            assets,
             groups,
             collision_sprites,
-            (44 * SCALE_FACTOR, 40 * SCALE_FACTOR),
             apply_tool
         )
+
+        self.hitbox_rect = pygame.FRect()
 
         # movement
         self.keybinds = self.import_controls()
@@ -122,7 +123,8 @@ class Player(Entity):
         if not self.tool_active and not self.blocked:
             self.direction.x = int(self.controls['right']) - int(self.controls['left'])
             self.direction.y = int(self.controls['down']) - int(self.controls['up'])
-            # self.direction = self.direction.normalize() if self.direction else self.direction
+            if self.direction:
+                self.direction = self.direction.normalize()
 
             # tool switch
             if self.controls['next tool']:
@@ -149,6 +151,21 @@ class Player(Entity):
             # interact
             if self.controls['interact']:
                 self.interact()
+
+    def move(self, dt):
+        self.hitbox_rect.update(
+            (self.rect.x + self._current_hitbox.x,
+             self.rect.y + self._current_hitbox.y),
+            self._current_hitbox.size
+        )
+
+        self.hitbox_rect.x += self.direction.x * self.speed * dt
+        self.hitbox_rect.y += self.direction.y * self.speed * dt
+        self.check_collision()
+
+        self.rect.update(
+            (self.hitbox_rect.x - self._current_hitbox.x,
+             self.hitbox_rect.y - self._current_hitbox.y), self.rect.size)
 
     def get_current_tool_string(self):
         return self.available_tools[self.tool_index]

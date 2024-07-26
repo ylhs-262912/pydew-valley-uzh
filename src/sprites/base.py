@@ -1,6 +1,9 @@
+from abc import ABC
 
 import pygame
-from src.settings import LAYERS
+
+from src.mapobjects import MapObjectType
+from src.settings import LAYERS, SCALE_FACTOR
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -18,16 +21,32 @@ class Sprite(pygame.sprite.Sprite):
         self.z = z
         self.name = name
         self.hitbox_rect = self.rect.copy()
-        
+
     def draw(self, display_surface, offset):
         display_surface.blit(self.image, self.rect.topleft + offset)
 
 
 
-class CollideableSprite(Sprite):
-    def __init__(self, pos, surf, groups, z=LAYERS['main'], name=None):
+class CollideableSprite(Sprite, ABC):
+    hitbox_rect: pygame.FRect
+
+
+class CollideableMapObject(CollideableSprite):
+    def __init__(
+            self,
+            pos: tuple[int, int],
+            object_type: MapObjectType,
+            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+            z=LAYERS['main'],
+            name=None
+    ):
+        self.object_type = object_type
+
+        surf = pygame.transform.scale_by(self.object_type.image, SCALE_FACTOR)
+
         super().__init__(pos, surf, groups, z, name)
 
+        self.hitbox_rect = self.object_type.hitbox.move(self.rect.topleft)
 
 
 class AnimatedSprite(Sprite):

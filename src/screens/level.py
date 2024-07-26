@@ -8,12 +8,10 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
+from src.mapobjects import MapObjects
 from src.npc.npc import NPC
 from src.npc.npc_behaviour import NPCBehaviourMethods
-from src.sprites.entities.trader import Trader
-from src.sprites.objects.bed import Bed
-from src.sprites.objects.hill import Hill
-from src.sprites.objects.rock import Rock
+from src.sprites.setup import EntityAssets
 from src.support import map_coords_to_tile, load_data, resource_path
 from src.groups import AllSprites
 from src.overlay.soil import SoilLayer
@@ -21,11 +19,11 @@ from src.overlay.transition import Transition
 from src.overlay.sky import Sky, Rain
 from src.overlay.overlay import Overlay
 from src.screens.shop import ShopMenu
-from src.sprites.base import CollideableSprite, Sprite, AnimatedSprite
+from src.sprites.base import Sprite, AnimatedSprite, CollideableMapObject
 from src.sprites.particle import ParticleSprite
 from src.sprites.objects.tree import Tree
 from src.sprites.entities.player import Player
-from src.enums import FarmingTool, GameState
+from src.enums import FarmingTool, GameState, Tileset
 from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -43,12 +41,14 @@ class Level:
         self.game = game
         self.switch_screen = switch
 
-
         # pathfinding
         self.pf_matrix_size = ()
         self.pf_matrix = []
         self.pf_grid: PF_Grid | None = None
         self.pf_finder = PF_AStarFinder()
+
+        # tilemap objects
+        self.map_objects: MapObjects | None = None
 
         # sprite groups
         self.entities = {}
@@ -111,6 +111,8 @@ class Level:
         self.pf_matrix_size = (self.tmx_maps["main"].width, self.tmx_maps["main"].height)
         self.pf_matrix = [[1 for _ in range(self.pf_matrix_size[0])] for _ in range(self.pf_matrix_size[1])]
 
+        self.map_objects = MapObjects(Tileset.OBJECTS)
+
         self.setup_layer_tiles('Lower ground', self.setup_environment)
         self.setup_layer_tiles('Upper ground', self.setup_environment)
         self.setup_layer_tiles('Water', self.setup_water)
@@ -118,6 +120,8 @@ class Level:
         self.setup_object_layer('Collidable objects', self.setup_collideable_object)
         self.setup_object_layer('Collisions', self.setup_collision)
         self.setup_object_layer('Interactions', self.setup_interaction)
+
+        EntityAssets.setup()
         self.setup_object_layer('Entities', self.setup_entities)
 
         self.pf_grid = PF_Grid(matrix=self.pf_matrix)
@@ -161,28 +165,27 @@ class Level:
                 self.pf_matrix[tile_y + h][tile_x + w] = 0
 
     def setup_collideable_object(self, pos, obj: pytmx.TiledObject):
-        image = pygame.transform.scale_by(obj.image, SCALE_FACTOR)
-
         if obj.name == 'Tree':
             apple_frames = self.frames['level']['objects']['apple']
             stump_frames = self.frames['level']['objects']['stump']
 
-            Tree(pos, image, (self.all_sprites, self.collision_sprites, self.tree_sprites), obj.name, apple_frames, stump_frames)
-        elif obj.name == 'Rock':
-            Rock(pos, image, (self.all_sprites, self.collision_sprites))
-        elif obj.name == 'Bed':
-            Bed(pos, image, (self.all_sprites, self.collision_sprites))
-        elif obj.name == 'Trader':
-            Trader(pos, image, (self.all_sprites, self.collision_sprites))
+            Tree(pos,
+                 self.map_objects.objects[obj.properties.get("id")],
+                 (self.all_sprites, self.collision_sprites, self.tree_sprites),
+                 obj.name, apple_frames, stump_frames)
         else:
-            CollideableSprite(pos, image, (self.all_sprites, self.collision_sprites))
+            object_type = self.map_objects.objects[obj.properties.get("id")]
+
+            CollideableMapObject(
+                pos, object_type, (self.all_sprites, self.collision_sprites)
+            )
 
         self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
     def setup_collision(self, pos, obj):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
-        Hill(pos, image, self.collision_sprites)
+        Sprite(pos, image, self.collision_sprites)
 
         self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
 
@@ -195,7 +198,7 @@ class Level:
         self.entities[obj.name] = Player(
             game=self.game,
             pos=pos,
-            frames=self.frames['character']['rabbit'],
+            assets=EntityAssets.Rabbit,
             groups=(self.all_sprites, self.collision_sprites),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
@@ -205,15 +208,17 @@ class Level:
         )
 
     def setup_npc(self, pos, obj):
-        self.npcs[obj.name] = NPC(pos=pos,
-                                  frames=self.frames['character']['rabbit'],
-                                  groups=(self.all_sprites, self.collision_sprites),
-                                  collision_sprites=self.collision_sprites,
-                                  apply_tool=self.apply_tool,
-                                  soil_layer=self.soil_layer,
-                                  pf_matrix=self.pf_matrix,
-                                  pf_grid=self.pf_grid,
-                                  pf_finder=self.pf_finder
+        self.npcs[obj.name] = NPC(
+            pos=pos,
+            assets=EntityAssets.Rabbit,
+            groups=(self.all_sprites, self.collision_sprites),
+            collision_sprites=self.collision_sprites,
+            apply_tool=self.apply_tool,
+            soil_layer=self.soil_layer,
+
+            pf_matrix=self.pf_matrix,
+            pf_grid=self.pf_grid,
+            pf_finder=self.pf_finder
         )
 
     def get_map_size(self):
@@ -256,7 +261,9 @@ class Level:
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
 
-                is_player_near = plant.rect.colliderect(self.player.hitbox_rect)
+                is_player_near = plant.rect.colliderect(
+                    self.player.hitbox_rect
+                )
 
                 if plant.harvestable and is_player_near:
 

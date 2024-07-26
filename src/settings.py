@@ -29,7 +29,7 @@ LAYERS = {
     "TextBox": TB_LAYER
 }
 
-ENABLE_NPCS = False
+ENABLE_NPCS = True
 
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 

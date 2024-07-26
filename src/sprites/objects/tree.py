@@ -1,21 +1,26 @@
-
 import random
+
 import pygame
-from src.sprites.base import CollideableSprite, Sprite
+
 from src import timer
-from src.settings import LAYERS, SCALE_FACTOR, APPLE_POS
-from src.support import generate_particle_surf
 from src.enums import InventoryResource
+from src.mapobjects import MapObjectType
+from src.settings import LAYERS, APPLE_POS
+from src.sprites.base import Sprite, CollideableMapObject
+from src.support import generate_particle_surf
 
 
-
-class Tree(CollideableSprite):
-    def __init__(self, pos, surf, groups, name, apple_surf, stump_surf):
-        super().__init__(pos, surf, groups)
+class Tree(CollideableMapObject):
+    def __init__(self, pos, object_type: MapObjectType, groups, name, apple_surf, stump_surf):
+        super().__init__(
+            pos,
+            object_type,
+            groups,
+        )
         self.name = name
         self.health = 5
         self.alive = True
-        
+
         self.timer = timer.Timer(300, func=self.unhit)
         self.was_hit = False
 
@@ -27,10 +32,6 @@ class Tree(CollideableSprite):
         self.apple_sprites = pygame.sprite.Group()
         self.apple_surf = apple_surf
         self.create_fruit()
-
-        # hitbox
-        self.hitbox_rect = pygame.Rect(0, 0, 36, 18)
-        self.hitbox_rect.midbottom = self.rect.midbottom
 
     def unhit(self):
         self.was_hit = False

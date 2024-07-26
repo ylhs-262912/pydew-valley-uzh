@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from typing import Callable
 
+import pygame
+import random
+
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.npc_base import NPCState, NPCBase
 from src.npc.npc_behaviour import NPCBehaviourContext, NPCBehaviourMethods
 from src.enums import InventoryResource
-from src.settings import SCALE_FACTOR, SCALED_TILE_SIZE
-from src.settings import Coordinate, AniFrames
-from pygame.math import Vector2 as vector2
-import pygame
-import random
-
+from src.settings import SCALED_TILE_SIZE
+from src.settings import Coordinate
+from src.sprites.setup import EntityAsset
 from src.support import screen_to_tile
 
 
@@ -22,7 +22,7 @@ class NPC(NPCBase):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable,
@@ -45,15 +45,14 @@ class NPC(NPCBase):
 
         super().__init__(
             pos,
-            frames,
+            assets,
             groups,
             collision_sprites,
 
-            (32 * SCALE_FACTOR, 32 * SCALE_FACTOR),
-            # scales the hitbox down to the exact tile size
-
             apply_tool
         )
+
+        self.hitbox_rect = pygame.FRect()
 
         self.speed = 250
 
@@ -128,8 +127,14 @@ class NPC(NPCBase):
 
         return True
 
-
     def move(self, dt):
+
+        self.hitbox_rect.update(
+            (self.rect.x + self._current_hitbox.x,
+             self.rect.y + self._current_hitbox.y),
+            self._current_hitbox.size
+        )
+
         if self.pf_state == NPCState.IDLE:
             self.update_state(dt)
         elif self.pf_state == NPCState.MOVING:
@@ -150,25 +155,28 @@ class NPC(NPCBase):
         if not self.pf_path:
             self.complete_path()
             return
-        
+
         # Get the next point in the path
         next_point = self.pf_path[0]
         current_point = screen_to_tile(self.rect.center)
-        
+
         # Calculate the direction vector
         dx = next_point[0] - current_point[0]
         dy = next_point[1] - current_point[1]
-        
+
         # If the NPC is close enough to the next point, move to the next point
         if abs(dx) < 1 and abs(dy) < 1:
             self.next_path_point()
-        
-        
+
+
         # Normalize the direction vector
-        magnitude = (dx ** 2 + dy ** 2) ** 0.5
-        self.direction.x = round(dx / magnitude)
-        self.direction.y = round(dy / magnitude)
-    
+        magnitude = dx + dy
+        if magnitude:
+            self.direction.x = round(dx / magnitude)
+            self.direction.y = round(dy / magnitude)
+        else:
+            self.direction.xy = (0, 0)
+
 
     def next_path_point(self):
         self.pf_path.pop(0)
