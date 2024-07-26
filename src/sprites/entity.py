@@ -43,9 +43,7 @@ class Entity(CollideableSprite, ABC):
 
         super().__init__(
             pos,
-            self.frames[self.state.value][
-                self.facing_direction.value
-            ][self.frame_index],
+            self.frames[self.state][self.facing_direction][self.frame_index],
             groups,
             shrink,
             z=z
@@ -57,7 +55,8 @@ class Entity(CollideableSprite, ABC):
         self.collision_sprites = collision_sprites
         self.plant_collide_rect = self.hitbox_rect.inflate(10, 10)
 
-        # Axe hitbox, which allows for independent usage of the axe by any entity (player or NPC)
+        # Axe hitbox, which allows for independent usage of the axe by any
+        # entity (player or NPC)
         self.axe_hitbox = pygame.Rect(0, 0, 32, 32)
 
     def _update_axe_hitbox(self):
@@ -93,7 +92,9 @@ class Entity(CollideableSprite, ABC):
 
     def focus(self):
         self.focused = True
-        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], EMOTE_LAYER)
+        self.focused_indicator = Sprite(
+            (0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], EMOTE_LAYER
+        )
 
     def unfocus(self):
         self.focused = False
@@ -145,16 +146,18 @@ class Entity(CollideableSprite, ABC):
         Animate the Entity. Child classes should implement method and
         set current image based on self._current_ani_frame
         """
-        self._current_ani_frame = self.frames[self.state.value][
+        self._current_ani_frame = self.frames[self.state][
             self.facing_direction
         ]
         self.frame_index += 4 * dt
 
     def update(self, dt: float):
         if self.focused_indicator:
-            self.focused_indicator.rect.update((self.rect.centerx - self.focused_indicator.rect.width / 2,
-                                                self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
-                                               self.focused_indicator.rect.size)
+            self.focused_indicator.rect.update(
+                (self.rect.centerx - self.focused_indicator.rect.width/2,
+                 self.rect.centery - 56 - self.focused_indicator.rect.height/2
+                 ), self.focused_indicator.rect.size
+            )
         self.get_state()
         self.get_facing_direction()
         self.move(dt)

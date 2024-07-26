@@ -9,6 +9,7 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.enums import FarmingTool
 from src.npc.behaviour.ai_behaviour import AIBehaviour
+from src.npc.behaviour.ai_behaviour_tree_base import ContextType
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate, AniFrames
 from src.sprites.character import Character
@@ -35,6 +36,8 @@ class NPCBase(Character, AIBehaviour, ABC):
             pf_grid: Grid,
             pf_finder: AStarFinder,
 
+            behaviour_tree_context: ContextType,
+
             z: int
     ):
         Character.__init__(
@@ -52,7 +55,9 @@ class NPCBase(Character, AIBehaviour, ABC):
             self,
             pf_matrix=pf_matrix,
             pf_grid=pf_grid,
-            pf_finder=pf_finder
+            pf_finder=pf_finder,
+
+            behaviour_tree_context=behaviour_tree_context
         )
 
         self.speed = 150

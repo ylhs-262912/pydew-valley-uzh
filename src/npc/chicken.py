@@ -1,10 +1,7 @@
 import pygame
 
 from src.npc.bases.chicken_base import ChickenBase
-from src.npc.behaviour.chicken_behaviour_tree import (
-    ChickenBehaviourTree,
-    ChickenBehaviourTreeContext
-)
+from src.npc.behaviour.chicken_behaviour_tree import ChickenIndividualContext
 from src.npc.setup import AIData
 from src.settings import Coordinate, AniFrames, LAYERS
 
@@ -27,8 +24,7 @@ class Chicken(ChickenBase):
             pf_grid=AIData.Grid,
             pf_finder=AIData.ChickenPathFinder,
 
+            behaviour_tree_context=ChickenIndividualContext(self),
+
             z=LAYERS["main"]
         )
-
-    def exit_idle(self):
-        ChickenBehaviourTree.tree.run(ChickenBehaviourTreeContext(self))

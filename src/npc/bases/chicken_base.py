@@ -8,6 +8,7 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.ai_behaviour import AIBehaviour
+from src.npc.behaviour.ai_behaviour_tree_base import ContextType
 from src.settings import Coordinate, AniFrames
 
 
@@ -22,6 +23,8 @@ class ChickenBase(Animal, AIBehaviour, ABC):
             pf_matrix: list[list[int]],
             pf_grid: Grid,
             pf_finder: AStarFinder,
+
+            behaviour_tree_context: ContextType,
 
             z: int
     ):
@@ -40,7 +43,9 @@ class ChickenBase(Animal, AIBehaviour, ABC):
             self,
             pf_matrix=pf_matrix,
             pf_grid=pf_grid,
-            pf_finder=pf_finder
+            pf_finder=pf_finder,
+
+            behaviour_tree_context=behaviour_tree_context
         )
 
         self.speed = 250
