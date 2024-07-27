@@ -37,7 +37,7 @@ from src.sprites.character import Character
 from src.sprites.particle import ParticleSprite
 from src.sprites.entities.player import Player
 from src.sprites.objects.tree import Tree
-from src.sprites.setup import EntityAssets, setup_entity_assets
+from src.sprites.setup import ENTITY_ASSETS, setup_entity_assets
 from src.support import map_coords_to_tile, load_data, resource_path
 
 
@@ -263,7 +263,7 @@ class Level:
     def setup_entity(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.entities[obj.name] = Player(
             pos=pos,
-            assets=EntityAssets.RABBIT,
+            assets=ENTITY_ASSETS.RABBIT,
             groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
@@ -276,7 +276,7 @@ class Level:
     def setup_npc(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.npcs[obj.name] = NPC(
             pos=pos,
-            assets=EntityAssets.RABBIT,
+            assets=ENTITY_ASSETS.RABBIT,
             groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
@@ -288,14 +288,14 @@ class Level:
         if obj.name == "Chicken":
             self.animals.append(Chicken(
                 pos=pos,
-                assets=EntityAssets.CHICKEN,
+                assets=ENTITY_ASSETS.CHICKEN,
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
             ))
         elif obj.name == "Cow":
             self.animals.append(Cow(
                 pos=pos,
-                assets=EntityAssets.COW,
+                assets=ENTITY_ASSETS.COW,
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
 

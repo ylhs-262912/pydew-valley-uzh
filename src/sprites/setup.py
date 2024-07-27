@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import pygame
 
@@ -23,7 +24,7 @@ class _AniFrames:
         return len(self.frames)
 
 
-EntityAsset = dict[EntityState, dict[Direction, _AniFrames]]
+type EntityAsset = dict[EntityState, dict[Direction, _AniFrames]]
 
 
 class _Hitbox:
@@ -176,10 +177,11 @@ def entity_importer(
     return states
 
 
-class EntityAssets:
-    CHICKEN: EntityAsset
-    COW: EntityAsset
-    RABBIT: EntityAsset
+ENTITY_ASSETS = SimpleNamespace()
+
+ENTITY_ASSETS.CHICKEN: EntityAsset | None = None  # type: ignore
+ENTITY_ASSETS.COW: EntityAsset | None = None  # type: ignore
+ENTITY_ASSETS.RABBIT: EntityAsset | None = None  # type: ignore
 
 
 def setup_entity_assets():
@@ -195,9 +197,7 @@ def setup_entity_assets():
         hitbox=chicken_hitbox
     )
 
-    EntityAssets.CHICKEN = EntityAsset(
-        chicken_asset
-    )
+    ENTITY_ASSETS.CHICKEN = chicken_asset
 
     cow_hitbox = _Hitbox(pygame.Rect(6, 25, 16, 4))
     cow_hitbox.set_direction_exception(
@@ -211,9 +211,7 @@ def setup_entity_assets():
         hitbox=cow_hitbox
     )
 
-    EntityAssets.COW = EntityAsset(
-        cow_asset
-    )
+    ENTITY_ASSETS.COW = cow_asset
 
     rabbit_hitbox = _Hitbox(pygame.Rect(18, 26, 12, 6))
     rabbit_hitbox.set_direction_exception(
@@ -236,6 +234,4 @@ def setup_entity_assets():
         hitbox=rabbit_hitbox
     )
 
-    EntityAssets.RABBIT = EntityAsset(
-        rabbit_asset
-    )
+    ENTITY_ASSETS.RABBIT = rabbit_asset
