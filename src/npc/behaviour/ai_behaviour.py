@@ -8,7 +8,6 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
 from src.settings import SCALED_TILE_SIZE
-from src.support import screen_to_tile
 
 
 class AIBehaviour(AIBehaviourBase, ABC):
@@ -159,7 +158,11 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         # Get the next point in the path
         next_point = self.pf_path[0]
-        current_point = screen_to_tile(self.rect.center)
+        # current exact NPC position on the tilemap
+        current_point = (
+            self.rect.centerx / SCALED_TILE_SIZE,
+            self.rect.centery / SCALED_TILE_SIZE
+        )
 
         # remaining distance the NPC moves in the current frame
         remaining_distance = self.speed * dt / SCALED_TILE_SIZE
