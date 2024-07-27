@@ -7,7 +7,7 @@
  <tileset firstgid="294" source="../tilesets/Paths.tsx"/>
  <tileset firstgid="310" source="../tilesets/Basic_Furniture.tsx"/>
  <tileset firstgid="364" source="../tilesets/Chest.tsx"/>
- <tileset firstgid="454" source="../tilesets/trees and bushes.tsx"/>
+ <tileset firstgid="454" source="../tilesets/trees_and_bushes.tsx"/>
  <tileset firstgid="531" source="../tilesets/objects.tsx"/>
  <tileset firstgid="579" source="../tilesets/Interaction.tsx"/>
  <tileset firstgid="581" source="../tilesets/grass_tileset.tsx"/>

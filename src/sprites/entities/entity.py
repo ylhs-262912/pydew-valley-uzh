@@ -201,14 +201,14 @@ class Entity(CollideableSprite, ABC):
         """
         self.frame_index += 4 * dt
 
-    def prepare_for_update(self):
+    def _prepare_for_update(self):
         # Updating all attributes necessary for updating the Entity
         self.last_hitbox_rect.update(self.hitbox_rect)
         self.get_state()
         self.get_facing_direction()
 
     def update(self, dt: float):
-        self.prepare_for_update()
+        self._prepare_for_update()
 
         if self.focused_indicator:
             self.focused_indicator.rect.update(

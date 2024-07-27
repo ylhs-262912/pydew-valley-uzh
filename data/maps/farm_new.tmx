@@ -9,7 +9,7 @@
  <tileset firstgid="214" source="../tilesets/Barn structures.tsx"/>
  <tileset firstgid="226" source="../tilesets/Bush_Tiles.tsx"/>
  <tileset firstgid="347" source="../tilesets/hill_tileset.tsx"/>
- <tileset firstgid="424" source="../tilesets/trees and bushes.tsx"/>
+ <tileset firstgid="424" source="../tilesets/trees_and_bushes.tsx"/>
  <tileset firstgid="501" source="../tilesets/Water_troughs.tsx"/>
  <tileset firstgid="507" source="../tilesets/Grass_Tile_layers2.tsx"/>
  <tileset firstgid="584" source="../tilesets/Wooden_House_Walls_Tileset_modified.tsx"/>

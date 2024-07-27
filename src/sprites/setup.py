@@ -23,20 +23,7 @@ class _AniFrames:
         return len(self.frames)
 
 
-@dataclass
-class _EntityStateAsset:
-    _data: dict[Direction, _AniFrames]
-
-    def __getitem__(self, direction: Direction) -> _AniFrames:
-        return self._data[direction]
-
-
-@dataclass
-class EntityAsset:
-    _data: dict[EntityState, dict[Direction, _AniFrames]]
-
-    def __getitem__(self, state: EntityState) -> dict[Direction, _AniFrames]:
-        return self._data[state]
+EntityAsset = dict[EntityState, dict[Direction, _AniFrames]]
 
 
 class _Hitbox:
@@ -124,71 +111,6 @@ class _Hitbox:
                 )
 
 
-class EntityAssets:
-    CHICKEN: EntityAsset
-    COW: EntityAsset
-    RABBIT: EntityAsset
-
-    @classmethod
-    def setup(cls):
-        chicken_hitbox = _Hitbox(pygame.Rect(1, 11, 11, 3))
-        chicken_hitbox.set_direction_exception(
-            Direction.LEFT, pygame.Rect(4, 11, 11, 3)
-        )
-
-        chicken_asset = entity_importer(
-            path=resource_path("images/entities/chicken"),
-            size=16,
-            directions=[Direction.RIGHT],
-            hitbox=chicken_hitbox
-        )
-
-        cls.CHICKEN = EntityAsset(
-            chicken_asset
-        )
-
-        cow_hitbox = _Hitbox(pygame.Rect(6, 25, 16, 4))
-        cow_hitbox.set_direction_exception(
-            Direction.LEFT, pygame.Rect(10, 25, 16, 4)
-        )
-
-        cow_asset = entity_importer(
-            path=resource_path("images/entities/cow"),
-            size=32,
-            directions=[Direction.RIGHT],
-            hitbox=cow_hitbox
-        )
-
-        cls.COW = EntityAsset(
-            cow_asset
-        )
-
-        rabbit_hitbox = _Hitbox(pygame.Rect(18, 26, 12, 6))
-        rabbit_hitbox.set_direction_exception(
-            Direction.LEFT, pygame.Rect(20, 26, 8, 6)
-        )
-        rabbit_hitbox.set_direction_exception(
-            Direction.RIGHT, pygame.Rect(20, 26, 8, 6)
-        )
-        rabbit_hitbox.set_exception(
-            EntityState.AXE, Direction.LEFT, pygame.Rect(24, 26, 8, 6)
-        )
-        rabbit_hitbox.set_exception(
-            EntityState.AXE, Direction.RIGHT, pygame.Rect(16, 26, 8, 6)
-        )
-
-        rabbit_asset = entity_importer(
-            path=resource_path("images/characters/rabbit"),
-            size=CHAR_TILE_SIZE,
-            directions=[Direction.DOWN, Direction.UP, Direction.LEFT],
-            hitbox=rabbit_hitbox
-        )
-
-        cls.RABBIT = EntityAsset(
-            rabbit_asset
-        )
-
-
 def state_importer(
         path: str, size: int, state: EntityState, directions: list[Direction],
         hitbox: _Hitbox
@@ -255,3 +177,68 @@ def entity_importer(
                 hitbox=hitbox,
             )
     return states
+
+
+class EntityAssets:
+    CHICKEN: EntityAsset
+    COW: EntityAsset
+    RABBIT: EntityAsset
+
+
+def setup_entity_assets():
+    chicken_hitbox = _Hitbox(pygame.Rect(1, 11, 11, 3))
+    chicken_hitbox.set_direction_exception(
+        Direction.LEFT, pygame.Rect(4, 11, 11, 3)
+    )
+
+    chicken_asset = entity_importer(
+        path=resource_path("images/entities/chicken"),
+        size=16,
+        directions=[Direction.RIGHT],
+        hitbox=chicken_hitbox
+    )
+
+    EntityAssets.CHICKEN = EntityAsset(
+        chicken_asset
+    )
+
+    cow_hitbox = _Hitbox(pygame.Rect(6, 25, 16, 4))
+    cow_hitbox.set_direction_exception(
+        Direction.LEFT, pygame.Rect(10, 25, 16, 4)
+    )
+
+    cow_asset = entity_importer(
+        path=resource_path("images/entities/cow"),
+        size=32,
+        directions=[Direction.RIGHT],
+        hitbox=cow_hitbox
+    )
+
+    EntityAssets.COW = EntityAsset(
+        cow_asset
+    )
+
+    rabbit_hitbox = _Hitbox(pygame.Rect(18, 26, 12, 6))
+    rabbit_hitbox.set_direction_exception(
+        Direction.LEFT, pygame.Rect(20, 26, 8, 6)
+    )
+    rabbit_hitbox.set_direction_exception(
+        Direction.RIGHT, pygame.Rect(20, 26, 8, 6)
+    )
+    rabbit_hitbox.set_exception(
+        EntityState.AXE, Direction.LEFT, pygame.Rect(24, 26, 8, 6)
+    )
+    rabbit_hitbox.set_exception(
+        EntityState.AXE, Direction.RIGHT, pygame.Rect(16, 26, 8, 6)
+    )
+
+    rabbit_asset = entity_importer(
+        path=resource_path("images/characters/rabbit"),
+        size=CHAR_TILE_SIZE,
+        directions=[Direction.DOWN, Direction.UP, Direction.LEFT],
+        hitbox=rabbit_hitbox
+    )
+
+    EntityAssets.RABBIT = EntityAsset(
+        rabbit_asset
+    )

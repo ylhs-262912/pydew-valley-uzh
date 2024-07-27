@@ -37,7 +37,7 @@ from src.sprites.character import Character
 from src.sprites.particle import ParticleSprite
 from src.sprites.entities.player import Player
 from src.sprites.objects.tree import Tree
-from src.sprites.setup import EntityAssets
+from src.sprites.setup import EntityAssets, setup_entity_assets
 from src.support import map_coords_to_tile, load_data, resource_path
 
 
@@ -171,7 +171,7 @@ class Level:
         self.setup_object_layer('Interactions', self.setup_interaction)
 
         self.setup_object_layer('Collisions', self.setup_collision)
-        EntityAssets.setup()
+        setup_entity_assets()
         self.setup_object_layer('Entities', self.setup_entity)
 
         if SETUP_PATHFINDING:
@@ -410,6 +410,7 @@ class Level:
                 return True
             if event.key == hitbox_key:
                 self.show_hitbox_active = not self.show_hitbox_active
+                return True
 
         return False
 

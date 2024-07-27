@@ -172,7 +172,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
                 # the NPC reached its current target position
                 self.pf_path.pop(0)
 
-            if not len(self.pf_path):
+            if not self.pf_path:
                 # the NPC has completed its path
                 self.complete_path()
                 break
