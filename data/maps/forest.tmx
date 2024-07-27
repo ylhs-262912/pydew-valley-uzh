@@ -820,5 +820,7 @@
   <object id="367" x="322" y="128" width="28" height="2"/>
   <object id="368" x="220" y="90" width="16" height="6"/>
   <object id="369" x="204" y="106" width="16" height="6"/>
+  <object id="385" x="545" y="381" width="14" height="19"/>
+  <object id="386" x="597" y="384" width="11" height="16"/>
  </objectgroup>
 </map>

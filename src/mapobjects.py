@@ -19,11 +19,15 @@ class MapObjectType:
 class MapObjects:
     objects: dict[int, MapObjectType]
 
-    def __init__(self, tileset: Tileset):
-        self.objects = get_object_hitboxes(tileset.value)
+    def __init__(self, *tilesets: Tileset):
+        self.objects = {}
+        for tileset in tilesets:
+            self.objects.update(get_object_hitboxes(tileset))
 
 
-def _get_obj_hitbox(obj: ElementTree.Element, path: str = "") -> MapObjectType | None:
+def _get_obj_hitbox(
+        obj: ElementTree.Element, path: str = ""
+) -> MapObjectType | None:
     _return_object = MapObjectType()
     if obj.tag == "tile":
         _return_object.id = int(obj.attrib.get("id"))
@@ -42,10 +46,10 @@ def _get_obj_hitbox(obj: ElementTree.Element, path: str = "") -> MapObjectType |
             hitbox = objectgroup.find("object")
             if hitbox is not None:
                 _return_object.hitbox = pygame.FRect(
-                    int(hitbox.attrib.get("x")) * SCALE_FACTOR,
-                    int(hitbox.attrib.get("y")) * SCALE_FACTOR,
-                    int(hitbox.attrib.get("width")) * SCALE_FACTOR,
-                    int(hitbox.attrib.get("height")) * SCALE_FACTOR
+                    float(hitbox.attrib.get("x")) * SCALE_FACTOR,
+                    float(hitbox.attrib.get("y")) * SCALE_FACTOR,
+                    float(hitbox.attrib.get("width")) * SCALE_FACTOR,
+                    float(hitbox.attrib.get("height")) * SCALE_FACTOR
                 )
         else:
             _return_object.hitbox = pygame.FRect(
@@ -64,10 +68,10 @@ def get_object_hitboxes(path_to_tileset: str) -> dict[int, MapObjectType]:
     to the first hitbox created with the Tiled Tile Collision Editor.
     If no hitbox is found, it uses the dimensions of the Tile's image.
 
-    This function is currently experimental and has only been tested with rectangular hitboxes.
-    It is also currently limited to integer values within the dimensions of the hitbox.
+    This function currently only works with rectangular hitboxes.
 
-    :return: Dictionary mapping the IDs of all tiles in a given tileset to its hitbox (x, y, width, height)
+    :return: Dictionary mapping the IDs of all tiles in a given tileset to its
+             hitbox (x, y, width, height)
     """
     tree = ElementTree.parse(path_to_tileset)
     root = tree.getroot()

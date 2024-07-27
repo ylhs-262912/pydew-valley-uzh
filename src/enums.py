@@ -244,4 +244,5 @@ class Tileset(StrEnum):
     HILL = "data/tilesets/hill_tileset.tsx"
     HOUSE = "data/tilesets/house_tileset.tsx"
     OBJECTS = "data/tilesets/objects.tsx"
+    TREES_AND_BUSHES = "data/tilesets/trees and bushes.tsx"
     SOIL = "data/tilesets/soil_tileset.tsx"

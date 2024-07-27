@@ -137,8 +137,6 @@ class Level:
                 for _ in range(self.pf_matrix_size[1])
             ]
 
-        self.map_objects = MapObjects(Tileset.OBJECTS)
-
         if self.current_map == Map.FARM:
             self.setup_tile_layer('Lower ground', self.setup_environment)
             self.setup_tile_layer('Upper ground', self.setup_environment)
@@ -147,19 +145,21 @@ class Level:
             self.setup_tile_layer('Water_decoration', self.setup_environment)
             self.setup_tile_layer('Hills', self.setup_environment)
             self.setup_tile_layer('Paths', self.setup_environment)
-            self.setup_tile_layer('House_ground', self.setup_house)
+            self.setup_tile_layer('House_ground', self.setup_environment)
             self.setup_tile_layer('House_walls', self.setup_house)
-            self.setup_tile_layer('House_furniture_bottom', self.setup_house)
+            self.setup_tile_layer('House_furniture_bottom', self.setup_environment)
             self.setup_tile_layer('House_furniture_top', self.setup_house)
             self.setup_tile_layer('Border', self.setup_border)
 
         self.setup_tile_layer('Water', self.setup_water)
 
         if self.current_map == Map.FARM:
+            self.map_objects = MapObjects(Tileset.OBJECTS)
             self.setup_object_layer(
                 'Collidable objects', self.setup_collideable_object
             )
         else:
+            self.map_objects = MapObjects(Tileset.OBJECTS, Tileset.TREES_AND_BUSHES)
             self.setup_object_layer(
                 'Decorative', self.setup_collideable_object
             )
