@@ -3,7 +3,7 @@ from abc import ABC
 import pygame
 
 from src.enums import Layer
-from src.mapobjects import MapObjectType
+from src.map_objects import MapObjectType
 from src.settings import SCALE_FACTOR
 
 

@@ -7,7 +7,7 @@ from src.enums import Direction, EntityState, Layer
 from src.gui.interface import indicators
 from src.sprites.base import CollideableSprite, Sprite
 from src.sprites.setup import EntityAsset
-from src.support import screen_to_tile
+from src.support import screen_to_tile, get_entity_facing_direction
 
 
 class Entity(CollideableSprite, ABC):
@@ -61,7 +61,8 @@ class Entity(CollideableSprite, ABC):
 
         self.last_hitbox_rect = self.hitbox_rect
 
-        # Axe hitbox, which allows for independent usage of the axe by any entity (player or NPC)
+        # Axe hitbox, which allows for independent usage of the axe by any
+        # entity (player or NPC)
         self.axe_hitbox = pygame.Rect(0, 0, 32, 32)
 
     def _update_axe_hitbox(self):
@@ -126,25 +127,20 @@ class Entity(CollideableSprite, ABC):
             self.state = EntityState.IDLE
 
     def get_facing_direction(self):
-        # prioritizes vertical animations, flip if statements to get horizontal
-        # ones
-        if self.direction.x:
-            if self.direction.x > 0:
-                self.facing_direction = Direction.RIGHT
-            else:
-                self.facing_direction = Direction.LEFT
-        if self.direction.y:
-            if self.direction.y > 0:
-                self.facing_direction = Direction.DOWN
-            else:
-                self.facing_direction = Direction.UP
+        self.facing_direction = get_entity_facing_direction(
+            self.direction, self.facing_direction
+        )
+        self._update_axe_hitbox()
 
     def get_target_pos(self):
         return screen_to_tile(self.hitbox_rect.center)
 
     def focus(self):
         self.focused = True
-        self.focused_indicator = Sprite((0, 0), indicators.ENTITY_FOCUSED, self.groups()[0], Layer.EMOTES)
+        self.focused_indicator = Sprite(
+            (0, 0), indicators.ENTITY_FOCUSED, (self.groups()[0],),
+            Layer.EMOTES
+        )
 
     def unfocus(self):
         self.focused = False
@@ -158,7 +154,8 @@ class Entity(CollideableSprite, ABC):
 
     def check_collision(self):
         """
-        :return: true: Entity collides with a sprite in self.collision_sprites, otherwise false
+        :return: true: Entity collides with a sprite in self.collision_sprites,
+        otherwise false
         """
         colliding_rect = None
 
@@ -214,9 +211,11 @@ class Entity(CollideableSprite, ABC):
         self.prepare_for_update()
 
         if self.focused_indicator:
-            self.focused_indicator.rect.update((self.rect.centerx - self.focused_indicator.rect.width / 2,
-                                                self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
-                                               self.focused_indicator.rect.size)
+            self.focused_indicator.rect.update(
+             (self.rect.centerx - self.focused_indicator.rect.width / 2,
+              self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
+             self.focused_indicator.rect.size
+            )
         self.move(dt)
         self.animate(dt)
         self.image = self._current_frame

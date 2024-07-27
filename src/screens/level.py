@@ -1,5 +1,4 @@
 import math
-import sys
 from collections.abc import Callable
 from random import randint
 
@@ -11,7 +10,7 @@ from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 from src.enums import FarmingTool, GameState, Tileset, Layer, Map
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
-from src.mapobjects import MapObjects
+from src.map_objects import MapObjects
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow
 from src.npc.npc import NPC
@@ -23,7 +22,6 @@ from src.overlay.transition import Transition
 from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
-    TILE_SIZE,
     SCALE_FACTOR,
     SCALED_TILE_SIZE,
     TEST_ANIMALS,
@@ -265,7 +263,7 @@ class Level:
     def setup_entity(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.entities[obj.name] = Player(
             pos=pos,
-            assets=EntityAssets.Rabbit,
+            assets=EntityAssets.RABBIT,
             groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
@@ -278,7 +276,7 @@ class Level:
     def setup_npc(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         self.npcs[obj.name] = NPC(
             pos=pos,
-            assets=EntityAssets.Rabbit,
+            assets=EntityAssets.RABBIT,
             groups=(self.all_sprites, self.collision_sprites,),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
@@ -290,14 +288,14 @@ class Level:
         if obj.name == "Chicken":
             self.animals.append(Chicken(
                 pos=pos,
-                assets=EntityAssets.Chicken,
+                assets=EntityAssets.CHICKEN,
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
             ))
         elif obj.name == "Cow":
             self.animals.append(Cow(
                 pos=pos,
-                assets=EntityAssets.Cow,
+                assets=EntityAssets.COW,
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
 

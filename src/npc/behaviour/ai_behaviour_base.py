@@ -64,3 +64,7 @@ class AIBehaviourBase(Entity, ABC):
     @abstractmethod
     def exit_moving(self):
         pass
+
+    @abstractmethod
+    def move(self, dt: float):
+        pass

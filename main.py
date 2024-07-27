@@ -103,7 +103,6 @@ class Game:
             'objects': support.import_folder_dict('images/objects')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
-
         self.frames = {
             "emotes": self.emotes,
             'level': self.level_frames,

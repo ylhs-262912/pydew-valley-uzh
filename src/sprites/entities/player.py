@@ -57,8 +57,6 @@ class Player(Character):
             apply_tool=apply_tool
         )
 
-        self.hitbox_rect = pygame.FRect()
-
         # movement
         self.controls = Controls
         self.load_controls()
@@ -231,7 +229,9 @@ class Player(Character):
 
         self.rect.update(
             (self.hitbox_rect.x - self._current_hitbox.x,
-             self.hitbox_rect.y - self._current_hitbox.y), self.rect.size)
+             self.hitbox_rect.y - self._current_hitbox.y),
+            self.rect.size
+        )
 
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()

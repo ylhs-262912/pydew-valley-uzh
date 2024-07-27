@@ -4,14 +4,22 @@ import pygame
 
 from src import timer
 from src.enums import InventoryResource, Layer
-from src.mapobjects import MapObjectType
-from src.settings import SCALE_FACTOR, APPLE_POS
+from src.map_objects import MapObjectType
+from src.settings import APPLE_POS
 from src.sprites.base import Sprite, CollideableMapObject
 from src.support import generate_particle_surf
 
 
 class Tree(CollideableMapObject):
-    def __init__(self, pos, object_type: MapObjectType, groups, name, apple_surf, stump_surf):
+    def __init__(
+            self,
+            pos: tuple[int, int],
+            object_type: MapObjectType,
+            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+            name: str,
+            apple_surf: pygame.Surface,
+            stump_surf: pygame.Surface
+    ):
         super().__init__(
             pos,
             object_type,
@@ -39,7 +47,6 @@ class Tree(CollideableMapObject):
             self.image = self.stump_surf
             if self.alive:
                 self.rect = self.image.get_frect(midbottom=self.rect.midbottom)
-                self.hitbox = self.rect.inflate(-10, -self.rect.height * 0.6)
                 self.alive = False
         elif self.health >= 0 and self.alive:
             self.image = self.surf

@@ -5,6 +5,7 @@ import pygame
 
 from src.enums import Direction, EntityState
 from src.settings import SCALE_FACTOR, CHAR_TILE_SIZE
+from src.support import resource_path
 
 
 @dataclass
@@ -125,9 +126,9 @@ class _Hitbox:
 
 
 class EntityAssets:
-    Chicken: EntityAsset
-    Cow: EntityAsset
-    Rabbit: EntityAsset
+    CHICKEN: EntityAsset
+    COW: EntityAsset
+    RABBIT: EntityAsset
 
     @classmethod
     def setup(cls):
@@ -137,13 +138,13 @@ class EntityAssets:
         )
 
         chicken_asset = entity_importer(
-            path="images/entities/chicken",
+            path=resource_path("images/entities/chicken"),
             size=16,
             directions=[Direction.RIGHT],
             hitbox=chicken_hitbox
         )
 
-        cls.Chicken = EntityAsset(
+        cls.CHICKEN = EntityAsset(
             chicken_asset
         )
 
@@ -153,13 +154,13 @@ class EntityAssets:
         )
 
         cow_asset = entity_importer(
-            path="images/entities/cow",
+            path=resource_path("images/entities/cow"),
             size=32,
             directions=[Direction.RIGHT],
             hitbox=cow_hitbox
         )
 
-        cls.Cow = EntityAsset(
+        cls.COW = EntityAsset(
             cow_asset
         )
 
@@ -178,21 +179,15 @@ class EntityAssets:
         )
 
         rabbit_asset = entity_importer(
-            path="images/characters/rabbit",
+            path=resource_path("images/characters/rabbit"),
             size=CHAR_TILE_SIZE,
             directions=[Direction.DOWN, Direction.UP, Direction.LEFT],
             hitbox=rabbit_hitbox
         )
 
-        cls.Rabbit = EntityAsset(
+        cls.RABBIT = EntityAsset(
             rabbit_asset
         )
-
-
-_StateHitboxTypes = (
-        dict[Direction, list[pygame.Rect] | pygame.Rect]
-        | pygame.Rect
-)
 
 
 def state_importer(

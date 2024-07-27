@@ -110,9 +110,8 @@ class TextBox(pygame.sprite.Sprite):
         ]
         self.image.fblits(blit_list)
     
-    def draw(self, screen, offset):
-        screen.blit(self.image, self.rect)
-
+    def draw(self, display_surface: pygame.Surface, offset: pygame.Vector2):
+        display_surface.blit(self.image, self.rect)
 
 
 def prepare_tb_image(cname_surf: pygame.Surface, txt_surf: pygame.Surface):

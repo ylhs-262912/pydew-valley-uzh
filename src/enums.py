@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, StrEnum, auto, nonmember  # noqa
+from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
 
 class PlayerState(IntEnum):
