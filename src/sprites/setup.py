@@ -111,7 +111,6 @@ class _Hitbox:
         return exception
 
     def scale_hitboxes(self, factor: float) -> None:
-        print(self._state_exceptions, self._direction_exceptions, self._exceptions, self.default)
         for item in [self._state_exceptions.values(),
                      self._direction_exceptions.values(),
                      self._exceptions.values(),
