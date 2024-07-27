@@ -124,17 +124,14 @@ def state_importer(
         frames = []
 
         for col in range(surf.get_width() // size):
-            cutout_surf = pygame.Surface((size, size), pygame.SRCALPHA)
-            cutout_rect = pygame.Rect(
+            subsurface = surf.subsurface(
                 col * size,
                 row * size,
                 size,
                 size
             )
-
-            cutout_surf.blit(surf, (0, 0), cutout_rect)
-            frames.append(
-                pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
+            subsurface = pygame.transform.scale_by(subsurface, SCALE_FACTOR)
+            frames.append(subsurface)
 
         current_hitbox = hitbox.get_hitbox(state, direction)
         directions_dict[direction] = _AniFrames(
