@@ -152,16 +152,9 @@ class Entity(CollideableSprite, ABC):
             self.focused_indicator.kill()
             self.focused_indicator = None
 
+    @abstractmethod
     def move(self, dt: float):
-        # x
-        x_movement = self.direction.x * self.speed * dt
-        self.rect.x += int(x_movement)
-
-        # y
-        y_movement = self.direction.y * self.speed * dt
-        self.rect.y += int(y_movement)
-
-        self.check_collision()
+        pass
 
     def check_collision(self):
         """
