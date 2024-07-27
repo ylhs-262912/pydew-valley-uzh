@@ -93,9 +93,15 @@
  </tile>
  <tile id="24">
   <image source="../../images/objects/water_lilies.png" width="16" height="15"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="0" width="16" height="15"/>
+  </objectgroup>
  </tile>
  <tile id="25">
   <image source="../../images/objects/water_lily.png" width="13" height="9"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="0" width="13" height="9"/>
+  </objectgroup>
  </tile>
  <tile id="26">
   <image source="../../images/objects/water_rock.png" width="16" height="12"/>
@@ -186,9 +192,15 @@
  </tile>
  <tile id="42">
   <image source="../../images/objects/weed_0.png" width="8" height="6"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="3" y="3" width="2" height="2"/>
+  </objectgroup>
  </tile>
  <tile id="43">
   <image source="../../images/objects/weed_1.png" width="13" height="13"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="3" y="3" width="7" height="9"/>
+  </objectgroup>
  </tile>
  <tile id="44">
   <image source="../../images/objects/weed_2.png" width="14" height="10"/>

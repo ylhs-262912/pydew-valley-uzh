@@ -7,7 +7,7 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.enums import FarmingTool, GameState, Tileset, Layer, Map
+from src.enums import FarmingTool, GameState, Layer, Map
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.map_objects import MapObjects
@@ -151,13 +151,13 @@ class Level:
 
         self.setup_tile_layer('Water', self.setup_water)
 
+        self.map_objects = MapObjects(self.tmx_maps[self.current_map])
+
         if self.current_map == Map.FARM:
-            self.map_objects = MapObjects(Tileset.OBJECTS)
             self.setup_object_layer(
                 'Collidable objects', self.setup_collideable_object
             )
         else:
-            self.map_objects = MapObjects(Tileset.OBJECTS, Tileset.TREES_AND_BUSHES)
             self.setup_object_layer(
                 'Decorative', self.setup_collideable_object
             )
@@ -234,11 +234,11 @@ class Level:
             stump_frames = self.frames['level']['objects']['stump']
 
             Tree(pos,
-                 self.map_objects.objects[obj.properties.get("id")],
+                 self.map_objects[obj.gid],
                  (self.all_sprites, self.collision_sprites, self.tree_sprites),
                  obj.name, apple_frames, stump_frames)
         else:
-            object_type = self.map_objects.objects[obj.properties.get("id")]
+            object_type = self.map_objects[obj.gid]
 
             CollideableMapObject(
                 pos, object_type, (self.all_sprites, self.collision_sprites)
