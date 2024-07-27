@@ -87,11 +87,6 @@ class Game:
         self.tmx_maps = support.tmx_importer('data/maps')
 
         # frames
-        self.character_frames = support.entity_importer(
-            'images/characters', 48,
-            [Direction.DOWN, Direction.UP, Direction.RIGHT]
-        )
-
         self.emotes = support.animation_importer(
             "images/ui/emotes/sprout_lands",
             frame_size=EMOTE_SIZE, resize=EMOTE_SIZE

@@ -10,7 +10,6 @@ import pytmx
 from src import settings
 from src.enums import Direction
 from src.settings import (
-    CHAR_TILE_SIZE,
     SCALE_FACTOR,
     TILE_SIZE,
 )

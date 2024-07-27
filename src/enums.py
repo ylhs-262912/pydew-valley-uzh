@@ -202,7 +202,7 @@ class SeedType(IntEnum):
 
 
 class Direction(IntEnum):
-    UP = auto()
+    UP = 0
     RIGHT = auto()
     DOWN = auto()
     LEFT = auto()

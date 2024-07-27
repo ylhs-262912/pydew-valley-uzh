@@ -21,7 +21,6 @@ class Entity(CollideableSprite, ABC):
     direction: pygame.Vector2
     speed: int
     collision_sprites: pygame.sprite.Group
-    plant_collide_rect: pygame.Rect
 
     def __init__(
             self,

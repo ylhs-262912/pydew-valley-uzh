@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import pygame
 
 from src.enums import Direction, EntityState
-from src.settings import SCALE_FACTOR
+from src.settings import SCALE_FACTOR, CHAR_TILE_SIZE
 
 
 @dataclass
@@ -179,7 +179,7 @@ class EntityAssets:
 
         rabbit_asset = entity_importer(
             path="images/characters/rabbit",
-            size=48,
+            size=CHAR_TILE_SIZE,
             directions=[Direction.DOWN, Direction.UP, Direction.LEFT],
             hitbox=rabbit_hitbox
         )
@@ -240,7 +240,7 @@ def state_importer(
             frame = pygame.transform.flip(frame, True, False)
             frames.append(frame)
         hitbox = hitbox.get_hitbox(state, Direction.LEFT)
-        directions_dict[Direction.RIGHT] = _AniFrames(frames, hitbox)
+        directions_dict[Direction.LEFT] = _AniFrames(frames, hitbox)
     return directions_dict
 
 
