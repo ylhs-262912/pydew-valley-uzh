@@ -444,9 +444,9 @@ class Level:
         self.display_surface.fill((130, 168, 132))
         self.all_sprites.draw(self.player.rect.center)
         self.sky.display(dt)
-        self.day_transition.draw()
         self.draw_overlay()
-
+        self.day_transition.draw()
+        
     # update
     def update_rain(self):
         if self.raining and not self.shop_active:
