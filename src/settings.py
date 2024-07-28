@@ -28,7 +28,7 @@ EMOTE_SIZE = 48
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 
 OVERLAY_POSITIONS = {
-    'tool': (79, 150),
+    'tool': (86, 150),
     'seed': (47, 142),
     'clock': (SCREEN_WIDTH - 10, 10)}
 
