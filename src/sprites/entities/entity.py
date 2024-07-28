@@ -67,16 +67,16 @@ class Entity(CollideableSprite, ABC):
 
     def _update_axe_hitbox(self):
         match self.facing_direction:
-            case "down":
+            case Direction.DOWN:
                 self.axe_hitbox.x = self.rect.centerx - 24
                 self.axe_hitbox.y = self.rect.centery + 24
-            case "up":
+            case Direction.UP:
                 self.axe_hitbox.x = self.rect.centerx - 8
                 self.axe_hitbox.bottom = self.rect.centery - 24
-            case "left":
+            case Direction.LEFT:
                 self.axe_hitbox.right = self.rect.centerx - 16
                 self.axe_hitbox.y = self.rect.centery + 8
-            case "right":
+            case Direction.RIGHT:
                 self.axe_hitbox.x = self.rect.centerx + 16
                 self.axe_hitbox.y = self.rect.centery + 8
 
