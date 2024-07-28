@@ -443,9 +443,9 @@ class Level:
     def draw(self, dt):
         self.display_surface.fill((130, 168, 132))
         self.all_sprites.draw(self.player.rect.center)
-        self.draw_overlay()
         self.sky.display(dt)
         self.day_transition.draw()
+        self.draw_overlay()
 
     # update
     def update_rain(self):
