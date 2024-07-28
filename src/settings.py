@@ -28,8 +28,9 @@ EMOTE_SIZE = 48
 GROW_SPEED = {'corn': 1, 'tomato': 0.7}
 
 OVERLAY_POSITIONS = {
-    'tool': (40, SCREEN_HEIGHT - 15),
-    'seed': (70, SCREEN_HEIGHT - 5)}
+    'tool': (86, 150),
+    'seed': (47, 142),
+    'clock': (SCREEN_WIDTH - 10, 10)}
 
 APPLE_POS = {
     'small': [(18, 17), (30, 37), (12, 50), (30, 45), (20, 30), (30, 10)],

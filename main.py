@@ -17,7 +17,7 @@ from src.settings import (
     CHAR_TILE_SIZE,
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
-from src.gui.health_bar import HealthProgressBar
+
 
 class Game:
     def __init__(self):
@@ -70,9 +70,6 @@ class Game:
             # GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
-
-        # progress bar
-        self.health_bar = HealthProgressBar(100)
 
     def switch_state(self, state: GameState):
         self.current_state = state
@@ -169,8 +166,6 @@ class Game:
             self.event_loop()
 
             self.level.update(dt)
-
-            self.health_bar.update(self.display_surface, dt)
 
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
