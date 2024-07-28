@@ -152,3 +152,7 @@ class Controls(Control, Enum):
     def all_controls(cls) -> Generator[Control, None, None]:
         """:return: A generator which yields all Controls members."""
         return (getattr(cls, i.name) for i in cls)
+    
+    @classmethod
+    def length(cls) -> int:
+        return len(list(cls.all_controls()))

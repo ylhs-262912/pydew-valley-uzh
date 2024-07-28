@@ -104,6 +104,12 @@ class KeybindsDescription(Description):
         save_data(self.controls.as_dict(), 'keybinds.json')
 
     def create_keybinds(self):
+
+        margin = 10
+        self.description_slider_surface = pygame.Surface((600, 60 * self.controls.length() + 2*margin))
+        self.description_slider_rect = self.description_slider_surface.get_rect()
+        self.description_slider_surface.set_colorkey('green')
+
         self.keys_group.clear()
         index = 0
         for control in self.controls.all_controls():
