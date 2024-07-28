@@ -124,86 +124,98 @@ class AIBehaviour(AIBehaviourBase, ABC):
         return True
 
     def move(self, dt: float):
-        # current NPC position on the tilemap
-        tile_coord = pygame.Vector2(
-            self.rect.centerx, self.rect.centery
-        ) / SCALED_TILE_SIZE
+        self.hitbox_rect.update(
+            (self.rect.x + self._current_hitbox.x,
+             self.rect.y + self._current_hitbox.y),
+            self._current_hitbox.size
+        )
 
         if self.pf_state == AIState.IDLE:
-            self.pf_state_duration -= dt
-
-            if self.pf_state_duration <= 0:
-                self.exit_idle()
+            self.update_idle(dt)
 
         if self.pf_state == AIState.MOVING:
-            if not self.pf_path:
-                # runs in case the path has been emptied in the meantime
-                #  (e.g. NPCBehaviourMethods.wander_to_interact created a path
-                #   to a tile adjacent to the NPC)
-                self.complete_path()
-                return
-
-            next_position = (tile_coord.x, tile_coord.y)
-
-            # remaining distance the NPC moves in the current frame
-            remaining_distance = self.speed * dt / SCALED_TILE_SIZE
-
-            while remaining_distance:
-                if next_position == self.pf_path[0]:
-                    # the NPC reached its current target position
-                    self.pf_path.pop(0)
-
-                if not len(self.pf_path):
-                    # the NPC has completed its path
-                    self.complete_path()
-                    break
-
-                # x- and y-distances from the NPCs current position to its
-                # target position
-                dx = self.pf_path[0][0] - next_position[0]
-                dy = self.pf_path[0][1] - next_position[1]
-
-                distance = (dx ** 2 + dy ** 2) ** 0.5
-
-                if remaining_distance >= distance:
-                    # the NPC reaches its current target position in the
-                    # current frame
-                    next_position = self.pf_path[0]
-                    remaining_distance -= distance
-                else:
-                    # the NPC does not reach its current target position in the
-                    # current frame, so it continues to move towards it
-                    next_position = (
-                        next_position[0] + dx * remaining_distance / distance,
-                        next_position[1] + dy * remaining_distance / distance
-                    )
-                    remaining_distance = 0
-
-                    # Rounding the direction leads to smoother animations,
-                    #  e.g. if the distance vector was (-0.99, -0.01), the NPC
-                    #  would face upwards, although it moves much more to the
-                    #  left than upwards, as the get_facing_direction method
-                    #  favors vertical movement
-                    self.direction.update((round(dx / distance),
-                                           round(dy / distance)))
-
-            self.hitbox_rect.update((
-                next_position[0] * SCALED_TILE_SIZE - self.hitbox_rect.width/2,
-                self.hitbox_rect.top,
-            ), self.hitbox_rect.size)
-            colliding = self.collision('horizontal')
-
-            self.hitbox_rect.update((
-                self.hitbox_rect.left,
-                next_position[1] * SCALED_TILE_SIZE - self.hitbox_rect.height/2
-            ), self.hitbox_rect.size)
-            colliding = colliding or self.collision('vertical')
-
-            if colliding:
-                self.abort_path()
+            self.update_moving(dt)
 
         self.rect.update(
-            (self.hitbox_rect.centerx - self.rect.width / 2,
-             self.hitbox_rect.centery - self.rect.height / 2), self.rect.size
+            (self.hitbox_rect.x - self._current_hitbox.x,
+             self.hitbox_rect.y - self._current_hitbox.y),
+            self.rect.size
         )
-        self.plant_collide_rect.center = self.hitbox_rect.center
+
+    def update_idle(self, dt: float):
+        self.pf_state_duration -= dt
+
+        if self.pf_state_duration <= 0:
+            self.exit_idle()
+
+    def update_moving(self, dt: float):
+        if not self.pf_path:
+            # runs in case the path has been emptied in the meantime
+            #  (e.g. NPCBehaviourMethods.wander_to_interact created a path
+            #   to a tile adjacent to the NPC)
+            self.complete_path()
+            return
+
+        # Get the next point in the path
+        next_point = self.pf_path[0]
+        # current exact NPC position on the tilemap
+        current_point = (
+            self.rect.centerx / SCALED_TILE_SIZE,
+            self.rect.centery / SCALED_TILE_SIZE
+        )
+
+        # remaining distance the NPC moves in the current frame
+        remaining_distance = self.speed * dt / SCALED_TILE_SIZE
+
+        while remaining_distance:
+            if current_point == next_point:
+                # the NPC reached its current target position
+                self.pf_path.pop(0)
+
+            if not self.pf_path:
+                # the NPC has completed its path
+                self.complete_path()
+                break
+
+            next_point = self.pf_path[0]
+
+            # x- and y-distances from the NPCs current position to its
+            # target position
+            dx = next_point[0] - current_point[0]
+            dy = next_point[1] - current_point[1]
+
+            distance = (dx ** 2 + dy ** 2) ** 0.5
+
+            if remaining_distance >= distance:
+                # the NPC reaches its current target position in the
+                # current frame
+                current_point = next_point
+                remaining_distance -= distance
+            else:
+                # the NPC does not reach its current target position in the
+                # current frame, so it continues to move towards it
+                current_point = (
+                    current_point[0] + dx * remaining_distance / distance,
+                    current_point[1] + dy * remaining_distance / distance
+                )
+                remaining_distance = 0
+
+                # Rounding the direction leads to smoother animations,
+                #  e.g. if the distance vector was (-0.99, -0.01), the NPC
+                #  would face upwards, although it moves much more to the
+                #  left than upwards, as the get_facing_direction method
+                #  favors vertical movement
+                self.direction.update((round(dx / distance),
+                                       round(dy / distance)))
+
+        self.hitbox_rect.update((
+            current_point[0] * SCALED_TILE_SIZE
+            - self.rect.width / 2 + self._current_hitbox.x,
+            current_point[1] * SCALED_TILE_SIZE
+            - self.rect.height / 2 + self._current_hitbox.y
+        ), self.hitbox_rect.size)
+
+        self.check_collision()
+
+        if self.is_colliding:
+            self.abort_path()

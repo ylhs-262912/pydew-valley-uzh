@@ -19,6 +19,7 @@ from src.settings import (
 )
 
 
+
 class Game:
     def __init__(self):
         # main setup
@@ -83,11 +84,6 @@ class Game:
         self.tmx_maps = support.tmx_importer('data/maps')
 
         # frames
-        self.character_frames = support.entity_importer(
-            'images/characters', 48,
-            [Direction.DOWN, Direction.UP, Direction.RIGHT]
-        )
-
         self.emotes = support.animation_importer(
             "images/ui/emotes/sprout_lands",
             frame_size=EMOTE_SIZE, resize=EMOTE_SIZE
@@ -104,31 +100,11 @@ class Game:
             'objects': support.import_folder_dict('images/objects')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
-        self.character_frames = support.entity_importer(
-            'images/characters', CHAR_TILE_SIZE,
-            [Direction.DOWN, Direction.UP, Direction.LEFT]
-        )
-        self.chicken_frames = support.entity_importer(
-            "images/entities/chicken", 16, [Direction.RIGHT]
-        )
-        self.cow_frames = support.entity_importer(
-            "images/entities/cow", 32, [Direction.RIGHT]
-        )
         self.frames = {
-            'character': self.character_frames,
             "emotes": self.emotes,
-            "entities": {
-                "chicken": self.chicken_frames,
-                "cow": self.cow_frames
-            },
             'level': self.level_frames,
             'overlay': self.overlay_frames
         }
-
-        # The chicken idle animation looks kinda weird,
-        #  that's why the second frame is getting removed
-        self.frames["entities"]["chicken"]["idle"][Direction.LEFT].pop(1)
-        self.frames["entities"]["chicken"]["idle"][Direction.RIGHT].pop(1)
 
         setup_gui()
 

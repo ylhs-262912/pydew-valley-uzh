@@ -16,6 +16,7 @@ from src.npc.behaviour.cow_flee_behaviour_tree import (
 from src.npc.setup import AIData
 from src.settings import Coordinate, AniFrames, SCALED_TILE_SIZE
 from src.sprites.character import Character
+from src.sprites.setup import EntityAsset
 from src.support import get_flight_matrix
 
 
@@ -23,7 +24,7 @@ class Cow(CowBase):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
 
@@ -31,7 +32,7 @@ class Cow(CowBase):
     ):
         super().__init__(
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
 

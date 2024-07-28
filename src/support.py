@@ -10,7 +10,6 @@ import pytmx
 from src import settings
 from src.enums import Direction
 from src.settings import (
-    CHAR_TILE_SIZE,
     SCALE_FACTOR,
     TILE_SIZE,
 )
@@ -98,76 +97,6 @@ def animation_importer(*ani_path: str, frame_size: int = None, resize: int = Non
                     )
 
     return animation_dict
-
-
-def _single_file_importer(
-        *sc_path: str, size: int, directions: list[str]
-) -> settings.AniFrames:
-    char_dict = {}
-    full_path = os.path.join(*sc_path)
-    surf = pygame.image.load(full_path).convert_alpha()
-    for row, dirct in enumerate(directions):
-        char_dict[dirct] = []
-        for col in range(surf.get_width() // size):
-            cutout_surf = pygame.Surface((size, size), pygame.SRCALPHA)
-            cutout_rect = pygame.Rect(
-                col * size,
-                row * size,
-                size,
-                size)
-            cutout_surf.blit(surf, (0, 0), cutout_rect)
-            char_dict[dirct].append(
-                pygame.transform.scale_by(cutout_surf, SCALE_FACTOR))
-
-    if "left" in directions and "right" not in directions:
-        char_dict['right'] = [pygame.transform.flip(
-            surf, True, False) for surf in char_dict['left']]
-    elif "right" in directions and "left" not in directions:
-        char_dict['left'] = [pygame.transform.flip(
-            surf, True, False) for surf in char_dict['right']]
-    return char_dict
-
-
-def _single_folder_importer(path: str, size: int, directions: list[Direction]):
-    folder = {}
-    for folder_path, sub_folders, file_names in os.walk(path):
-        for file_name in file_names:
-            folder[file_name.split('.')[0]] = (
-                _single_file_importer(
-                    os.path.join(folder_path, file_name),
-                    size=size,
-                    directions=directions,
-                )
-            )
-    return folder
-
-
-def entity_importer(
-        chr_path: str, size: int, directions: list[Direction]
-) -> dict[str, settings.AniFrames]:
-    # create dict with subfolders
-    char_dict = {}
-    for _, sub_folders, _ in os.walk(resource_path(chr_path)):
-        if sub_folders:
-            char_dict = {folder: {} for folder in sub_folders}
-
-    if char_dict:
-        # go through all found characters
-        # and use _single_folder_importer to get their frames
-        for char, frame_dict in char_dict.items():
-            char_dict[char] = _single_folder_importer(
-                os.path.join(resource_path(chr_path), char),
-                size=size,
-                directions=directions
-            )
-    else:
-        # import the frames of a single character
-        char_dict = _single_folder_importer(
-            resource_path(chr_path),
-            size=size,
-            directions=directions
-        )
-    return char_dict
 
 
 def sound_importer(
@@ -329,6 +258,7 @@ def get_entity_facing_direction(
     if direction[1]:
         return Direction.DOWN if direction[1] > 0 else Direction.UP
     return default_value
+
 
 def oscilating_lerp(a: float | int, b: float | int, t: float) -> float:
     """returns a value smoothly iterpolated from a to b and back to a"""

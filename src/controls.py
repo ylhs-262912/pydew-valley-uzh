@@ -93,6 +93,7 @@ class Controls(Control, Enum):
     PLANT = (pygame.K_RETURN, "Plant Current Seed")
     INTERACT = (pygame.K_i, "Interact")
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
+    SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
 
     @classmethod
     def as_dict(cls) -> dict[str, dict[str, str | int]]:

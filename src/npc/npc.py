@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import random
 from typing import Callable
 
 import pygame
@@ -14,18 +13,16 @@ from src.npc.behaviour.npc_behaviour_tree import (
 )
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
-from src.settings import (
-    SCALE_FACTOR, SCALED_TILE_SIZE,
-    Coordinate, AniFrames
-)
+from src.settings import Coordinate
 from src.sprites.character import Character
+from src.sprites.setup import EntityAsset
 
 
 class NPC(NPCBase):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
@@ -40,7 +37,7 @@ class NPC(NPCBase):
 
         super().__init__(
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
 

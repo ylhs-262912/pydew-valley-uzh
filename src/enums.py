@@ -201,16 +201,20 @@ class SeedType(IntEnum):
         return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
 
 
-class Direction(StrEnum):
-    UP = "up"
-    RIGHT = "right"
-    DOWN = "down"
-    LEFT = "left"
+class Direction(IntEnum):
+    UP = 0
+    RIGHT = auto()
+    DOWN = auto()
+    LEFT = auto()
 
 
 class EntityState(StrEnum):
     IDLE = "idle"
     WALK = "walk"
+
+    AXE = "axe"
+    HOE = "hoe"
+    WATER = "water"
 
 
 class Layer(IntEnum):

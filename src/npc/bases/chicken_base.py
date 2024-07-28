@@ -8,14 +8,15 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.ai_behaviour import AIBehaviour
-from src.settings import Coordinate, AniFrames
+from src.settings import Coordinate
+from src.sprites.setup import EntityAsset
 
 
 class ChickenBase(Animal, AIBehaviour, ABC):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
 
@@ -28,11 +29,9 @@ class ChickenBase(Animal, AIBehaviour, ABC):
         Animal.__init__(
             self,
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
-
-            shrink=(30, 30),
 
             z=z
         )

@@ -10,8 +10,9 @@ from pathfinding.finder.a_star import AStarFinder
 from src.enums import FarmingTool
 from src.npc.behaviour.ai_behaviour import AIBehaviour
 from src.overlay.soil import SoilLayer
-from src.settings import Coordinate, AniFrames
+from src.settings import Coordinate
 from src.sprites.character import Character
+from src.sprites.setup import EntityAsset
 
 
 class NPCBase(Character, AIBehaviour, ABC):
@@ -20,7 +21,7 @@ class NPCBase(Character, AIBehaviour, ABC):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
 
@@ -37,7 +38,7 @@ class NPCBase(Character, AIBehaviour, ABC):
         Character.__init__(
             self,
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
 
@@ -51,4 +52,4 @@ class NPCBase(Character, AIBehaviour, ABC):
             pf_finder=pf_finder
         )
 
-        self.speed = 150
+        self.speed = 250

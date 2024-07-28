@@ -7,7 +7,7 @@
  <tileset firstgid="294" source="../tilesets/Paths.tsx"/>
  <tileset firstgid="310" source="../tilesets/Basic_Furniture.tsx"/>
  <tileset firstgid="364" source="../tilesets/Chest.tsx"/>
- <tileset firstgid="454" source="../tilesets/trees and bushes.tsx"/>
+ <tileset firstgid="454" source="../tilesets/trees_and_bushes.tsx"/>
  <tileset firstgid="531" source="../tilesets/objects.tsx"/>
  <tileset firstgid="579" source="../tilesets/Interaction.tsx"/>
  <tileset firstgid="581" source="../tilesets/grass_tileset.tsx"/>
@@ -820,5 +820,7 @@
   <object id="367" x="322" y="128" width="28" height="2"/>
   <object id="368" x="220" y="90" width="16" height="6"/>
   <object id="369" x="204" y="106" width="16" height="6"/>
+  <object id="385" x="545" y="381" width="14" height="19"/>
+  <object id="386" x="597" y="384" width="11" height="16"/>
  </objectgroup>
 </map>

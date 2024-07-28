@@ -21,15 +21,9 @@ class AllSprites(pygame.sprite.Group):
         self.offset.y = -(target_pos[1] - SCREEN_HEIGHT / 2)
 
         sorted_sprites = sorted(self.sprites(),
-                                key=lambda spr: spr.rect.centery)
+                                key=lambda spr: spr.hitbox_rect.centery)
 
         for layer in Layer:
             for sprite in sorted_sprites:
                 if sprite.z == layer:
-                    self.display_surface.blit(
-                        sprite.image,
-                        sprite.rect.topleft + (
-                            self.offset if not isinstance(sprite, TextBox)
-                            else (0, 0)
-                        )
-                    )
+                    sprite.draw(self.display_surface, self.offset)

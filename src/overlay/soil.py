@@ -6,7 +6,7 @@ from pytmx import TiledMap
 from src.enums import SeedType, Layer
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
-from src.sprites.plant import Plant
+from src.sprites.objects.plant import Plant
 from src.settings import TILE_SIZE, SCALE_FACTOR, SoundDict
 
 

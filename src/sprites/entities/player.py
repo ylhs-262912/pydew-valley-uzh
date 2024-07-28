@@ -9,9 +9,10 @@ from src.controls import Controls
 from src.enums import InventoryResource, FarmingTool, ItemToUse
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import AniFrames, Coordinate, SoundDict
+from src.settings import Coordinate, SoundDict
 from src.sprites.character import Character
-from src.sprites.entity import Entity
+from src.sprites.entities.entity import Entity
+from src.sprites.setup import EntityAsset
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
@@ -34,7 +35,7 @@ class Player(Character):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
@@ -50,7 +51,7 @@ class Player(Character):
 
         super().__init__(
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
             apply_tool=apply_tool
@@ -216,12 +217,21 @@ class Player(Character):
                     self.emote_manager.toggle_emote_wheel()
 
     def move(self, dt: float):
+        self.hitbox_rect.update(
+            (self.rect.x + self._current_hitbox.x,
+             self.rect.y + self._current_hitbox.y),
+            self._current_hitbox.size
+        )
+
         self.hitbox_rect.x += self.direction.x * self.speed * dt
-        self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
-        self.collision('vertical')
-        self.rect.center = self.hitbox_rect.center
-        self.plant_collide_rect.center = self.hitbox_rect.center
+        self.check_collision()
+
+        self.rect.update(
+            (self.hitbox_rect.x - self._current_hitbox.x,
+             self.hitbox_rect.y - self._current_hitbox.y),
+            self.rect.size
+        )
 
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()

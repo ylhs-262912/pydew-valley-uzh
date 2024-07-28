@@ -7,7 +7,7 @@ from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
 )
-from src.sprites.player import Player
+from src.sprites.entities.player import Player
 
 
 # TODO: Refactor this class
