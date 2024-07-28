@@ -106,7 +106,8 @@ class KeybindsDescription(Description):
     def create_keybinds(self):
 
         margin = 10
-        self.description_slider_surface = pygame.Surface((600, 60 * self.controls.length() + 2*margin))
+        size = (600, 60 * self.controls.length() + 2*margin)
+        self.description_slider_surface = pygame.Surface((size))
         self.description_slider_rect = self.description_slider_surface.get_rect()
         self.description_slider_surface.set_colorkey('green')
 
