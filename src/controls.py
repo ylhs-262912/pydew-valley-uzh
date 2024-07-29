@@ -82,15 +82,16 @@ class Controls(Control, Enum):
     Enum which groups all Control instances of the game.
     """
 
+
     UP = (pygame.K_UP, "Move Up")
     DOWN = (pygame.K_DOWN, "Move Down")
     LEFT = (pygame.K_LEFT, "Move Left")
     RIGHT = (pygame.K_RIGHT, "Move Right")
 
-    USE = (pygame.K_SPACE, "Use Tool")
+    USE = (pygame.BUTTON_LEFT, "Use Tool")
     NEXT_TOOL = (pygame.K_TAB, "Cycle Tools")
     NEXT_SEED = (pygame.K_LSHIFT, "Cycle Seeds")
-    PLANT = (pygame.K_RETURN, "Plant Current Seed")
+    PLANT = (pygame.BUTTON_RIGHT, "Plant Seed")
     INTERACT = (pygame.K_i, "Interact")
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
     SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
@@ -152,3 +153,7 @@ class Controls(Control, Enum):
     def all_controls(cls) -> Generator[Control, None, None]:
         """:return: A generator which yields all Controls members."""
         return (getattr(cls, i.name) for i in cls)
+    
+    @classmethod
+    def length(cls) -> int:
+        return len(list(cls.all_controls()))
