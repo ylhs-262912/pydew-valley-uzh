@@ -20,6 +20,28 @@ from src.settings import (
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
 
+_COSMETICS = frozenset(
+    {
+        "goggles",
+        "horn",
+        "necklace",
+        "hat"
+    }
+)
+# Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed
+_COSMETIC_SCALE_FACTORS = {
+    "goggles": 2,
+    "horn": 4,
+    "necklace": 2,
+    "hat": 3
+}
+_COSMETIC_SUBSURF_AREAS = {
+    "goggles": pygame.Rect(0, 0, 27, 16),
+    "horn": pygame.Rect(32, 0, 16, 16),
+    "necklace": pygame.Rect(0, 16, 21, 22),
+    "hat": pygame.Rect(24, 16, 20, 11)
+}
+
 
 class Game:
     def __init__(self):
@@ -36,6 +58,7 @@ class Game:
         self.level_frames: dict | None = None
         self.tmx_maps: MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
+        self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
 
         # assets
@@ -109,10 +132,21 @@ class Game:
             'objects': support.import_folder_dict('images/objects')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
+        cosmetic_surf = pygame.image.load(
+            support.resource_path("images/cosmetics.png")
+        ).convert_alpha()
+        for cosmetic in _COSMETICS:
+            self.cosmetic_frames[cosmetic] = pygame.transform.scale_by(
+                cosmetic_surf.subsurface(
+                    _COSMETIC_SUBSURF_AREAS[cosmetic]
+                ),
+                _COSMETIC_SCALE_FACTORS[cosmetic]
+            )
         self.frames = {
             "emotes": self.emotes,
             'level': self.level_frames,
-            'overlay': self.overlay_frames
+            'overlay': self.overlay_frames,
+            "cosmetics": self.cosmetic_frames
         }
 
         setup_gui()

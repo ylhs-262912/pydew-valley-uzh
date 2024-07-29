@@ -7,7 +7,7 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.enums import FarmingTool, GameState, Layer, Map
+from src.enums import FarmingTool, GameState, Layer, Map, SeedType
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.map_objects import MapObjects
@@ -356,9 +356,9 @@ class Level:
                 if plant.harvestable and is_player_near:
 
                     # add resource
-                    ressource = plant.seed_type
+                    ressource: SeedType = plant.seed_type
                     quantity = 3
-                    self.player.add_resource(ressource, quantity)
+                    self.player.add_resource(ressource.as_nonseed_ir(), quantity)
 
                     # update grid
                     x, y = map_coords_to_tile(plant.rect.center)

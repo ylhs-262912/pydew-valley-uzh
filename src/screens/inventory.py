@@ -61,6 +61,7 @@ class InventoryMenu(AbstractMenu):
         self.assign_seed = assign_seed
         self.overlay_frames = frames["overlay"]
         self.obj_frames = frames["level"]["objects"]
+        self.cosmetic_frames = frames["cosmetics"]
         # Splitting this into three lists, because
         # the inventory's content can get updated with new resources,
         # and if tools are progressively handed over to the player,
