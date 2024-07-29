@@ -135,9 +135,12 @@ class Player(Character):
         mouse_pressed = pygame.mouse.get_pressed()
 
         for control in self.controls.all_controls():
-            mouse_event = 1 <= control.control_value <= len(mouse_pressed)
-            if mouse_event:
-                control.hold = mouse_pressed[control.control_value - 1]
+            is_mouse_event = control.control_value in (1, 2, 3)
+
+            if is_mouse_event:
+                is_event_active = mouse_pressed[control.control_value - 1]
+                control.click = is_event_active
+                control.hold = is_event_active
             else:
                 control.click = keys_just_pressed[control.control_value]
                 control.hold = keys_pressed[control.control_value]
