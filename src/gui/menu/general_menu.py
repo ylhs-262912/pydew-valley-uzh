@@ -7,8 +7,7 @@ from pygame.mouse import get_pressed as mouse_buttons
 from src.enums import GameState
 from src.gui.menu.components import Button
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.support import resource_path
-from src.gui.abstract_menu import AbstractMenu
+from src.gui.menu.abstract_menu import AbstractMenu
 
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)

@@ -3,6 +3,7 @@ import sys
 import pygame
 from pytmx import TiledMap
 
+from src.events import OPEN_INVENTORY
 from src import support
 from src.enums import GameState, Direction
 from src.gui.setup import setup_gui
@@ -12,12 +13,12 @@ from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
+from src.screens.inventory import InventoryMenu
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
     CHAR_TILE_SIZE,
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
-
 
 
 class Game:
@@ -58,6 +59,8 @@ class Game:
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
+        self.inventory_menu = InventoryMenu(self.player, self.frames, self.switch_state,
+                                            self.player.assign_tool, self.player.assign_seed)
 
         # dialog
         self.dm = DialogueManager(self.level.all_sprites)
@@ -68,12 +71,18 @@ class Game:
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
+            GameState.INVENTORY: self.inventory_menu
             # GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
     def switch_state(self, state: GameState):
         self.current_state = state
+        if self.current_state == GameState.SAVE_AND_RESUME:
+            self.level.player.save()
+            self.current_state = GameState.LEVEL
+        if self.current_state == GameState.INVENTORY:
+            self.inventory_menu.refresh_buttons_content()
         if self.game_paused():
             self.player.blocked = True
             self.player.direction.update((0, 0))
@@ -133,6 +142,8 @@ class Game:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == OPEN_INVENTORY:
+            self.switch_state(GameState.INVENTORY)
         return False
 
     def run(self):

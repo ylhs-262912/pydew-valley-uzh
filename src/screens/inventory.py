@@ -1,7 +1,7 @@
 import pygame  # noqa
-from src.gui.abstract_menu import AbstractMenu
+from src.gui.menu.abstract_menu import AbstractMenu
 from src.enums import FarmingTool, InventoryResource, GameState
-from src.gui.components import ImageButton
+from src.gui.menu.components import ImageButton
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from itertools import chain
 from operator import itemgetter
@@ -27,6 +27,7 @@ _SECTION_TITLES = (
     "Tools",
     "Equipment"
 )
+_AVAILABLE_TOOLS = ("axe", "hoe", "water")
 _get_resource_count = itemgetter(1)
 
 
@@ -54,7 +55,7 @@ class InventoryMenu(AbstractMenu):
     ):
         super().__init__("Inventory", (SCREEN_WIDTH, 800))
         self._inventory = player.inventory
-        self._av_tools = player.available_tools
+        self._av_tools = _AVAILABLE_TOOLS
         self.switch_screen = switch_screen
         self.assign_tool = assign_tool
         self.assign_seed = assign_seed
@@ -168,7 +169,7 @@ class InventoryMenu(AbstractMenu):
             )
         )
 
-    def handle_events(self, event):
+    def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)

@@ -2,11 +2,12 @@ import sys
 import pygame
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from src.support import resource_path
-from src.gui.components import Button
+from src.gui.menu.components import Button
 from src.enums import GameState
 from pygame.mouse import get_pressed as mouse_buttons
 from pygame.math import Vector2 as vector
 from abc import ABC, abstractmethod
+from src.events import post_event
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
@@ -54,16 +55,13 @@ class AbstractMenu(ABC):
     def button_setup(self):
         pass
 
-    def handle_events(self, event: pygame.event.Event):
+    def handle_event(self, event: pygame.event.Event):
         pass
 
     # setup
     def rect_setup(self):
         self.rect = pygame.Rect((0, 0), self.size)
         self.rect.center = self.center or _SCREEN_CENTER
-
-    def handle_events(self, event):
-        pass
 
     def click(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
@@ -82,8 +80,7 @@ class AbstractMenu(ABC):
                 self.pressed_button = None
 
     def quit_game(self):
-        pygame.quit()
-        sys.exit()
+        post_event(pygame.QUIT)
 
     # events
     def event_loop(self):
@@ -93,7 +90,7 @@ class AbstractMenu(ABC):
                 self.quit_game()
 
             self.click(event)
-            self.handle_events(event)
+            self.handle_event(event)
 
     def update_buttons(self, dt):
         for button in self.buttons:

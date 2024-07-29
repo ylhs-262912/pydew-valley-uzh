@@ -4,6 +4,7 @@ from typing import Callable, Type
 
 import pygame  # noqa
 
+from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
 from src.enums import InventoryResource, FarmingTool, ItemToUse
@@ -141,6 +142,18 @@ class Player(Character):
                 control.click = keys_just_pressed[control.control_value]
                 control.hold = keys_pressed[control.control_value]
 
+    def assign_seed(self, seed: str):
+        computed_value = FarmingTool.from_serialised_string(seed)
+        if not computed_value.is_seed():
+            raise ValueError("given value is not a seed type")
+        self.current_seed = computed_value
+
+    def assign_tool(self, tool: str):
+        computed_value = FarmingTool.from_serialised_string(tool)
+        if computed_value.is_seed():
+            raise ValueError("given value is a seed")
+        self.current_tool = computed_value
+
     def handle_controls(self):
         self.update_controls()
 
@@ -195,6 +208,9 @@ class Player(Character):
             # interact
             if self.controls.INTERACT.click:
                 self.interact()
+
+            if self.controls.INVENTORY.click:
+                post_event(OPEN_INVENTORY)
 
         # emotes
         if not self.blocked:

@@ -382,7 +382,7 @@ class Level:
                     entity,
                     self.tree_sprites,
                     False,
-                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(tree_spr.rect)
+                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(tree_spr.hitbox_rect)
                 ):
                     tree.hit(entity)
                     self.sounds["axe"].play()

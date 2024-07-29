@@ -92,6 +92,7 @@ class Controls(Control, Enum):
     NEXT_SEED = (pygame.K_LSHIFT, "Cycle Seeds")
     PLANT = (pygame.K_RETURN, "Plant Current Seed")
     INTERACT = (pygame.K_i, "Interact")
+    INVENTORY = (pygame.K_r, "Open Inventory")
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
     SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
 
