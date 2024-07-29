@@ -82,7 +82,6 @@ class Controls(Control, Enum):
     Enum which groups all Control instances of the game.
     """
 
-
     UP = (pygame.K_UP, "Move Up")
     DOWN = (pygame.K_DOWN, "Move Down")
     LEFT = (pygame.K_LEFT, "Move Left")
@@ -92,8 +91,8 @@ class Controls(Control, Enum):
     NEXT_TOOL = (pygame.K_TAB, "Cycle Tools")
     NEXT_SEED = (pygame.K_LSHIFT, "Cycle Seeds")
     PLANT = (pygame.BUTTON_RIGHT, "Plant Seed")
-    INTERACT = (pygame.K_i, "Interact")
-    INVENTORY = (pygame.K_r, "Open Inventory")
+    INTERACT = (pygame.K_SPACE, "Interact")
+    INVENTORY = (pygame.K_i, "Open Inventory")
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
     SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
 

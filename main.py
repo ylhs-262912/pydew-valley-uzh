@@ -13,7 +13,7 @@ from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
-from src.screens.inventory import InventoryMenu
+from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
     CHAR_TILE_SIZE,
@@ -146,8 +146,12 @@ class Game:
             "emotes": self.emotes,
             'level': self.level_frames,
             'overlay': self.overlay_frames,
-            "cosmetics": self.cosmetic_frames
+            "cosmetics": self.cosmetic_frames,
+            "checkmark": pygame.transform.scale_by(pygame.image.load(
+                support.resource_path("images/checkmark.png")
+            ).convert_alpha(), 4)
         }
+        prepare_checkmark_for_buttons(self.frames["checkmark"])
 
         setup_gui()
 

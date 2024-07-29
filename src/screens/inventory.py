@@ -1,11 +1,11 @@
 import pygame  # noqa
 from src.gui.menu.abstract_menu import AbstractMenu
-from src.enums import FarmingTool, InventoryResource, GameState
-from src.gui.menu.components import ImageButton
+from src.enums import FarmingTool, InventoryResource, GameState, StudyGroup
+from src.gui.menu.components import Button, ImageButton
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from itertools import chain
 from operator import itemgetter
-from typing import Callable
+from typing import Callable, Any
 
 
 class _IMButton(ImageButton):
@@ -16,6 +16,64 @@ class _IMButton(ImageButton):
     @property
     def text(self):
         return self._name
+
+
+_EQUIP_BTN_CHECKMARK_FRECT_KWARGS = (
+    {"bottomright": (64, 64)},
+    {"bottomleft": (0, 64)}
+)
+
+
+class _EquipButton(_IMButton):
+    _CHECKMARK: pygame.Surface | None = None
+    _get_checkmark_rect: Callable[[dict[str, Any]], pygame.FRect] | None = None
+
+    @classmethod
+    def set_checkmark_surf(cls, surf: pygame.Surface):
+        cls._CHECKMARK = surf
+        cls._get_checkmark_rect = surf.get_frect
+
+    def __prepare_contents(self, draw_checkmark_to_left: bool):
+        img_to_calculate = self._contents[0]
+        surf = pygame.Surface((64, 64), pygame.SRCALPHA)
+        img_rect = img_to_calculate.get_frect(center=(32, 32))
+        blit_list = [
+            (img_to_calculate, img_rect),
+            (
+                self._CHECKMARK,
+                self._get_checkmark_rect(
+                    **_EQUIP_BTN_CHECKMARK_FRECT_KWARGS[draw_checkmark_to_left]
+                )
+            )
+        ]
+        surf.fblits(blit_list)
+        self._contents[1] = surf
+
+    def __init__(
+            self,
+            content: pygame.Surface,
+            rect: pygame.Rect,
+            name: str,
+            selected: bool = False,
+            draw_checkmark_to_left: bool = False
+    ):
+        self._contents = [content, None]
+        self.__prepare_contents(draw_checkmark_to_left)
+        super().__init__(self._contents[selected], rect, name)
+        self._selected = selected
+
+    @property
+    def selected(self):
+        return self._selected
+
+    @selected.setter
+    def selected(self, val: bool):
+        self.content = self._contents[val]
+        self._selected = val
+
+
+def prepare_checkmark_for_buttons(surf: pygame.Surface):
+    _EquipButton.set_checkmark_surf(surf)
 
 
 _SPACING_BETWEEN_ROWS = 20
@@ -54,6 +112,7 @@ class InventoryMenu(AbstractMenu):
             assign_seed: Callable
     ):
         super().__init__("Inventory", (SCREEN_WIDTH, 800))
+        self.player = player
         self._inventory = player.inventory
         self._av_tools = _AVAILABLE_TOOLS
         self.switch_screen = switch_screen
@@ -66,9 +125,10 @@ class InventoryMenu(AbstractMenu):
         # the inventory's content can get updated with new resources,
         # and if tools are progressively handed over to the player,
         # the same requirement might appear for tools and personal items
+        self._assignable_irs = set()
         self._inv_buttons = []
         self._ft_buttons = []
-        self.button_setup()
+        self.button_setup(player)
 
     def _prepare_img_for_ir_button(self, ir: InventoryResource, count: int):
         match ir:
@@ -88,7 +148,7 @@ class InventoryMenu(AbstractMenu):
         calc_img.fblits(blit_list)  # faster than doing two separate blits
         return calc_img, btn_name
 
-    def _inventory_part_btn_setup(self, button_size: tuple[int, int]):
+    def _inventory_part_btn_setup(self, player, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to see
         # how many of each resource they gathered,
         # and possibly assign them as their current seed
@@ -108,9 +168,15 @@ class InventoryMenu(AbstractMenu):
             btn_rect = generic_rect.copy()
             btn_rect.x = _LEFT_MARGIN + button_size[0] * column + x_spacing * column
             btn_rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * row
-            yield _IMButton(calc_img, btn_rect, btn_name)
+            if ir.is_seed():
+                # Keep track of equip buttons so we can toggle whether they display
+                # a checkmark when equipped
+                self._assignable_irs.add(btn_name)
+                yield _EquipButton(calc_img, btn_rect, btn_name, player.current_seed == FarmingTool(ir), True)
+            else:
+                yield _IMButton(calc_img, btn_rect, btn_name)
 
-    def _ft_btn_setup(self, button_size: tuple[int, int]):
+    def _ft_btn_setup(self, player, button_size: tuple[int, int]):
         # Portion of the menu to allow the player to select their current tool.
         rect = pygame.Rect((0, 0), button_size)
         rect.centerx = (self.rect.width / 2)
@@ -120,23 +186,63 @@ class InventoryMenu(AbstractMenu):
             calc_img.blit(img, img.get_frect(center=(32, 32)))
             btn_rect = rect.copy()
             btn_rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * index
-            yield _IMButton(calc_img, btn_rect, tool)
+            yield _EquipButton(calc_img, btn_rect, tool, player.current_tool.as_serialised_string() == tool)
 
-    def _special_btn_setup(self):
-        # TODO: this part requires separate icons for the goggles, the hat and all special items.
+    def _special_btn_setup(self, player, button_size: tuple[int, int]):
         # Part of the menu for items such as the goggles, the hat, etc.
-        pass
+
+        # Check which items should be listed in this section
+        buttons_to_display = []
+        if player.has_goggles is not None:
+            buttons_to_display.append("goggles")
+        match player.study_group:
+            # No items are shown if the player is not in a group yet (StudyGroup.NO_GROUP)
+            case StudyGroup.INGROUP:
+                buttons_to_display.extend({"hat", "necklace"})
+            case StudyGroup.OUTGROUP:
+                buttons_to_display.append("horn")
+
+        # Should the player have absolutely no cosmetics on themselves
+        # whatsoever, show only one button with "No Equipment" on it
+        # and stop yielding buttons
+        if not buttons_to_display:
+            text_rect = self.font.render("No equipment", False, "black").get_rect(
+                centerx=self.rect.width * 3/4,
+                centery=self.rect.centery
+            )
+            yield Button("No equipment", text_rect, self.font)
+            return
+
+        generic_rect = pygame.Rect(0, 0, *button_size)
+        generic_rect.centerx = self.rect.width * 3/4
+        for i, btn_name in enumerate(buttons_to_display):
+            rect = generic_rect.copy()
+            rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * i
+            if btn_name == "goggles":
+                yield _EquipButton(
+                    self.cosmetic_frames["goggles"],
+                    rect,
+                    btn_name,
+                    player.has_goggles
+                )
+                continue
+            yield _IMButton(self.cosmetic_frames[btn_name], rect, btn_name)
 
     def button_action(self, text):
         if text in self._av_tools:
             self.assign_tool(text)
+            for btn in self._ft_buttons:
+                btn.selected = (btn.text == text)
         if "seed" in text:
             self.assign_seed(text)
+            if text in self._assignable_irs:
+                for btn in filter(lambda button: button.text in self._assignable_irs, self._inv_buttons):
+                    btn.selected = (btn.text == text)
 
-    def button_setup(self):
-        self._inv_buttons.extend(self._inventory_part_btn_setup(_BUTTON_SIZE))
+    def button_setup(self, player):
+        self._inv_buttons.extend(self._inventory_part_btn_setup(player, _BUTTON_SIZE))
         self.buttons.extend(self._inv_buttons)
-        self._ft_buttons.extend(self._ft_btn_setup(_BUTTON_SIZE))
+        self._ft_buttons.extend(self._ft_btn_setup(player, _BUTTON_SIZE))
         self.buttons.extend(self._ft_buttons)
 
     def draw_title(self):
@@ -157,12 +263,13 @@ class InventoryMenu(AbstractMenu):
         in case the values change."""
         for btn in chain(self._inv_buttons, self._ft_buttons):
             self.buttons.remove(btn)
+        self._assignable_irs.clear()
         self._inv_buttons.clear()
         self._ft_buttons.clear()
         self._inv_buttons.extend(
-            self._inventory_part_btn_setup(_BUTTON_SIZE)
+            self._inventory_part_btn_setup(self.player, _BUTTON_SIZE)
         )
-        self._ft_buttons.extend(self._ft_btn_setup(_BUTTON_SIZE))
+        self._ft_buttons.extend(self._ft_btn_setup(self.player, _BUTTON_SIZE))
         self.buttons.extend(
             chain(
                 self._inv_buttons,

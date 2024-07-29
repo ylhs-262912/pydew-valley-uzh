@@ -52,7 +52,7 @@ class AbstractMenu(ABC):
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
 
     @abstractmethod
-    def button_setup(self):
+    def button_setup(self, *args, **kwargs):
         pass
 
     def handle_event(self, event: pygame.event.Event):

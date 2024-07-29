@@ -247,3 +247,10 @@ class Layer(IntEnum):
 class Map(StrEnum):
     FARM = "farm"
     FOREST = "forest"
+
+
+class StudyGroup(IntEnum):
+    """The group in which a certain character belongs to."""
+    NO_GROUP = 0  # Set at the beginning of the game.
+    INGROUP = auto()
+    OUTGROUP = auto()

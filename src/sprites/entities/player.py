@@ -7,10 +7,10 @@ import pygame  # noqa
 from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
-from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, SoundDict
+from src.settings import Coordinate, SoundDict, GogglesStatus
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -66,6 +66,8 @@ class Player(Character):
         self.paused = False
         self.font = font
         self.interact = interact
+        self.has_goggles: GogglesStatus = save_data.get("goggles_status")
+        self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
 
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
@@ -117,7 +119,8 @@ class Player(Character):
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
         savefile.save(
-            self.current_tool, self.current_seed, self.money, compacted_inv
+            self.current_tool, self.current_seed, self.money, compacted_inv,
+            self.study_group, self.has_goggles
         )
 
     def load_controls(self):
