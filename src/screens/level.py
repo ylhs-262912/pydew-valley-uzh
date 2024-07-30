@@ -7,7 +7,8 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.enums import FarmingTool, GameState, Layer, Map, SeedType
+
+from src.enums import FarmingTool, GameState, Layer, Map, InventoryResource, SeedType
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.map_objects import MapObjects
@@ -38,6 +39,7 @@ from src.sprites.particle import ParticleSprite
 from src.sprites.entities.player import Player
 from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS, setup_entity_assets
+from src.sprites.drops import DropsManager
 from src.support import map_coords_to_tile, load_data, resource_path
 
 
@@ -67,6 +69,7 @@ class Level:
         self.collision_sprites = pygame.sprite.Group()
         self.tree_sprites = pygame.sprite.Group()
         self.interaction_sprites = pygame.sprite.Group()
+        self.drop_sprites = pygame.sprite.Group()
 
         # assets
         self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
@@ -98,9 +101,15 @@ class Level:
             self.emotes, (self.all_sprites,)
         )
 
+        # drops manager
+        self.drops_manager = DropsManager(self.all_sprites,
+                                          self.drop_sprites,
+                                          self.frames['level']['drops'])
+
         # setup map
         self.setup()
         self.player = self.entities['Player']
+        self.drops_manager.player = self.player
 
         # day night cycle
         self.day_transition = Transition(self.reset, self.finish_reset, dur=3200)
@@ -165,7 +174,7 @@ class Level:
                 'Vegetation', self.setup_collideable_object
             )
             self.setup_object_layer(
-                'Trees', self.setup_collideable_object
+                'Trees', self.setup_tree
             )
 
         self.setup_object_layer('Interactions', self.setup_interaction)
@@ -230,13 +239,7 @@ class Level:
 
     def setup_collideable_object(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         if obj.name == 'Tree':
-            apple_frames = self.frames['level']['objects']['apple']
-            stump_frames = self.frames['level']['objects']['stump']
-
-            Tree(pos,
-                 self.map_objects[obj.gid],
-                 (self.all_sprites, self.collision_sprites, self.tree_sprites),
-                 obj.name, apple_frames, stump_frames)
+            self.setup_tree(pos, obj)
         else:
             object_type = self.map_objects[obj.gid]
 
@@ -303,6 +306,31 @@ class Level:
             ))
         else:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")
+
+    def setup_tree(self, pos, obj):
+        props = obj.properties
+        if props.get("type") == "tree":
+            if props.get("size") == "medium" and props.get("breakable"):
+                fruit = props.get("fruit_type")
+                if fruit == "no_fruit":
+                    fruit_type, fruit_frames = None, None
+                else:
+                    fruit_type = InventoryResource.from_serialised_string(fruit)
+                    fruit_frames = self.frames['level']['objects'][fruit]
+                stump_frames = self.frames['level']['objects']['stump']
+
+                tree = Tree(pos, self.map_objects[obj.gid],
+                        (self.all_sprites,
+                        self.collision_sprites,
+                        self.tree_sprites),
+                        obj.name,
+                        fruit_frames,
+                        fruit_type,
+                        stump_frames,
+                        self.drops_manager)
+                # we need a tree surf without fruits
+                tree.image = self.frames['level']['objects']['tree']
+                tree.surf = tree.image
 
     def setup_emote_interactions(self):
         @self.player_emote_manager.on_show_emote
@@ -438,9 +466,10 @@ class Level:
         # No need to iterate using explicit sprites() call.
         # Iterating over a sprite group normally will do the same thing
         for tree in self.tree_sprites:
-            for apple in tree.apple_sprites:
-                apple.kill()
-            tree.create_fruit()
+            for fruit in tree.fruit_sprites:
+                fruit.kill()
+            if tree.alive:
+                tree.create_fruit()
 
         # sky
         self.sky.start_color = [255, 255, 255]
@@ -470,6 +499,11 @@ class Level:
                 hitbox = sprite.hitbox_rect.copy()
                 hitbox.topleft += offset
                 pygame.draw.rect(self.display_surface, 'blue', hitbox, 2)
+            for drop in self.drop_sprites:
+                pygame.draw.rect(self.display_surface, 'red',
+                                 drop.rect.move(*offset), 2)
+                pygame.draw.rect(self.display_surface, 'blue',
+                                 drop.hitbox_rect.move(*offset), 2)
 
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -493,6 +527,7 @@ class Level:
         self.update_rain()
         self.day_transition.update()
         self.all_sprites.update(dt)
+        self.drops_manager.update()
 
         # draw
         self.draw(dt)

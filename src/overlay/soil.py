@@ -109,8 +109,8 @@ class SoilLayer:
 
     def plant(self, pos, seed, inventory):
         tile = self.tiles.get(pos)
-        seed_amount = inventory.get(seed)
         seed_type = SeedType.from_farming_tool(seed)
+        seed_amount = inventory.get(seed_type.as_ir(), 0)
 
         if tile and tile.hoed and not tile.planted and seed_amount > 0:
             tile.planted = True
@@ -118,7 +118,7 @@ class SoilLayer:
             frames = self.level_frames[seed_name]
             groups = (self.all_sprites, self.plant_sprites)
             tile.plant = Plant(seed_type, groups, tile, frames)
-            inventory[seed] -= 1
+            inventory[seed_type.as_ir()] -= 1
             self.sounds["plant"].play()
             # self.sounds['cant plant'].play()
 

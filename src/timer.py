@@ -7,6 +7,7 @@ class Timer:
         self.duration = duration
         self.start_time = 0
         self.active = False
+        self.finished = False
         self.repeat = repeat
         self.func = func
 
@@ -18,10 +19,12 @@ class Timer:
 
     def activate(self):
         self.active = True
+        self.finished = False
         self.start_time = pygame.time.get_ticks()
 
     def deactivate(self):
         self.active = False
+        self.finished = True
         self.start_time = 0
         if self.repeat:
             self.activate()
@@ -30,7 +33,7 @@ class Timer:
         """returns a value between 0 and 1 that shows the timers progress
         1 means duration finshed"""
         curr = pygame.time.get_ticks()
-        return (curr - self.start_time)/ self.duration if self.active else 0
+        return (curr - self.start_time) / self.duration if self.active else 0
 
     def update(self):
         if self.active:
