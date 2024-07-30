@@ -19,7 +19,6 @@ from src.settings import (
 )
 
 
-
 class Game:
     def __init__(self):
         # main setup
@@ -97,7 +96,8 @@ class Game:
             'corn': support.import_folder('images/plants/corn'),
             'rain drops': support.import_folder('images/rain/drops'),
             'rain floor': support.import_folder('images/rain/floor'),
-            'objects': support.import_folder_dict('images/objects')
+            'objects': support.import_folder_dict('images/objects'),
+            'drops': support.import_folder_dict('images/drops')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
         self.frames = {

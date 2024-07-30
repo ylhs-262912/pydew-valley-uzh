@@ -2,6 +2,7 @@ import json
 import math
 import os
 import sys
+import random
 
 import pygame
 import pygame.gfxdraw
@@ -12,6 +13,7 @@ from src.enums import Direction
 from src.settings import (
     SCALE_FACTOR,
     TILE_SIZE,
+    Coordinate
 )
 
 
@@ -258,6 +260,17 @@ def get_entity_facing_direction(
     if direction[1]:
         return Direction.DOWN if direction[1] > 0 else Direction.UP
     return default_value
+
+
+def rand_circular_pos(center: Coordinate,
+                      max_radius: float,
+                      min_radius: float) -> Coordinate:
+    """returns a random position from a circular range"""
+    angle = random.random() * 2 * math.pi
+    radius = min_radius + ((max_radius - min_radius) * random.random())
+    rand_x = center[0] + radius * math.cos(angle)
+    rand_y = center[1] +  radius * math.sin(angle)
+    return (rand_x, rand_y)
 
 
 def oscilating_lerp(a: float | int, b: float | int, t: float) -> float:

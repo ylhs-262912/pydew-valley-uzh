@@ -7,6 +7,7 @@ from src.enums import InventoryResource, Layer
 from src.map_objects import MapObjectType
 from src.settings import APPLE_POS
 from src.sprites.base import Sprite, CollideableMapObject
+from src.sprites.drops import DropsManager
 from src.support import generate_particle_surf
 
 
@@ -17,8 +18,10 @@ class Tree(CollideableMapObject):
             object_type: MapObjectType,
             groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
             name: str,
-            apple_surf: pygame.Surface,
-            stump_surf: pygame.Surface
+            fruit_surf: pygame.Surface | None,
+            fruit_type: InventoryResource | None,
+            stump_surf: pygame.Surface,
+            drops_manager: DropsManager
     ):
         super().__init__(
             pos,
@@ -28,6 +31,7 @@ class Tree(CollideableMapObject):
         self.name = name
         self.health = 5
         self.alive = True
+        self.drops_manager = drops_manager
 
         self.timer = timer.Timer(300, func=self.unhit)
         self.was_hit = False
@@ -36,9 +40,11 @@ class Tree(CollideableMapObject):
         self.particle_surf = generate_particle_surf(self.image)
         self.stump_surf = stump_surf
 
-        # apples
-        self.apple_sprites = pygame.sprite.Group()
-        self.apple_surf = apple_surf
+        # fruits
+        self.fruit_sprites = pygame.sprite.Group()
+        self.fruit_surf = fruit_surf
+        self.fruit_type = fruit_type
+
         self.create_fruit()
 
     def unhit(self):
@@ -48,16 +54,21 @@ class Tree(CollideableMapObject):
             if self.alive:
                 self.rect = self.image.get_frect(midbottom=self.rect.midbottom)
                 self.alive = False
+                for fruit in self.fruit_sprites:
+                    fruit.kill()
         elif self.health >= 0 and self.alive:
             self.image = self.surf
+            for fruit in self.fruit_sprites:
+                fruit.image = fruit.surf
 
     def create_fruit(self):
-        for pos in APPLE_POS['default']:
-            if random.randint(0, 10) < 6:
-                x = pos[0] + self.rect.left
-                y = pos[1] + self.rect.top
-                Sprite((x, y), self.apple_surf, (self.apple_sprites,),
-                       Layer.FRUIT)
+        if self.fruit_type:
+            for pos in APPLE_POS['default']:
+                if random.randint(0, 10) < 6:
+                    x = pos[0] + self.rect.left
+                    y = pos[1] + self.rect.top
+                    Sprite((x, y), self.fruit_surf, (self.fruit_sprites,),
+                        Layer.FRUIT)
 
     def update(self, dt):
         self.timer.update()
@@ -67,17 +78,24 @@ class Tree(CollideableMapObject):
             return
         self.was_hit = True
         self.health -= 1
-        # remove an apple
-        if len(self.apple_sprites.sprites()) > 0:
-            random_apple = random.choice(self.apple_sprites.sprites())
-            random_apple.kill()
-            entity.add_resource(InventoryResource.APPLE)
+        # remove an fruit
+        #if len(self.fruit_sprites.sprites()) > 0:
+            #random_fruit = random.choice(self.fruit_sprites.sprites())
+            #random_fruit.kill()
+            #entity.add_resource(self.fruit_type)
         if self.health < 0 and self.alive:
-            entity.add_resource(InventoryResource.WOOD, 5)
+            #entity.add_resource(InventoryResource.WOOD, 5)
+            pos = self.rect.center
+            self.drops_manager.drop(pos, InventoryResource.WOOD, amount=5)
+            if self.fruit_type:
+                self.drops_manager.drop(pos, self.fruit_type, amount=len(self.fruit_sprites))
+
         self.image = generate_particle_surf(self.image)
+        for fruit in self.fruit_sprites:
+            fruit.image = generate_particle_surf(fruit.image)
         self.timer.activate()
 
     def draw(self, display_surface, offset):
         super().draw(display_surface, offset)
-        for apple in self.apple_sprites:
-            apple.draw(display_surface, offset)
+        for fruit in self.fruit_sprites:
+            fruit.draw(display_surface, offset)

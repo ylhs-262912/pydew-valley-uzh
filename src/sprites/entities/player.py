@@ -242,9 +242,12 @@ class Player(Character):
     def get_current_seed_string(self):
         return self.current_seed.as_serialised_string()
 
-    def add_resource(self, resource: InventoryResource, amount: int = 1):
+    def add_resource(self, resource: InventoryResource,
+                     amount: int = 1,
+                     sound: str = 'success'):
         super().add_resource(resource, amount)
-        self.sounds['success'].play()
+        if sound:
+            self.sounds[sound].play()
 
     def update(self, dt):
         self.handle_controls()
