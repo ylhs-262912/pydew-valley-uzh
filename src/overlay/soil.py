@@ -110,7 +110,7 @@ class SoilLayer:
     def plant(self, pos, seed, inventory):
         tile = self.tiles.get(pos)
         seed_type = SeedType.from_farming_tool(seed)
-        seed_amount = inventory.get(seed_type.as_ir(), default=0)
+        seed_amount = inventory.get(seed_type.as_ir(), 0)
 
         if tile and tile.hoed and not tile.planted and seed_amount > 0:
             tile.planted = True
