@@ -216,3 +216,11 @@ def post_event(code: int, **attrs: Type | SpecialForm):
     edef = _EventDefinition.from_code(code)
     pygame.event.post(edef(**attrs))
 
+
+# Adding this to the event definition cache so we can easily post quit events
+_EventDefinition.add_to_edef_cache(
+    _EventDefinition("Quit", pygame.QUIT)
+)
+
+
+OPEN_INVENTORY = create_custom_event_type("OpenInventory")

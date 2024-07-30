@@ -4,12 +4,13 @@ from typing import Callable, Type
 
 import pygame  # noqa
 
+from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
-from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, SoundDict
+from src.settings import Coordinate, SoundDict, GogglesStatus
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -65,6 +66,8 @@ class Player(Character):
         self.paused = False
         self.font = font
         self.interact = interact
+        self.has_goggles: GogglesStatus = save_data.get("goggles_status")
+        self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
 
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
@@ -116,7 +119,8 @@ class Player(Character):
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
         savefile.save(
-            self.current_tool, self.current_seed, self.money, compacted_inv
+            self.current_tool, self.current_seed, self.money, compacted_inv,
+            self.study_group, self.has_goggles
         )
 
     def load_controls(self):
@@ -143,6 +147,18 @@ class Player(Character):
             else:
                 control.click = keys_just_pressed[control.control_value]
                 control.hold = keys_pressed[control.control_value]
+
+    def assign_seed(self, seed: str):
+        computed_value = FarmingTool.from_serialised_string(seed)
+        if not computed_value.is_seed():
+            raise ValueError("given value is not a seed type")
+        self.current_seed = computed_value
+
+    def assign_tool(self, tool: str):
+        computed_value = FarmingTool.from_serialised_string(tool)
+        if computed_value.is_seed():
+            raise ValueError("given value is a seed")
+        self.current_tool = computed_value
 
     def handle_controls(self):
         self.update_controls()
@@ -198,6 +214,9 @@ class Player(Character):
             # interact
             if self.controls.INTERACT.click:
                 self.interact()
+
+            if self.controls.INVENTORY.click:
+                post_event(OPEN_INVENTORY)
 
         # emotes
         if not self.blocked:
