@@ -9,6 +9,7 @@ type Coordinate = tuple[int | float, int | float]
 type SoundDict = dict[str, pygame.mixer.Sound]
 type MapDict = dict[str, pytmx.TiledMap]
 type AniFrames = dict[str, list[pygame.Surface]]
+type GogglesStatus = bool | None
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
@@ -16,10 +17,10 @@ CHAR_TILE_SIZE = 48
 SCALE_FACTOR = 4
 SCALED_TILE_SIZE = TILE_SIZE * SCALE_FACTOR
 
-GAME_MAP = Map.FOREST
+GAME_MAP = Map.FARM
 
-ENABLE_NPCS = True
-TEST_ANIMALS = True
+ENABLE_NPCS = False
+TEST_ANIMALS = False
 
 SETUP_PATHFINDING = any((ENABLE_NPCS, TEST_ANIMALS))
 

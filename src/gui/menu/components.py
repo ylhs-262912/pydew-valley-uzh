@@ -1,6 +1,7 @@
 import pygame
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
+from abc import ABC, abstractmethod
 
 from src.controls import Control
 from src.support import resource_path
@@ -94,14 +95,18 @@ class Component:
         self.animate(dt)
 
 
-class Button(Component):
-    def __init__(self, text, font, rect, offset):
+class AbstractButton(Component, ABC):
+    """Abstract base class for all button types."""
+
+    @abstractmethod
+    def __init__(self, content: str | pygame.Surface, rect, font=None):
         super().__init__(rect)
         self.initial_rect = rect.copy()
         self.font_size = 30
         self.font = font
-        self.text = text
-        self.offset = vector(offset)
+        self._content = content
+        self.content = None
+        self._content_rect = None
         self.color = 'White'
         self.hover_active = False
 
@@ -110,12 +115,6 @@ class Button(Component):
     def mouse_hover(self):
         return self.rect.collidepoint(mouse_pos())
 
-    # draw
-    def draw_text(self):
-        text_surf = self.font.render(self.text, False, 'Black')
-        text_rect = text_surf.get_frect(center=self.rect.center)
-        self.display_surface.blit(text_surf, text_rect)
-
     def draw_hover(self):
         if self.mouse_hover():
             self.hover_active = True
@@ -123,11 +122,54 @@ class Button(Component):
         else:
             self.hover_active = False
 
+    def draw_content(self):
+        self.display_surface.blit(self.content, self._content_rect)
+
     def draw(self, surface):
         self.display_surface = surface
         pygame.draw.rect(self.display_surface, self.color, self.rect, 0, 4)
-        self.draw_text()
+        self.draw_content()
         self.draw_hover()
+
+
+class Button(AbstractButton):
+    """A button that can contain text."""
+
+    def __init__(self, content: str, rect, font):
+        # Force the user to pass a string as content or else raise an error
+        if not isinstance(content, str):
+            if isinstance(content, pygame.Surface):
+                raise TypeError("Normal buttons can only contain text, use ImageButton"
+                                " if you need to display an image instead")
+            raise TypeError(f"expected a value of type 'str', got '{content.__class__.__name__}'")
+
+        # Setup
+        super().__init__(content, rect, font)
+        self.content = font.render(
+            self._content,
+            False,
+            "black"
+        )
+        self._content_rect = self.content.get_frect(center=self.rect.center)
+
+    @property
+    def text(self):
+        return self._content
+
+
+class ImageButton(AbstractButton):
+    """A button type that can contain an image."""
+
+    def __init__(self, content: pygame.Surface, rect):
+        # Force the user to pass an image as content or else raise an error
+        if not isinstance(content, pygame.Surface):
+            if isinstance(content, str):
+                raise TypeError("Image buttons cannot contain text, use Button instead")
+            raise TypeError(f"expected a pygame.Surface instance, got '{content.__class__.__name__}'")
+
+        super().__init__(content, rect)
+        self.content = self._content
+        self._content_rect = self.content.get_frect(center=self.rect.center)
 
 
 class KeySetup(Component):
@@ -262,6 +304,7 @@ class Slider:
 
     def draw(self, surface):
         self.surface = surface
+        self.surface.fill(pygame.Color(0, 0, 0, 0))
         self.draw_rect()
         self.draw_knob()
         self.draw_value()

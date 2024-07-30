@@ -32,6 +32,10 @@ class GameState(IntEnum):
     GAME_OVER = 6
     WIN = 7
     CREDITS = 8
+    # Special value: when switched to this value, the game
+    # saves and then sets its current state back to LEVEL
+    SAVE_AND_RESUME = 9
+    INVENTORY = 10
 
 
 # NOTE : DO NOT pay attention to anything the IDE might complain about in this class, as the enum generation mechanisms
@@ -123,9 +127,15 @@ class FarmingTool(_SerialisableEnum):
         }
     )
 
-    @property
-    def _swinging_tools(self):
-        return {self.HOE, self.AXE}
+    # Using frozenset to ensure this cannot change
+    _swinging_tools = nonmember(
+        frozenset(
+            {
+                HOE,
+                AXE
+            }
+        )
+    )
 
     def is_swinging_tool(self):
         return self in self._swinging_tools
@@ -237,3 +247,10 @@ class Layer(IntEnum):
 class Map(StrEnum):
     FARM = "farm"
     FOREST = "forest"
+
+
+class StudyGroup(IntEnum):
+    """The group in which a certain character belongs to."""
+    NO_GROUP = 0  # Set at the beginning of the game.
+    INGROUP = auto()
+    OUTGROUP = auto()
