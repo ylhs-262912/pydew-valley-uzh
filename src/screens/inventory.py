@@ -69,6 +69,7 @@ class _EquipButton(_IMButton):
     @selected.setter
     def selected(self, val: bool):
         self.content = self._contents[val]
+        self._content_rect = self.content.get_frect(center=self.rect.center)
         self._selected = val
 
 
@@ -128,6 +129,7 @@ class InventoryMenu(AbstractMenu):
         self._assignable_irs = set()
         self._inv_buttons = []
         self._ft_buttons = []
+        self._special_btns = []
         self.button_setup(player)
 
     def _prepare_img_for_ir_button(self, ir: InventoryResource, count: int):
@@ -238,12 +240,19 @@ class InventoryMenu(AbstractMenu):
             if text in self._assignable_irs:
                 for btn in filter(lambda button: button.text in self._assignable_irs, self._inv_buttons):
                     btn.selected = (btn.text == text)
+        if text == "goggles":
+            has_goggles = not self.player.has_goggles
+            self.player.has_goggles = has_goggles
+            for btn in self._special_btns:
+                if btn.text == "goggles":
+                    btn.selected = has_goggles
+                    break
 
     def button_setup(self, player):
         self._inv_buttons.extend(self._inventory_part_btn_setup(player, _BUTTON_SIZE))
-        self.buttons.extend(self._inv_buttons)
         self._ft_buttons.extend(self._ft_btn_setup(player, _BUTTON_SIZE))
-        self.buttons.extend(self._ft_buttons)
+        self._special_btns.extend(self._special_btn_setup(player, _BUTTON_SIZE))
+        self.buttons.extend(chain(self._inv_buttons, self._ft_buttons, self._special_btns))
 
     def draw_title(self):
         super().draw_title()
@@ -261,19 +270,22 @@ class InventoryMenu(AbstractMenu):
     def refresh_buttons_content(self):
         """Replace the existing buttons for available tools and resource count,
         in case the values change."""
-        for btn in chain(self._inv_buttons, self._ft_buttons):
+        for btn in chain(self._inv_buttons, self._ft_buttons, self._special_btns):
             self.buttons.remove(btn)
         self._assignable_irs.clear()
         self._inv_buttons.clear()
         self._ft_buttons.clear()
+        self._special_btns.clear()
         self._inv_buttons.extend(
             self._inventory_part_btn_setup(self.player, _BUTTON_SIZE)
         )
         self._ft_buttons.extend(self._ft_btn_setup(self.player, _BUTTON_SIZE))
+        self._special_btns.extend(self._special_btn_setup(self.player, _BUTTON_SIZE))
         self.buttons.extend(
             chain(
                 self._inv_buttons,
-                self._ft_buttons
+                self._ft_buttons,
+                self._special_btns
             )
         )
 
