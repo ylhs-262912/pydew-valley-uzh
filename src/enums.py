@@ -1,5 +1,7 @@
 from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
+from src.events import create_custom_event_type
+
 
 class PlayerState(IntEnum):
     IDLE = 0
@@ -237,3 +239,8 @@ class Layer(IntEnum):
 class Map(StrEnum):
     FARM = "farm"
     FOREST = "forest"
+
+
+class CustomEvent(IntEnum):
+    DIALOG_SHOW = create_custom_event_type("DIALOG_SHOW", dial=str)
+    DIALOG_ADVANCE = create_custom_event_type("DIALOG_ADVANCE")

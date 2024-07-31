@@ -7,7 +7,8 @@ import pytmx
 from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.enums import FarmingTool, GameState, Layer, Map
+from src.enums import FarmingTool, GameState, Layer, Map, CustomEvent
+from src.events import post_event
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.map_objects import MapObjects
@@ -402,12 +403,21 @@ class Level:
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         hitbox_key = self.player.controls.SHOW_HITBOXES.control_value
+        dialog_key = self.player.controls.SHOW_DIALOG.control_value
+        advance_dialog_key = self.player.controls.ADVANCE_DIALOG.control_value
+
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 self.switch_screen(GameState.PAUSE)
                 return True
             if event.key == hitbox_key:
                 self.show_hitbox_active = not self.show_hitbox_active
+                return True
+            if event.key == dialog_key:
+                post_event(CustomEvent.DIALOG_SHOW, dial="test")
+                return True
+            if event.key == advance_dialog_key:
+                post_event(CustomEvent.DIALOG_ADVANCE)
                 return True
 
         return False

@@ -4,7 +4,8 @@ import pygame
 from pytmx import TiledMap
 
 from src import support
-from src.enums import GameState, Direction
+from src.enums import GameState, CustomEvent
+from src.groups import AllSprites
 from src.gui.setup import setup_gui
 from src.gui.interface.dialog import DialogueManager
 from src.screens.level import Level
@@ -60,7 +61,8 @@ class Game:
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
 
         # dialog
-        self.dm = DialogueManager(self.level.all_sprites)
+        self.all_sprites = AllSprites()
+        self.dialogue_manager = DialogueManager(self.all_sprites)
 
         # screens
         self.menus = {
@@ -133,6 +135,20 @@ class Game:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == CustomEvent.DIALOG_SHOW:
+            if self.dialogue_manager.showing_dialogue:
+                pass
+            else:
+                self.dialogue_manager.open_dialogue(event.dial)
+                self.player.blocked = True
+                self.player.direction.update((0, 0))
+            return True
+        elif event.type == CustomEvent.DIALOG_ADVANCE:
+            if self.dialogue_manager.showing_dialogue:
+                self.dialogue_manager.advance()
+                if not self.dialogue_manager.showing_dialogue:
+                    self.player.blocked = False
+            return True
         return False
 
     def run(self):
@@ -145,6 +161,12 @@ class Game:
 
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
+
+            self.all_sprites.update(dt)
+            self.all_sprites.draw(
+                (self.display_surface.width / 2,
+                 self.display_surface.height / 2)
+            )
 
             pygame.display.update()
 

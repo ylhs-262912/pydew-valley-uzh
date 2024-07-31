@@ -42,7 +42,7 @@ class TextBox(Sprite):
         :param text: The dialogue the character is supposed to say.
         :param font: The font used to render this dialogue."""
         self.font: pygame.Font = font
-        self.cname: str = character_name
+        self.name: str = character_name
         self.text: str = textwrap.fill(text, width=CHARS_PER_LINE)
         self.image: pygame.Surface = pygame.Surface(TB_SIZE, flags=pygame.SRCALPHA)
         self.__prepare_image()

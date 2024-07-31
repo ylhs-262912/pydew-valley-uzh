@@ -94,6 +94,8 @@ class Controls(Control, Enum):
     INTERACT = (pygame.K_i, "Interact")
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
     SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
+    SHOW_DIALOG = (pygame.K_t, "Show Dialog")
+    ADVANCE_DIALOG = (pygame.K_SPACE, "Advance Dialog")
 
     @classmethod
     def as_dict(cls) -> dict[str, dict[str, str | int]]:
