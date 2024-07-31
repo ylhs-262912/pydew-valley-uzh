@@ -441,6 +441,9 @@ class Level:
                 return True
 
         return False
+    
+    def get_camera_center(self):
+        return self.player.rect.center
 
     # reset
     def reset(self):
@@ -511,7 +514,8 @@ class Level:
 
     def draw(self, dt):
         self.display_surface.fill((130, 168, 132))
-        self.all_sprites.draw(self.player.rect.center)
+        camera_center = self.get_camera_center()
+        self.all_sprites.draw(camera_center)
         self.sky.display(dt)
         self.draw_overlay()
         self.day_transition.draw()
