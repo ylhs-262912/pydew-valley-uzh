@@ -108,6 +108,9 @@ class InventoryResource(_SerialisableEnum):
     def is_seed(self):
         return self >= self.CORN_SEED
 
+    def is_fruit(self):
+        return self.APPLE <= self <= self.PEAR
+
 
 class FarmingTool(_SerialisableEnum):
     """Notably used to distinguish the different farming tools (including seeds) in-code."""
@@ -209,6 +212,9 @@ class SeedType(IntEnum):
     @classmethod
     def from_inventory_resource(cls, val: InventoryResource):
         return cls(cls._AS_IRS.index(val))
+
+    def as_fts(self):
+        return self._AS_FTS[self]
 
     def as_ir(self):
         return self._AS_IRS[self]

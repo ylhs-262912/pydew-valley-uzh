@@ -1,6 +1,6 @@
 import pygame  # noqa
 from src.gui.menu.abstract_menu import AbstractMenu
-from src.enums import FarmingTool, InventoryResource, GameState, StudyGroup
+from src.enums import FarmingTool, InventoryResource, GameState, StudyGroup, SeedType
 from src.gui.menu.components import Button, ImageButton
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from itertools import chain
@@ -133,13 +133,13 @@ class InventoryMenu(AbstractMenu):
         self.button_setup(player)
 
     def _prepare_img_for_ir_button(self, ir: InventoryResource, count: int):
-        match ir:
-            case InventoryResource.APPLE:
-                btn_name = "apple"
-                img = self.obj_frames["apple"]
-            case _:
-                btn_name = self._IR_TO_OVERLAY_IMG[ir]
-                img = self.overlay_frames[btn_name]
+        # , _ ,
+        if ir.is_fruit():
+            btn_name = ir.as_serialised_string()
+            img = self.obj_frames[btn_name]
+        else:
+            btn_name = self._IR_TO_OVERLAY_IMG[ir]
+            img = self.overlay_frames[btn_name]
         calc_rect = img.get_frect(center=(32, 32))
         calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
         amount = self.font.render(str(count), False, "black")
@@ -166,7 +166,7 @@ class InventoryMenu(AbstractMenu):
                 )
         ):
             calc_img, btn_name = self._prepare_img_for_ir_button(ir, count)
-            row, column = divmod(button_no, btns_per_line)
+            row, column = divmod(button_no, 6)  # , _ ,
             btn_rect = generic_rect.copy()
             btn_rect.x = _LEFT_MARGIN + button_size[0] * column + x_spacing * column
             btn_rect.y = _TOP_MARGIN + (button_size[1] + _SPACING_BETWEEN_ROWS) * row
@@ -174,7 +174,9 @@ class InventoryMenu(AbstractMenu):
                 # Keep track of equip buttons so we can toggle whether they display
                 # a checkmark when equipped
                 self._assignable_irs.add(btn_name)
-                yield _EquipButton(calc_img, btn_rect, btn_name, player.current_seed == FarmingTool(ir), True)
+                # , _ ,
+                seed = SeedType.from_inventory_resource(ir).as_fts()
+                yield _EquipButton(calc_img, btn_rect, btn_name, player.current_seed == seed, True)
             else:
                 yield _IMButton(calc_img, btn_rect, btn_name)
 
