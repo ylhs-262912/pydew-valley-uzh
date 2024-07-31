@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from abc import ABC
 from collections.abc import Callable
+from typing import ClassVar
 
 import pygame
 from pathfinding.core.grid import Grid
@@ -16,6 +17,10 @@ from src.sprites.setup import EntityAsset
 
 
 class NPCBase(Character, AIBehaviour, ABC):
+    pf_matrix: ClassVar[list[list[int]] | None] = None
+    pf_grid: ClassVar[Grid | None] = None
+    pf_finder: ClassVar[AStarFinder | None] = None
+
     soil_layer: SoilLayer
 
     def __init__(
@@ -29,10 +34,6 @@ class NPCBase(Character, AIBehaviour, ABC):
                 [FarmingTool, tuple[float, float], Character], None
             ],
 
-            pf_matrix: list[list[int]],
-            pf_grid: Grid,
-            pf_finder: AStarFinder,
-
             z: int
     ):
         Character.__init__(
@@ -45,11 +46,6 @@ class NPCBase(Character, AIBehaviour, ABC):
             apply_tool=apply_tool,
             z=z
         )
-        AIBehaviour.__init__(
-            self,
-            pf_matrix=pf_matrix,
-            pf_grid=pf_grid,
-            pf_finder=pf_finder
-        )
+        AIBehaviour.__init__(self)
 
         self.speed = 250

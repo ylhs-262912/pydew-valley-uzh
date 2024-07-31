@@ -11,7 +11,6 @@ from src.npc.behaviour.npc_behaviour_tree import (
     NPCBehaviourTree,
     NPCBehaviourTreeContext
 )
-from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate
 from src.sprites.character import Character
@@ -42,10 +41,6 @@ class NPC(NPCBase):
             collision_sprites=collision_sprites,
 
             apply_tool=apply_tool,
-
-            pf_matrix=AIData.Matrix,
-            pf_grid=AIData.Grid,
-            pf_finder=AIData.ChickenPathFinder,
 
             z=Layer.MAIN
         )

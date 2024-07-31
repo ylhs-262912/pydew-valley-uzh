@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from enum import IntEnum
+from typing import ClassVar
 
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
@@ -18,13 +19,9 @@ class AIState(IntEnum):
 
 class AIBehaviourBase(Entity, ABC):
     # Pathfinding
-    pf_matrix: list[list[int]]
-    """A representation of the in-game tilemap,
-       where 1 stands for a walkable tile, and 0 stands for a
-       non-walkable tile. Each list entry represents one row of the tilemap."""
-
-    pf_grid: Grid
-    pf_finder: AStarFinder
+    pf_matrix: ClassVar[list[list[int]] | None]
+    pf_grid: ClassVar[Grid | None]
+    pf_finder: ClassVar[AStarFinder | None]
     pf_state: AIState
     pf_state_duration: float
 

@@ -175,7 +175,7 @@ class Level:
         self.setup_object_layer('Entities', self.setup_entity)
 
         if SETUP_PATHFINDING:
-            AIData.setup(self.pf_matrix)
+            AIData.setup(self.pf_matrix, self.entities['player'])
 
         if ENABLE_NPCS:
             self.setup_object_layer('NPCs', self.setup_npc)
@@ -297,9 +297,7 @@ class Level:
                 pos=pos,
                 assets=ENTITY_ASSETS.COW,
                 groups=(self.all_sprites, self.collision_sprites),
-                collision_sprites=self.collision_sprites,
-
-                player=self.entities['Player']
+                collision_sprites=self.collision_sprites
             ))
         else:
             print(f"Malformed animal object name \"{obj.name}\" in tilemap")

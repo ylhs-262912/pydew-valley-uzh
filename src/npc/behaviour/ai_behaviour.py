@@ -3,30 +3,19 @@ from abc import ABC
 from collections.abc import Callable
 
 import pygame
-from pathfinding.core.grid import Grid
-from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
 from src.settings import SCALED_TILE_SIZE
 
 
 class AIBehaviour(AIBehaviourBase, ABC):
-    def __init__(  # noqa
-            self,
-            pf_matrix: list[list[int]],
-            pf_grid: Grid,
-            pf_finder: AStarFinder
-    ):
+    def __init__(self):  # noqa
         """
         !IMPORTANT! AIBehaviour doesn't call Entity.__init__ while still
         relying on it. Be aware that when inheriting from AIBehaviour you
         should first inherit from Entity itself, or inherit from another class
         that has Entity as base.
         """
-        self.pf_matrix = pf_matrix
-        self.pf_grid = pf_grid
-        self.pf_finder = pf_finder
-
         # AI-controlled Entities will idle for 1-4s on game start
         self.pf_state = AIState.IDLE
         self.pf_state_duration = random.random() * 3 + 1
