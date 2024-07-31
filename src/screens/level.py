@@ -175,7 +175,7 @@ class Level:
         self.setup_object_layer('Entities', self.setup_entity)
 
         if SETUP_PATHFINDING:
-            AIData.setup(self.pf_matrix, self.entities['player'])
+            AIData.setup(self.pf_matrix, self.entities['Player'])
 
         if ENABLE_NPCS:
             self.setup_object_layer('NPCs', self.setup_npc)
