@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.10" tiledversion="1.11.0" name="objects" tilewidth="37" tileheight="42" tilecount="39" columns="0">
+<tileset version="1.10" tiledversion="1.11.0" name="objects" tilewidth="48" tileheight="48" tilecount="45" columns="0">
  <grid orientation="orthogonal" width="1" height="1"/>
  <tile id="9">
   <image source="../../images/objects/flower_0.png" width="9" height="6"/>
@@ -80,12 +80,24 @@
   </objectgroup>
  </tile>
  <tile id="22">
+  <properties>
+   <property name="breakable" type="bool" value="true"/>
+   <property name="fruit_type" value="no_fruit"/>
+   <property name="size" value="medium"/>
+   <property name="type" value="tree"/>
+  </properties>
   <image source="../../images/objects/tree.png" width="24" height="30"/>
   <objectgroup draworder="index" id="2">
    <object id="1" x="7" y="26" width="10" height="4"/>
   </objectgroup>
  </tile>
  <tile id="23">
+  <properties>
+   <property name="breakable" type="bool" value="false"/>
+   <property name="fruit_type" value="no_fruit"/>
+   <property name="size" value="large"/>
+   <property name="type" value="tree"/>
+  </properties>
   <image source="../../images/objects/tree_small.png" width="14" height="28"/>
   <objectgroup draworder="index" id="2">
    <object id="1" x="3" y="23" width="8" height="4"/>
@@ -225,5 +237,23 @@
   <objectgroup draworder="index" id="2">
    <object id="1" x="3" y="24" width="24" height="18"/>
   </objectgroup>
+ </tile>
+ <tile id="62">
+  <image source="../../images/objects/Piknik basket.png" width="16" height="16"/>
+ </tile>
+ <tile id="63">
+  <image source="../../images/objects/Piknik blanket.png" width="48" height="48"/>
+ </tile>
+ <tile id="64">
+  <image source="../../images/objects/mailbox.png" width="8" height="17"/>
+ </tile>
+ <tile id="65">
+  <image source="../../images/objects/seaweed_1.png" width="14" height="16"/>
+ </tile>
+ <tile id="66">
+  <image source="../../images/objects/seaweed_0.png" width="13" height="13"/>
+ </tile>
+ <tile id="67">
+  <image source="../../images/objects/sign.png" width="14" height="16"/>
  </tile>
 </tileset>

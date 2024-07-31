@@ -87,11 +87,12 @@ class Controls(Control, Enum):
     LEFT = (pygame.K_LEFT, "Move Left")
     RIGHT = (pygame.K_RIGHT, "Move Right")
 
-    USE = (pygame.K_SPACE, "Use Tool")
+    USE = (pygame.BUTTON_LEFT, "Use Tool")
     NEXT_TOOL = (pygame.K_TAB, "Cycle Tools")
     NEXT_SEED = (pygame.K_LSHIFT, "Cycle Seeds")
-    PLANT = (pygame.K_RETURN, "Plant Current Seed")
-    INTERACT = (pygame.K_i, "Interact")
+    PLANT = (pygame.BUTTON_RIGHT, "Plant Seed")
+    INTERACT = (pygame.K_SPACE, "Interact")
+    INVENTORY = (pygame.K_i, "Open Inventory")
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
     SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
     SHOW_DIALOG = (pygame.K_t, "Show Dialog")
@@ -154,3 +155,7 @@ class Controls(Control, Enum):
     def all_controls(cls) -> Generator[Control, None, None]:
         """:return: A generator which yields all Controls members."""
         return (getattr(cls, i.name) for i in cls)
+    
+    @classmethod
+    def length(cls) -> int:
+        return len(list(cls.all_controls()))

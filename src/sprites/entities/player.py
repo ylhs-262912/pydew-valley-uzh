@@ -4,12 +4,13 @@ from typing import Callable, Type
 
 import pygame  # noqa
 
+from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
-from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, SoundDict
+from src.settings import Coordinate, SoundDict, GogglesStatus
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -62,6 +63,8 @@ class Player(Character):
         self.blocked = False
         self.paused = False
         self.interact = interact
+        self.has_goggles: GogglesStatus = save_data.get("goggles_status")
+        self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
 
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
@@ -113,7 +116,8 @@ class Player(Character):
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
         savefile.save(
-            self.current_tool, self.current_seed, self.money, compacted_inv
+            self.current_tool, self.current_seed, self.money, compacted_inv,
+            self.study_group, self.has_goggles
         )
 
     def load_controls(self):
@@ -131,12 +135,27 @@ class Player(Character):
         mouse_pressed = pygame.mouse.get_pressed()
 
         for control in self.controls.all_controls():
-            mouse_event = 1 <= control.control_value <= len(mouse_pressed)
-            if mouse_event:
-                control.hold = mouse_pressed[control.control_value - 1]
+            is_mouse_event = control.control_value in (1, 2, 3)
+
+            if is_mouse_event:
+                is_event_active = mouse_pressed[control.control_value - 1]
+                control.click = is_event_active
+                control.hold = is_event_active
             else:
                 control.click = keys_just_pressed[control.control_value]
                 control.hold = keys_pressed[control.control_value]
+
+    def assign_seed(self, seed: str):
+        computed_value = FarmingTool.from_serialised_string(seed)
+        if not computed_value.is_seed():
+            raise ValueError("given value is not a seed type")
+        self.current_seed = computed_value
+
+    def assign_tool(self, tool: str):
+        computed_value = FarmingTool.from_serialised_string(tool)
+        if computed_value.is_seed():
+            raise ValueError("given value is a seed")
+        self.current_tool = computed_value
 
     def handle_controls(self):
         self.update_controls()
@@ -193,6 +212,9 @@ class Player(Character):
             if self.controls.INTERACT.click:
                 self.interact()
 
+            if self.controls.INVENTORY.click:
+                post_event(OPEN_INVENTORY)
+
         # emotes
         if not self.blocked:
             if self.controls.EMOTE_WHEEL.click:
@@ -239,9 +261,12 @@ class Player(Character):
     def get_current_seed_string(self):
         return self.current_seed.as_serialised_string()
 
-    def add_resource(self, resource: InventoryResource, amount: int = 1):
+    def add_resource(self, resource: InventoryResource,
+                     amount: int = 1,
+                     sound: str = 'success'):
         super().add_resource(resource, amount)
-        self.sounds['success'].play()
+        if sound:
+            self.sounds[sound].play()
 
     def update(self, dt):
         self.handle_controls()

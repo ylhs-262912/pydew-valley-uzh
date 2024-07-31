@@ -6,6 +6,7 @@
   "money": 216,
   "current_tool": "axe",
   "current_seed": "tomato_seed",
+  "goggles_status": false,
   "inventory": {
     "wood": 26,
     "apple": 24,

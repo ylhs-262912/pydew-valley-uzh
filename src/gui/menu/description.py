@@ -27,13 +27,10 @@ class Description:
         # description
         self.description_rect = pygame.Rect(0, 0, 600, 400)
         self.description_rect.topright = self.rect.topright
-        self.description_surface = pygame.Surface(self.description_rect.size)
-        self.description_surface.set_colorkey('green')
-
+        self.description_surface = pygame.Surface(self.description_rect.size, pygame.SRCALPHA)
         # slider
-        self.description_slider_surface = pygame.Surface((600, 600))
+        self.description_slider_surface = pygame.Surface((600, 600), pygame.SRCALPHA)
         self.description_slider_rect = self.description_surface.get_rect()
-        self.description_slider_surface.set_colorkey('green')
 
     # events
     def handle_event(self, event) -> bool:
@@ -58,8 +55,7 @@ class Description:
 
     # draw
     def make_surface_transparent(self):
-        self.description_surface.fill('green')
-        self.description_slider_surface.fill('green')
+        self.description_surface.fill(pygame.Color(0, 0, 0, 0))
 
     def draw_slider_bar(self):
         height1 = self.description_slider_surface.get_height()
@@ -95,7 +91,7 @@ class KeybindsDescription(Description):
         reset_btn_rect = pygame.Rect(0, 0, 100, 50)
         reset_btn_rect.bottomright = self.rect.bottomleft - vector(10, 0)
 
-        self.reset_button = Button('Reset', self.font, reset_btn_rect, (0, 0))
+        self.reset_button = Button('Reset', reset_btn_rect, self.font)
 
     def save_data(self):
         for key in self.keys_group:
@@ -104,6 +100,13 @@ class KeybindsDescription(Description):
         save_data(self.controls.as_dict(), 'keybinds.json')
 
     def create_keybinds(self):
+
+        margin = 10
+        size = (600, 60 * self.controls.length() + 2*margin)
+        self.description_slider_surface = pygame.Surface((size))
+        self.description_slider_rect = self.description_slider_surface.get_rect()
+        self.description_slider_surface.set_colorkey('green')
+
         self.keys_group.clear()
         index = 0
         for control in self.controls.all_controls():

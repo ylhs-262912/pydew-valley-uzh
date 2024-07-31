@@ -5,7 +5,7 @@ from typing import Any
 import pygame
 from pytmx import TiledMap, TiledTileLayer, TiledObjectGroup, TiledObject
 
-from src.enums import Layer, FarmingTool
+from src.enums import Layer, FarmingTool, InventoryResource
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.map_objects import MapObjects
@@ -21,6 +21,7 @@ from src.settings import (
 )
 from src.sprites.base import Sprite, AnimatedSprite, CollideableMapObject
 from src.sprites.character import Character
+from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
 from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS
@@ -124,6 +125,8 @@ class GameMap:
             player_emote_manager: PlayerEmoteManager,
             npc_emote_manager: NPCEmoteManager,
 
+            drops_manager: DropsManager,
+
             # SoilLayer and Tool applying function for farming NPCs
             soil_layer: SoilLayer,
             apply_tool: Callable[
@@ -146,6 +149,8 @@ class GameMap:
 
         self.player_emote_manager = player_emote_manager
         self.npc_emote_manager = npc_emote_manager
+
+        self.drops_manager = drops_manager
 
         self.soil_layer = soil_layer
         self.apply_tool = apply_tool
@@ -340,12 +345,33 @@ class GameMap:
                     (the obj.image will be used as Tree image)
         :param groups: Groups the Sprite should be added to
         """
-        apple_frames = self.frames['level']['objects']['apple']
-        stump_frames = self.frames['level']['objects']['stump']
+        props = obj.properties
+        if props.get("type") == "tree":
+            if props.get("size") == "medium" and props.get("breakable"):
+                fruit = props.get("fruit_type")
+                if fruit == "no_fruit":
+                    fruit_type, fruit_frames = None, None
+                else:
+                    fruit_type = InventoryResource.from_serialised_string(fruit)
+                    fruit_frames = self.frames['level']['objects'][fruit]
+                stump_frames = self.frames['level']['objects']['stump']
 
-        Tree(pos, self._map_objects[obj.gid],
-             groups,
-             obj.name, apple_frames, stump_frames)
+                tree = Tree(
+                    pos, self._map_objects[obj.gid],
+                    (
+                        self.all_sprites,
+                        self.collision_sprites,
+                        self.tree_sprites
+                    ),
+                    obj.name,
+                    fruit_frames,
+                    fruit_type,
+                    stump_frames,
+                    self.drops_manager
+                )
+                # we need a tree surf without fruits
+                tree.image = self.frames['level']['objects']['tree']
+                tree.surf = tree.image
 
         if SETUP_PATHFINDING:
             self._add_pf_matrix_collision(

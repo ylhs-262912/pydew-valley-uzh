@@ -7,7 +7,7 @@ import pygame
 from src import settings
 from src.enums import (
     FarmingTool, InventoryResource, ItemToUse, EntityState,
-    Layer
+    Layer, StudyGroup
 )
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -18,6 +18,7 @@ class Character(Entity, ABC):
     tool_active: bool
     just_used_tool: bool
     apply_tool: Callable[[FarmingTool, tuple[float, float], Self], None]
+    study_group: StudyGroup
 
     current_seed: FarmingTool
 
@@ -55,6 +56,9 @@ class Character(Entity, ABC):
         self.inventory = {
             InventoryResource.WOOD: 0,
             InventoryResource.APPLE: 0,
+            InventoryResource.ORANGE: 0,
+            InventoryResource.PEACH: 0,
+            InventoryResource.PEAR: 0,
             InventoryResource.CORN: 0,
             InventoryResource.TOMATO: 0,
             InventoryResource.CORN_SEED: 0,
@@ -64,6 +68,10 @@ class Character(Entity, ABC):
         # Not all Characters can go to the market,
         # so those that can't should not have money either
         self.money = 0
+
+        # TODO: implement compatibility with this, e.g. NPCs reacting differently to emotes
+        # depending on the group they belong to and the player's
+        self.study_group = StudyGroup.NO_GROUP
 
     def get_state(self):
         if self.tool_active:

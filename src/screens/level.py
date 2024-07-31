@@ -3,7 +3,7 @@ from random import randint
 
 import pygame
 
-from src.enums import FarmingTool, GameState, Map, CustomEvent
+from src.enums import FarmingTool, GameState, Map, CustomEvent, SeedType
 from src.events import post_event
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
@@ -20,7 +20,7 @@ from src.settings import (
     GAME_MAP
 )
 from src.sprites.character import Character
-from src.sprites.entities.entity import Entity
+from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
 from src.sprites.particle import ParticleSprite
 from src.sprites.setup import ENTITY_ASSETS
@@ -42,8 +42,8 @@ class Level:
     # sprite groups
     all_sprites: AllSprites
     collision_sprites: PersistentSpriteGroup
-    interaction_sprites: PersistentSpriteGroup
     tree_sprites: PersistentSpriteGroup
+    interaction_sprites: PersistentSpriteGroup
     map_exits: pygame.sprite.Group
 
     # farming
@@ -88,8 +88,9 @@ class Level:
 
         self.all_sprites = AllSprites()
         self.collision_sprites = PersistentSpriteGroup()
-        self.interaction_sprites = PersistentSpriteGroup()
         self.tree_sprites = PersistentSpriteGroup()
+        self.interaction_sprites = PersistentSpriteGroup()
+        self.drop_sprites = pygame.sprite.Group()
         self.map_exits = PersistentSpriteGroup()
 
         self.soil_layer = SoilLayer(
@@ -118,6 +119,14 @@ class Level:
         )
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
+
+        # drops manager
+        self.drops_manager = DropsManager(
+            self.all_sprites,
+            self.drop_sprites,
+            self.frames['level']['drops']
+        )
+        self.drops_manager.player = self.player
 
         # weather
         self.sky = Sky()
@@ -167,6 +176,8 @@ class Level:
             player_emote_manager=self.player_emote_manager,
             npc_emote_manager=self.npc_emote_manager,
 
+            drops_manager=self.drops_manager,
+
             soil_layer=self.soil_layer,
             apply_tool=self.apply_tool,
 
@@ -215,9 +226,11 @@ class Level:
                 if plant.harvestable and is_player_near:
 
                     # add resource
-                    ressource = plant.seed_type
+                    ressource: SeedType = plant.seed_type
                     quantity = 3
-                    self.player.add_resource(ressource, quantity)
+                    self.player.add_resource(
+                        ressource.as_nonseed_ir(), quantity
+                    )
 
                     # update grid
                     x, y = map_coords_to_tile(plant.rect.center)
@@ -248,7 +261,7 @@ class Level:
                     self.tree_sprites,
                     False,
                     lambda spr, tree_spr: spr.axe_hitbox.colliderect(
-                        tree_spr.rect
+                        tree_spr.hitbox_rect
                     )
                 ):
                     tree.hit(entity)
@@ -327,9 +340,10 @@ class Level:
         # No need to iterate using explicit sprites() call.
         # Iterating over a sprite group normally will do the same thing
         for tree in self.tree_sprites:
-            for apple in tree.apple_sprites:
-                apple.kill()
-            tree.create_fruit()
+            for fruit in tree.fruit_sprites:
+                fruit.kill()
+            if tree.alive:
+                tree.create_fruit()
 
         # sky
         self.sky.start_color = [255, 255, 255]
@@ -363,6 +377,11 @@ class Level:
                 hitbox = sprite.hitbox_rect.copy()
                 hitbox.topleft += offset
                 pygame.draw.rect(self.display_surface, 'blue', hitbox, 2)
+            for drop in self.drop_sprites:
+                pygame.draw.rect(self.display_surface, 'red',
+                                 drop.rect.move(*offset), 2)
+                pygame.draw.rect(self.display_surface, 'blue',
+                                 drop.hitbox_rect.move(*offset), 2)
 
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -389,6 +408,7 @@ class Level:
         self.day_transition.update()
         self.map_transition.update()
         self.all_sprites.update(dt)
+        self.drops_manager.update()
 
         # draw
         self.draw(dt)

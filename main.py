@@ -4,9 +4,11 @@ import pygame
 
 from src import support
 from src.enums import GameState, CustomEvent
+from src.events import OPEN_INVENTORY
 from src.groups import AllSprites
 from src.gui.setup import setup_gui
 from src.gui.interface.dialog import DialogueManager
+from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
@@ -17,6 +19,29 @@ from src.settings import (
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
 from src.sprites.setup import setup_entity_assets
+
+
+_COSMETICS = frozenset(
+    {
+        "goggles",
+        "horn",
+        "necklace",
+        "hat"
+    }
+)
+# Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed
+_COSMETIC_SCALE_FACTORS = {
+    "goggles": 2,
+    "horn": 4,
+    "necklace": 2,
+    "hat": 3
+}
+_COSMETIC_SUBSURF_AREAS = {
+    "goggles": pygame.Rect(0, 0, 27, 16),
+    "horn": pygame.Rect(32, 0, 16, 16),
+    "necklace": pygame.Rect(0, 16, 21, 22),
+    "hat": pygame.Rect(24, 16, 20, 11)
+}
 
 
 class Game:
@@ -30,6 +55,7 @@ class Game:
         # frames
         self.level_frames: dict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
+        self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
 
         # assets
@@ -53,6 +79,8 @@ class Game:
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
+        self.inventory_menu = InventoryMenu(self.player, self.frames, self.switch_state,
+                                            self.player.assign_tool, self.player.assign_seed)
 
         # dialog
         self.all_sprites = AllSprites()
@@ -63,12 +91,18 @@ class Game:
             GameState.MAIN_MENU: self.main_menu,
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
-            GameState.SHOP: self.shop_menu
+            GameState.SHOP: self.shop_menu,
+            GameState.INVENTORY: self.inventory_menu
         }
         self.current_state = GameState.MAIN_MENU
 
     def switch_state(self, state: GameState):
         self.current_state = state
+        if self.current_state == GameState.SAVE_AND_RESUME:
+            self.level.player.save()
+            self.current_state = GameState.PLAY
+        if self.current_state == GameState.INVENTORY:
+            self.inventory_menu.refresh_buttons_content()
         if self.game_paused():
             self.player.blocked = True
             self.player.direction.update((0, 0))
@@ -92,14 +126,30 @@ class Game:
             'corn': support.import_folder('images/plants/corn'),
             'rain drops': support.import_folder('images/rain/drops'),
             'rain floor': support.import_folder('images/rain/floor'),
-            'objects': support.import_folder_dict('images/objects')
+            'objects': support.import_folder_dict('images/objects'),
+            'drops': support.import_folder_dict('images/drops')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
+        cosmetic_surf = pygame.image.load(
+            support.resource_path("images/cosmetics.png")
+        ).convert_alpha()
+        for cosmetic in _COSMETICS:
+            self.cosmetic_frames[cosmetic] = pygame.transform.scale_by(
+                cosmetic_surf.subsurface(
+                    _COSMETIC_SUBSURF_AREAS[cosmetic]
+                ),
+                _COSMETIC_SCALE_FACTORS[cosmetic]
+            )
         self.frames = {
             "emotes": self.emotes,
             'level': self.level_frames,
-            'overlay': self.overlay_frames
+            'overlay': self.overlay_frames,
+            "cosmetics": self.cosmetic_frames,
+            "checkmark": pygame.transform.scale_by(pygame.image.load(
+                support.resource_path("images/checkmark.png")
+            ).convert_alpha(), 4)
         }
+        prepare_checkmark_for_buttons(self.frames["checkmark"])
 
         setup_entity_assets()
 
@@ -130,6 +180,8 @@ class Game:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == OPEN_INVENTORY:
+            self.switch_state(GameState.INVENTORY)
         elif event.type == CustomEvent.DIALOG_SHOW:
             if self.dialogue_manager.showing_dialogue:
                 pass
