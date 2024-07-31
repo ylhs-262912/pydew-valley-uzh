@@ -38,7 +38,7 @@ class Player(Character):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
-                [FarmingTool, tuple[int, int], Character], None
+                [FarmingTool, tuple[float, float], Character], None
             ],
             interact: Callable[[], None],
             emote_manager: PlayerEmoteManager,
@@ -61,7 +61,6 @@ class Player(Character):
         self.speed = 250
         self.blocked = False
         self.paused = False
-        self.font = font
         self.interact = interact
 
         self.emote_manager = emote_manager
@@ -230,6 +229,9 @@ class Player(Character):
              self.hitbox_rect.y - self._current_hitbox.y),
             self.rect.size
         )
+
+    def teleport(self, pos: tuple[float, float]):
+        self.rect.update((pos[0] - self.rect.width / 2, pos[1] - self.rect.height / 2), self.rect.size)
 
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()

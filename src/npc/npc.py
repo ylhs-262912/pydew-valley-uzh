@@ -25,7 +25,7 @@ class NPC(NPCBase):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
-                [FarmingTool, tuple[int, int], Character], None
+                [FarmingTool, tuple[float, float], Character], None
             ],
             soil_layer: SoilLayer,
             emote_manager: NPCEmoteManager

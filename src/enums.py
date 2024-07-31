@@ -221,8 +221,7 @@ class EntityState(StrEnum):
 
 class Layer(IntEnum):
     WATER = 0
-    LOWER_GROUND = auto()
-    UPPER_GROUND = auto()
+    GROUND = auto()
     SOIL = auto()
     SOIL_WATER = auto()
     RAIN_FLOOR = auto()

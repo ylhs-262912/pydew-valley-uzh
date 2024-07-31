@@ -1,48 +1,75 @@
-import math
 from collections.abc import Callable
 from random import randint
 
 import pygame
-import pytmx
-from pathfinding.core.grid import Grid as PF_Grid
-from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
-from src.enums import FarmingTool, GameState, Layer, Map, CustomEvent
+from src.enums import FarmingTool, GameState, Map, CustomEvent
 from src.events import post_event
-from src.groups import AllSprites
+from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
-from src.map_objects import MapObjects
-from src.npc.chicken import Chicken
-from src.npc.cow import Cow
-from src.npc.npc import NPC
-from src.npc.setup import AIData
 from src.overlay.overlay import Overlay
 from src.overlay.sky import Sky, Rain
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
+from src.screens.game_map import GameMap
 from src.settings import (
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
-    SCALE_FACTOR,
-    SCALED_TILE_SIZE,
-    TEST_ANIMALS,
-    TILE_SIZE,
     MapDict,
-    ENABLE_NPCS,
     SoundDict,
-    SETUP_PATHFINDING,
-    GAME_MAP,
+    GAME_MAP
 )
-from src.sprites.base import Sprite, AnimatedSprite, CollideableMapObject
 from src.sprites.character import Character
-from src.sprites.particle import ParticleSprite
+from src.sprites.entities.entity import Entity
 from src.sprites.entities.player import Player
-from src.sprites.objects.tree import Tree
-from src.sprites.setup import ENTITY_ASSETS, setup_entity_assets
+from src.sprites.particle import ParticleSprite
+from src.sprites.setup import ENTITY_ASSETS
 from src.support import map_coords_to_tile, load_data, resource_path
 
 
 class Level:
+    display_surface: pygame.Surface
+    switch_screen: Callable[[GameState], None]
+
+    # assets
+    font: pygame.Font
+    frames: dict
+    sounds: SoundDict
+    tmx_maps: MapDict
+    current_map: Map | None
+    game_map: GameMap | None
+
+    # sprite groups
+    all_sprites: AllSprites
+    collision_sprites: PersistentSpriteGroup
+    interaction_sprites: PersistentSpriteGroup
+    tree_sprites: PersistentSpriteGroup
+    map_exits: pygame.sprite.Group
+
+    # farming
+    soil_layer: SoilLayer
+
+    # emotes
+    _emotes: dict
+    player_emote_manager: PlayerEmoteManager
+    npc_emote_manager: NPCEmoteManager
+
+    player: Player
+
+    # weather
+    sky: Sky
+    rain: Rain
+    raining: bool
+
+    # transitions
+    map_transition: Transition
+    day_transition: Transition
+    current_day: int
+
+    # overlay
+    overlay: Overlay
+    show_hitbox_active: bool
+
     def __init__(
             self, switch: Callable[[GameState], None], tmx_maps: MapDict,
             frames: dict[str, dict], sounds: SoundDict
@@ -51,287 +78,121 @@ class Level:
         self.display_surface = pygame.display.get_surface()
         self.switch_screen = switch
 
-        # pathfinding
-        self.pf_matrix_size = (0, 0)
-        self.pf_matrix = []
-        self.pf_grid: PF_Grid | None = None
-        self.pf_finder = PF_AStarFinder()
-
-        # tilemap objects
-        self.map_objects: MapObjects | None = None
-
-        # sprite groups
-        self.entities: dict[str, Player] = {}
-        self.npcs: dict[str, NPC] = {}
-        self.animals = []
-        self.all_sprites = AllSprites()
-        self.collision_sprites = pygame.sprite.Group()
-        self.tree_sprites = pygame.sprite.Group()
-        self.interaction_sprites = pygame.sprite.Group()
-
         # assets
         self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
         self.frames = frames
         self.sounds = sounds
         self.tmx_maps = tmx_maps
-        self.current_map = GAME_MAP
+        self.current_map = None
+        self.game_map = None
 
-        # soil
+        self.all_sprites = AllSprites()
+        self.collision_sprites = PersistentSpriteGroup()
+        self.interaction_sprites = PersistentSpriteGroup()
+        self.tree_sprites = PersistentSpriteGroup()
+        self.map_exits = PersistentSpriteGroup()
+
         self.soil_layer = SoilLayer(
             self.all_sprites,
-            tmx_maps[self.current_map],
-            frames["level"],
-            sounds
+            self.frames["level"],
+            self.sounds
         )
 
-        # weather
-        self.sky = Sky()
-        self.rain = Rain(self.all_sprites, frames['level'], self.get_map_size())
-        self.raining = False
-
-        # emotes
-        self.emotes = self.frames["emotes"]
+        self._emotes = self.frames["emotes"]
         self.player_emote_manager = PlayerEmoteManager(
-            self.emotes, (self.all_sprites,)
+            self._emotes, self.all_sprites
         )
-
         self.npc_emote_manager = NPCEmoteManager(
-            self.emotes, (self.all_sprites,)
+            self._emotes, self.all_sprites
         )
 
-        # setup map
-        self.setup()
-        self.player = self.entities['Player']
-
-        # day night cycle
-        self.day_transition = Transition(self.reset, self.finish_reset, dur=3200)
-        self.current_day = 0
-
-        # weather
-        self.sky = Sky()
-        self.rain = Rain(
-            self.all_sprites,
-            frames["level"],
-            (tmx_maps[self.current_map].width *
-             TILE_SIZE *
-             SCALE_FACTOR,
-             tmx_maps[self.current_map].height *
-             TILE_SIZE *
-             SCALE_FACTOR))
-
-        # overlays
-        self.overlay = Overlay(self.player, frames['overlay'])
-        self.shop_active = False
-        self.show_hitbox_active = False
-
-    # setup
-    def setup(self):
-        self.activate_music()
-
-        if SETUP_PATHFINDING:
-            self.pf_matrix_size = (self.tmx_maps[self.current_map].width,
-                                   self.tmx_maps[self.current_map].height)
-            self.pf_matrix = [
-                [1 for _ in range(self.pf_matrix_size[0])]
-                for _ in range(self.pf_matrix_size[1])
-            ]
-
-        if self.current_map == Map.FARM:
-            self.setup_tile_layer('Lower ground', self.setup_environment)
-            self.setup_tile_layer('Upper ground', self.setup_environment)
-        else:
-            self.setup_tile_layer('Ground', self.setup_environment)
-            self.setup_tile_layer('Water_decoration', self.setup_environment)
-            self.setup_tile_layer('Hills', self.setup_environment)
-            self.setup_tile_layer('Paths', self.setup_environment)
-            self.setup_tile_layer('House_ground', self.setup_environment)
-            self.setup_tile_layer('House_walls', self.setup_house)
-            self.setup_tile_layer('House_furniture_bottom', self.setup_environment)
-            self.setup_tile_layer('House_furniture_top', self.setup_house)
-            self.setup_tile_layer('Border', self.setup_border)
-
-        self.setup_tile_layer('Water', self.setup_water)
-
-        self.map_objects = MapObjects(self.tmx_maps[self.current_map])
-
-        if self.current_map == Map.FARM:
-            self.setup_object_layer(
-                'Collidable objects', self.setup_collideable_object
-            )
-        else:
-            self.setup_object_layer(
-                'Decorative', self.setup_collideable_object
-            )
-            self.setup_object_layer(
-                'Vegetation', self.setup_collideable_object
-            )
-            self.setup_object_layer(
-                'Trees', self.setup_collideable_object
-            )
-
-        self.setup_object_layer('Interactions', self.setup_interaction)
-
-        self.setup_object_layer('Collisions', self.setup_collision)
-        self.setup_object_layer('Entities', self.setup_entity)
-
-        if SETUP_PATHFINDING:
-            AIData.setup(self.pf_matrix, self.entities['Player'])
-
-        if ENABLE_NPCS:
-            self.setup_object_layer('NPCs', self.setup_npc)
-            self.setup_emote_interactions()
-
-        if TEST_ANIMALS:
-            self.setup_object_layer("Animals", self.setup_animal)
-
-    def setup_tile_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pygame.Surface], None]):
-        for x, y, surf in self.tmx_maps[self.current_map].get_layer_by_name(layer).tiles():
-            x = x * TILE_SIZE * SCALE_FACTOR
-            y = y * TILE_SIZE * SCALE_FACTOR
-            pos = (x, y)
-            setup_func(pos, surf)
-
-    def setup_environment(self, pos: tuple[int, int], surf: pygame.Surface):
-        image = pygame.transform.scale_by(surf, SCALE_FACTOR)
-        Sprite(pos, image, self.all_sprites, Layer.LOWER_GROUND)
-
-    def setup_house(self, pos: tuple[int, int], surf: pygame.Surface):
-        image = pygame.transform.scale_by(surf, SCALE_FACTOR)
-        Sprite(pos, image, self.all_sprites, Layer.MAIN)
-
-    def setup_border(self, pos: tuple[int, int], surf: pygame.Surface):
-        image = pygame.transform.scale_by(surf, SCALE_FACTOR)
-        Sprite(pos, image, (self.all_sprites, self.collision_sprites), Layer.BORDER)
-
-    def setup_water(self, pos: tuple[int, int], surf: pygame.Surface):
-        image = self.frames['level']['animations']['water']
-        AnimatedSprite(pos, image, self.all_sprites, Layer.WATER)
-
-    def setup_object_layer(self, layer: str, setup_func: Callable[[tuple[int, int], pytmx.TiledObject], None]):
-        for obj in self.tmx_maps[self.current_map].get_layer_by_name(layer):
-            x = int(obj.x * SCALE_FACTOR)
-            y = int(obj.y * SCALE_FACTOR)
-            pos = (x, y)
-            setup_func(pos, obj)
-
-    def pf_matrix_setup_collision(self, pos: tuple[float, float], size: tuple[float, float]):
-        """
-        :param pos: Absolute position of collision rect (x, y)
-        :param size: Absolute size of collision rect (width, height)
-        """
-        tile_x = int(pos[0] / TILE_SIZE)
-        tile_y = int(pos[1] / TILE_SIZE)
-        tile_w = math.ceil((pos[0] + size[0]) / TILE_SIZE) - tile_x
-        tile_h = math.ceil((pos[1] + size[1]) / TILE_SIZE) - tile_y
-
-        for w in range(tile_w):
-            for h in range(tile_h):
-                self.pf_matrix[tile_y + h][tile_x + w] = 0
-
-    def setup_collideable_object(self, pos: tuple[int, int], obj: pytmx.TiledObject):
-        if obj.name == 'Tree':
-            apple_frames = self.frames['level']['objects']['apple']
-            stump_frames = self.frames['level']['objects']['stump']
-
-            Tree(pos,
-                 self.map_objects[obj.gid],
-                 (self.all_sprites, self.collision_sprites, self.tree_sprites),
-                 obj.name, apple_frames, stump_frames)
-        else:
-            object_type = self.map_objects[obj.gid]
-
-            CollideableMapObject(
-                pos, object_type, (self.all_sprites, self.collision_sprites)
-            )
-
-        if SETUP_PATHFINDING:
-            self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
-
-    def setup_collision(self, pos: tuple[int, int], obj: pytmx.TiledObject):
-        size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
-        image = pygame.Surface(size)
-        Sprite(pos, image, self.collision_sprites)
-
-        if SETUP_PATHFINDING:
-            self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
-
-    def setup_interaction(self, pos: tuple[int, int], obj: pytmx.TiledObject):
-        size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
-        image = pygame.Surface(size)
-        Sprite(pos, image, self.interaction_sprites, Layer.MAIN, obj.name)
-
-    def setup_entity(self, pos: tuple[int, int], obj: pytmx.TiledObject):
-        self.entities[obj.name] = Player(
-            pos=pos,
+        self.player = Player(
+            pos=(0, 0),
             assets=ENTITY_ASSETS.RABBIT,
-            groups=(self.all_sprites, self.collision_sprites,),
+            groups=tuple(),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             interact=self.interact,
             emote_manager=self.player_emote_manager,
-            sounds=self.sounds,
-            font=self.font
+            sounds=self.sounds
+        )
+        self.all_sprites.add_persistent(self.player)
+        self.collision_sprites.add_persistent(self.player)
+
+        # weather
+        self.sky = Sky()
+        self.rain = Rain(
+            self.all_sprites, self.frames["level"], (0, 0)
+        )
+        self.raining = False
+
+        self.load_map(GAME_MAP)
+        self.map_transition = Transition(
+            lambda: self.switch_to_map(self.current_map), self.finish_transition,
+            dur=2400
         )
 
-    def setup_npc(self, pos: tuple[int, int], obj: pytmx.TiledObject):
-        self.npcs[obj.name] = NPC(
-            pos=pos,
-            assets=ENTITY_ASSETS.RABBIT,
-            groups=(self.all_sprites, self.collision_sprites,),
+        self.activate_music()
+
+        # day night cycle
+        self.day_transition = Transition(
+            self.reset, self.finish_transition, dur=3200
+        )
+        self.current_day = 0
+
+        # overlays
+        self.overlay = Overlay(self.player, frames['overlay'])
+        self.show_hitbox_active = False
+
+    def load_map(self, game_map: Map, from_map: str = None):
+        self.all_sprites.empty()
+        self.collision_sprites.empty()
+        self.interaction_sprites.empty()
+        self.tree_sprites.empty()
+        self.map_exits.empty()
+
+        self.soil_layer.reset()
+
+        self.game_map = GameMap(
+            tilemap=self.tmx_maps[game_map],
+
+            all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,
-            apply_tool=self.apply_tool,
+            interaction_sprites=self.interaction_sprites,
+            tree_sprites=self.tree_sprites,
+            map_exits=self.map_exits,
+
+            player=self.player,
+
+            player_emote_manager=self.player_emote_manager,
+            npc_emote_manager=self.npc_emote_manager,
+
             soil_layer=self.soil_layer,
-            emote_manager=self.npc_emote_manager,
+            apply_tool=self.apply_tool,
+
+            frames=self.frames
         )
 
-    def setup_animal(self, pos, obj):
-        if obj.name == "Chicken":
-            self.animals.append(Chicken(
-                pos=pos,
-                assets=ENTITY_ASSETS.CHICKEN,
-                groups=(self.all_sprites, self.collision_sprites),
-                collision_sprites=self.collision_sprites,
-            ))
-        elif obj.name == "Cow":
-            self.animals.append(Cow(
-                pos=pos,
-                assets=ENTITY_ASSETS.COW,
-                groups=(self.all_sprites, self.collision_sprites),
-                collision_sprites=self.collision_sprites
-            ))
-        else:
-            print(f"Malformed animal object name \"{obj.name}\" in tilemap")
+        player_spawn = None
 
-    def setup_emote_interactions(self):
-        @self.player_emote_manager.on_show_emote
-        def on_show_emote(emote: str):
-            if self.player.focused_entity:
-                npc = self.player.focused_entity
-                npc.abort_path()
+        if from_map:
+            player_spawn = self.game_map.player_entrances.get(from_map)
+            if not player_spawn:
+                print(f"No valid entrance point found for \"{game_map}\" "
+                      f"from: \"{self.current_map}\"")
 
-                self.npc_emote_manager.show_emote(npc, emote)
+        if not player_spawn:
+            if self.game_map.player_spawnpoint:
+                player_spawn = self.game_map.player_spawnpoint
+            else:
+                print(f"No default spawnpoint found on {game_map}")
+                player_spawn = list(self.game_map.player_entrances.values())[0]
 
-        @self.player_emote_manager.on_emote_wheel_opened
-        def on_emote_wheel_opened():
-            player_pos = self.player.rect.center
-            distance_to_player = 5 * SCALED_TILE_SIZE
-            npc_to_focus = None
-            for npc in self.npcs.values():
-                current_distance = ((player_pos[0] - npc.rect.center[0]) ** 2 +
-                                    (player_pos[1] - npc.rect.center[1]) ** 2) ** .5
-                if current_distance < distance_to_player:
-                    distance_to_player = current_distance
-                    npc_to_focus = npc
-            if npc_to_focus:
-                self.player.focus_entity(npc_to_focus)
+        self.player.teleport(player_spawn)
 
-        @self.player_emote_manager.on_emote_wheel_closed
-        def on_emote_wheel_closed():
-            self.player.unfocus_entity()
+        self.rain.floor_w, self.rain.floor_h = self.game_map.get_size()
 
-    def get_map_size(self):
-        return (self.tmx_maps[self.current_map].width * TILE_SIZE * SCALE_FACTOR,
-                self.tmx_maps[self.current_map].height * TILE_SIZE * SCALE_FACTOR)
+        self.current_map = game_map
 
     def activate_music(self):
         volume = 0.1
@@ -368,6 +229,12 @@ class Level:
                     plant.kill()
                     self.create_particle(plant)
 
+    def switch_to_map(self, map_name: Map):
+        if self.tmx_maps.get(map_name):
+            self.load_map(map_name, from_map=self.current_map)
+        else:
+            self.load_map(self.current_map, from_map=map_name)
+
     def create_particle(self, sprite: pygame.sprite.Sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
@@ -380,7 +247,9 @@ class Level:
                     entity,
                     self.tree_sprites,
                     False,
-                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(tree_spr.rect)
+                    lambda spr, tree_spr: spr.axe_hitbox.colliderect(
+                        tree_spr.rect
+                    )
                 ):
                     tree.hit(entity)
                     self.sounds["axe"].play()
@@ -393,10 +262,12 @@ class Level:
                 self.soil_layer.plant(pos, tool, entity.inventory)
 
     def interact(self):
-        collided_interactions = pygame.sprite.spritecollide(self.player, self.interaction_sprites, False)
+        collided_interactions = pygame.sprite.spritecollide(
+            self.player, self.interaction_sprites, False
+        )
         if collided_interactions:
             if collided_interactions[0].name == 'Bed':
-                self.start_reset()
+                self.start_day_transition()
             if collided_interactions[0].name == 'Trader':
                 self.switch_screen(GameState.SHOP)
 
@@ -420,6 +291,17 @@ class Level:
                 return True
 
         return False
+
+    def start_transition(self):
+        self.player.blocked = True
+        self.player.direction = pygame.Vector2(0, 0)
+
+    def finish_transition(self):
+        self.player.blocked = False
+
+    def start_day_transition(self):
+        self.day_transition.activate()
+        self.start_transition()
 
     # reset
     def reset(self):
@@ -453,15 +335,19 @@ class Level:
         self.sky.start_color = [255, 255, 255]
         self.sky.set_time(6, 0)  # set to 0600 hours upon sleeping
 
-    def finish_reset(self):
-        for entity in self.entities.values():
-            entity.blocked = False
+    def start_map_transition(self):
+        self.map_transition.activate()
+        self.start_transition()
 
-    def start_reset(self):
-        self.day_transition.activate()
-        for entity in self.entities.values():
-            entity.blocked = True
-            entity.direction = pygame.Vector2(0, 0)
+    def check_map_exit(self):
+        if not self.map_transition:
+            for map_exit in self.map_exits:
+                if self.player.hitbox_rect.colliderect(map_exit.rect):
+                    self.map_transition.reset = lambda: self.switch_to_map(
+                        map_exit.name
+                    )
+                    self.start_map_transition()
+                    return
 
     # draw
     def draw_hitboxes(self):
@@ -488,17 +374,20 @@ class Level:
         self.sky.display(dt)
         self.draw_overlay()
         self.day_transition.draw()
-        
+        self.map_transition.draw()
+
     # update
     def update_rain(self):
-        if self.raining and not self.shop_active:
+        if self.raining:
             self.rain.update()
 
     def update(self, dt: float):
         # update
+        self.check_map_exit()
         self.plant_collision()
         self.update_rain()
         self.day_transition.update()
+        self.map_transition.update()
         self.all_sprites.update(dt)
 
         # draw

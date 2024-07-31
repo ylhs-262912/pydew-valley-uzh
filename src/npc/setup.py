@@ -18,14 +18,27 @@ class AIData:
 
     player: Player = None
 
+    _setup: bool = False
+
     @classmethod
-    def setup(
+    def update(
             cls, pathfinding_matrix: list[list[int]], player: Player
     ) -> None:
-        NPCBehaviourTree.init()
-        ChickenBehaviourTree.init()
-        CowBehaviourTree.init()
-        CowFleeBehaviourTree.init()
+        if not cls._setup:
+            NPCBehaviourTree.init()
+            ChickenBehaviourTree.init()
+            CowBehaviourTree.init()
+            CowFleeBehaviourTree.init()
+
+            NPCBase.pf_finder = AStarFinder()
+            ChickenBase.pf_finder = AStarFinder(
+                diagonal_movement=DiagonalMovement.only_when_no_obstacle
+            )
+            CowBase.pf_finder = AStarFinder(
+                diagonal_movement=DiagonalMovement.only_when_no_obstacle
+            )
+
+            cls._setup = True
 
         cls.Matrix = pathfinding_matrix
         cls.Grid = Grid(matrix=cls.Matrix)
@@ -33,13 +46,5 @@ class AIData:
         for ai in (NPCBase, ChickenBase, CowBase):
             ai.pf_matrix = cls.Matrix
             ai.pf_grid = cls.Grid
-
-        NPCBase.pf_finder = AStarFinder()
-        ChickenBase.pf_finder = AStarFinder(
-            diagonal_movement=DiagonalMovement.only_when_no_obstacle
-        )
-        CowBase.pf_finder = AStarFinder(
-            diagonal_movement=DiagonalMovement.only_when_no_obstacle
-        )
 
         cls.player = player
