@@ -247,6 +247,7 @@ class EntityState(StrEnum):
 class Layer(IntEnum):
     WATER = 0
     GROUND = auto()
+    GROUND_OBJECTS = auto()
     SOIL = auto()
     SOIL_WATER = auto()
     RAIN_FLOOR = auto()
@@ -264,6 +265,7 @@ class Map(StrEnum):
     FARM = "farm"
     NEW_FARM = "farm_new"
     FOREST = "forest"
+    TOWN = "town"
 
 
 class StudyGroup(IntEnum):
@@ -271,8 +273,3 @@ class StudyGroup(IntEnum):
     NO_GROUP = 0  # Set at the beginning of the game.
     INGROUP = auto()
     OUTGROUP = auto()
-
-
-class CustomEvent(IntEnum):
-    DIALOG_SHOW = create_custom_event_type("DIALOG_SHOW", dial=str)
-    DIALOG_ADVANCE = create_custom_event_type("DIALOG_ADVANCE")

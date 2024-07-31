@@ -3,8 +3,8 @@ import sys
 import pygame
 
 from src import support
-from src.enums import GameState, CustomEvent
-from src.events import OPEN_INVENTORY
+from src.enums import GameState
+from src.events import OPEN_INVENTORY, DIALOG_SHOW, DIALOG_ADVANCE
 from src.groups import AllSprites
 from src.gui.setup import setup_gui
 from src.gui.interface.dialog import DialogueManager
@@ -182,7 +182,7 @@ class Game:
             sys.exit()
         if event.type == OPEN_INVENTORY:
             self.switch_state(GameState.INVENTORY)
-        elif event.type == CustomEvent.DIALOG_SHOW:
+        elif event.type == DIALOG_SHOW:
             if self.dialogue_manager.showing_dialogue:
                 pass
             else:
@@ -190,7 +190,7 @@ class Game:
                 self.player.blocked = True
                 self.player.direction.update((0, 0))
             return True
-        elif event.type == CustomEvent.DIALOG_ADVANCE:
+        elif event.type == DIALOG_ADVANCE:
             if self.dialogue_manager.showing_dialogue:
                 self.dialogue_manager.advance()
                 if not self.dialogue_manager.showing_dialogue:

@@ -62,7 +62,27 @@ def _setup_object_layer(
     return objects
 
 
-class InvalidMapException(Exception):
+def _get_layer_property(
+        layer: TiledTileLayer | TiledObjectGroup,
+        property_name: str,
+        callback: Callable[[str], Any],
+        default: Any
+):
+    prop = layer.properties.get("layer")
+    if prop:
+        try:
+            return callback(prop)
+        except Exception as e:
+            print(
+                f"WARNING: Property {property_name} is invalid for layer "
+                f"{layer}. Full error: {e}\n"
+            )
+
+    if prop is None:
+        return default
+
+
+class InvalidMapError(Exception):
     pass
 
 
@@ -378,14 +398,14 @@ class GameMap:
                 (obj.x, obj.y), (obj.width, obj.height)
             )
 
-    def _setup_player_point(
+    def _setup_player_warp(
             self,
             pos: tuple[int, int],
             obj: TiledObject
     ):
         """
-        Add a new Player entrance / spawn point.
-        The type of the point will be retrieved from the object's name.
+        Add a new Player warp point.
+        The type of the warp will be retrieved from the object's name.
 
         The default spawnpoint should be named "spawnpoint", and teleport
         destination points should be named "from " + map name (without .tmx),
@@ -396,8 +416,8 @@ class GameMap:
         will be used when teleporting to farm_new should be named
         "to farm_new".
 
-        :param pos: Position of the point
-        :param obj: TiledObject to create the point from
+        :param pos: Position of the warp
+        :param obj: TiledObject to create the warp from
         """
         name = obj.name
         if name == "spawnpoint":
@@ -424,10 +444,10 @@ class GameMap:
                     ).add(self.map_exits)
                 else:
                     print(
-                        f"WARNING: Invalid player point {name}"
+                        f"WARNING: Invalid player warp \"{name}\""
                     )
             else:
-                print(f"WARNING: Invalid player point {name}")
+                print(f"WARNING: Invalid player warp \"{name}\"")
 
     def _setup_npc(
             self,
@@ -499,21 +519,12 @@ class GameMap:
                     )
                     continue
 
-                # create visible tile layers
+                # create tile layers
                 # set layer if defined in the TileLayer properties
-                layer = tilemap_layer.properties.get("layer")
-                if layer:
-                    try:
-                        layer = Layer[layer]
-                    except KeyError:
-                        print(
-                            f"WARNING: Layer {layer} does not exist\n"
-                            f"Tiles from the TileLayer {tilemap_layer} "
-                            f"will be rendered on GROUND instead"
-                        )
-
-                if layer is None:
-                    layer = Layer.GROUND
+                layer = _get_layer_property(
+                    tilemap_layer, "layer",
+                    lambda prop: Layer[prop], Layer.GROUND
+                )
 
                 if layer == Layer.WATER:
                     # tiles on the WATER layer will always be created as water
@@ -570,14 +581,14 @@ class GameMap:
                 elif tilemap_layer.name == "Player":
                     _setup_object_layer(
                         tilemap_layer,
-                        lambda pos, obj: self._setup_player_point(pos, obj)
+                        lambda pos, obj: self._setup_player_warp(pos, obj)
                     )
 
                     if (not self.player_entrances and
                             not self.player_spawnpoint):
-                        raise InvalidMapException(
-                            "No Player entrance point has been found in the "
-                            "map's Player layer"
+                        raise InvalidMapError(
+                            "No Player warp point could be found in the map's "
+                            "Player layer"
                         )
                 elif tilemap_layer.name == "NPCs":
                     if ENABLE_NPCS:
@@ -596,11 +607,17 @@ class GameMap:
                     else:
                         continue
                 else:
+                    # set layer if defined in the TileLayer properties
+                    layer = _get_layer_property(
+                        tilemap_layer, "layer",
+                        lambda prop: Layer[prop], Layer.MAIN
+                    )
+
                     # decorative objects will be created as collideable object
                     _setup_object_layer(
                         tilemap_layer,
                         lambda pos, obj: self._setup_collideable_object(
-                            pos, obj, Layer.MAIN,
+                            pos, obj, layer,
                             (self.all_sprites, self.collision_sprites)
                         )
                     )

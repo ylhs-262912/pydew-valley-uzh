@@ -295,4 +295,4 @@ class InventoryMenu(AbstractMenu):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-                self.switch_screen(GameState.LEVEL)
+                self.switch_screen(GameState.PLAY)

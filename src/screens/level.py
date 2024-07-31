@@ -3,8 +3,8 @@ from random import randint
 
 import pygame
 
-from src.enums import FarmingTool, GameState, Map, CustomEvent, SeedType
-from src.events import post_event
+from src.enums import FarmingTool, GameState, Map, SeedType
+from src.events import post_event, DIALOG_SHOW, DIALOG_ADVANCE
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.overlay.overlay import Overlay
@@ -17,7 +17,7 @@ from src.settings import (
     SCREEN_WIDTH,
     MapDict,
     SoundDict,
-    GAME_MAP
+    GAME_SPAWN
 )
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
@@ -44,6 +44,7 @@ class Level:
     collision_sprites: PersistentSpriteGroup
     tree_sprites: PersistentSpriteGroup
     interaction_sprites: PersistentSpriteGroup
+    drop_sprites: pygame.sprite.Group
     map_exits: pygame.sprite.Group
 
     # farming
@@ -91,7 +92,7 @@ class Level:
         self.tree_sprites = PersistentSpriteGroup()
         self.interaction_sprites = PersistentSpriteGroup()
         self.drop_sprites = pygame.sprite.Group()
-        self.map_exits = PersistentSpriteGroup()
+        self.map_exits = pygame.sprite.Group()
 
         self.soil_layer = SoilLayer(
             self.all_sprites,
@@ -135,9 +136,10 @@ class Level:
         )
         self.raining = False
 
-        self.load_map(GAME_MAP)
+        self.load_map(GAME_SPAWN)
         self.map_transition = Transition(
-            lambda: self.switch_to_map(self.current_map), self.finish_transition,
+            lambda: self.switch_to_map(self.current_map),
+            self.finish_transition,
             dur=2400
         )
 
@@ -189,7 +191,7 @@ class Level:
         if from_map:
             player_spawn = self.game_map.player_entrances.get(from_map)
             if not player_spawn:
-                print(f"No valid entrance point found for \"{game_map}\" "
+                print(f"No valid entry warp found for \"{game_map}\" "
                       f"from: \"{self.current_map}\"")
 
         if not player_spawn:
@@ -297,10 +299,10 @@ class Level:
                 self.show_hitbox_active = not self.show_hitbox_active
                 return True
             if event.key == dialog_key:
-                post_event(CustomEvent.DIALOG_SHOW, dial="test")
+                post_event(DIALOG_SHOW, dial="test")
                 return True
             if event.key == advance_dialog_key:
-                post_event(CustomEvent.DIALOG_ADVANCE)
+                post_event(DIALOG_ADVANCE)
                 return True
 
         return False
