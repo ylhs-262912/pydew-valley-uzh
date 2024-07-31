@@ -172,7 +172,6 @@ class Level:
         self.setup_object_layer('Interactions', self.setup_interaction)
 
         self.setup_object_layer('Collisions', self.setup_collision)
-        setup_entity_assets()
         self.setup_object_layer('Entities', self.setup_entity)
 
         if SETUP_PATHFINDING:

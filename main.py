@@ -1,7 +1,6 @@
 import sys
 
 import pygame
-from pytmx import TiledMap
 
 from src import support
 from src.enums import GameState, CustomEvent
@@ -15,10 +14,9 @@ from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
-    CHAR_TILE_SIZE,
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
-
+from src.sprites.setup import setup_entity_assets
 
 
 class Game:
@@ -30,16 +28,12 @@ class Game:
         pygame.display.set_caption('PyDew')
 
         # frames
-        self.character_frames: dict[str, AniFrames] | None = None
-        self.chicken_frames: dict[str, AniFrames] | None = None
-        self.cow_frames: dict[str, AniFrames] | None = None
         self.level_frames: dict | None = None
-        self.tmx_maps: MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps: dict[str, TiledMap] | None = {}
+        self.tmx_maps: MapDict | None = None
 
         self.emotes: AniFrames | None = None
 
@@ -69,8 +63,7 @@ class Game:
             GameState.MAIN_MENU: self.main_menu,
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
-            GameState.SHOP: self.shop_menu,
-            # GameState.LEVEL: self.level
+            GameState.SHOP: self.shop_menu
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -108,6 +101,8 @@ class Game:
             'overlay': self.overlay_frames
         }
 
+        setup_entity_assets()
+
         setup_gui()
 
         # sounds
@@ -116,7 +111,7 @@ class Game:
         self.font = support.import_font(30, 'font/LycheeSoda.ttf')
 
     def game_paused(self):
-        return self.current_state != GameState.LEVEL
+        return self.current_state != GameState.PLAY
 
     # events
     def event_loop(self):

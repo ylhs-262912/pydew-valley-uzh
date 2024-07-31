@@ -26,7 +26,7 @@ _FT_SERIALISED_STRINGS = (
 
 class GameState(IntEnum):
     MAIN_MENU = 0
-    LEVEL = 1
+    PLAY = 1
     PAUSE = 2
     SETTINGS = 3
     SHOP = 4
@@ -238,6 +238,7 @@ class Layer(IntEnum):
 
 class Map(StrEnum):
     FARM = "farm"
+    NEW_FARM = "farm_new"
     FOREST = "forest"
 
 

@@ -101,7 +101,7 @@ class GeneralMenu:
 
     def button_action(self, text: str):
         if text == 'Play':
-            self.switch_screen(GameState.LEVEL)
+            self.switch_screen(GameState.PLAY)
         if text == 'Quit':
             self.quit_game()
 

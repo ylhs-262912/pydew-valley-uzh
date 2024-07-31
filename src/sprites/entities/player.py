@@ -28,7 +28,6 @@ class Player(Character):
 
     blocked: bool
     paused: bool
-    font: pygame.font.Font
     interact: Callable[[], None]
     sounds: SoundDict
 
@@ -43,8 +42,7 @@ class Player(Character):
             ],
             interact: Callable[[], None],
             emote_manager: PlayerEmoteManager,
-            sounds: SoundDict,
-            font: pygame.font.Font
+            sounds: SoundDict
     ):
 
         save_data = savefile.load_savefile()
