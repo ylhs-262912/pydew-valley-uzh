@@ -6,6 +6,7 @@ import pygame
 import pygame.gfxdraw
 
 from src.enums import Layer
+from src.groups import PersistentSpriteGroup
 from src.gui.interface.emotes_base import (
     EmoteBoxBase, EmoteManagerBase, EmoteWheelBase
 )
@@ -198,7 +199,7 @@ class EmoteWheel(EmoteWheelBase):
     def __init__(
             self,
             emote_manager: EmoteManagerBase,
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+            groups: tuple[PersistentSpriteGroup, ...] | PersistentSpriteGroup,
     ):
         """
         The Player's emote selection wheel
@@ -228,9 +229,11 @@ class EmoteWheel(EmoteWheelBase):
         self._setup_image()
 
         super().__init__(
-            (0, 0), self._image.copy(), groups,
+            (0, 0), self._image.copy(),
             z=Layer.TEXT_BOX
         )
+        for group in groups:
+            group.add_persistent(self)
 
         self.visible = False
 
@@ -383,7 +386,7 @@ class PlayerEmoteManager(EmoteManager):
     def __init__(
             self,
             emotes: dict[str, list[pygame.Surface]],
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+            groups: tuple[PersistentSpriteGroup, ...] | PersistentSpriteGroup
     ):
         super().__init__(emotes, groups)
 

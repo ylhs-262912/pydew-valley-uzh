@@ -12,10 +12,14 @@ class Sprite(pygame.sprite.Sprite):
                  pos: tuple[int | float,
                             int | float],
                  surf: pygame.Surface,
-                 groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+                 groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+                 = None,
                  z: int = Layer.MAIN,
                  name: str | None = None):
-        super().__init__(groups)
+        if groups:
+            super().__init__(groups)
+        else:
+            super().__init__()
         self.surf = surf
         self.image = surf
         self.rect = self.image.get_frect(topleft=pos)
