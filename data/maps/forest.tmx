@@ -13,6 +13,9 @@
  <tileset firstgid="581" source="../tilesets/grass_tileset.tsx"/>
  <tileset firstgid="658" source="../tilesets/Wooden_House_Walls_Tileset_modified.tsx"/>
  <layer id="6" name="Water" width="50" height="40">
+  <properties>
+   <property name="layer" value="WATER"/>
+  </properties>
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,657,657,657,657,657,657,657,657,657,657,657,657,657,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,657,657,657,657,657,657,657,657,657,657,657,657,657,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -277,6 +280,9 @@
 </data>
  </layer>
  <layer id="10" name="House_walls" width="50" height="40">
+  <properties>
+   <property name="layer" value="MAIN"/>
+  </properties>
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -365,6 +371,9 @@
 </data>
  </layer>
  <layer id="23" name="House_furniture_top" width="50" height="40">
+  <properties>
+   <property name="layer" value="MAIN"/>
+  </properties>
   <data encoding="csv">
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -408,7 +417,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
- <objectgroup id="16" name="Trees">
+ <objectgroup id="16" name="Decorative_Trees">
   <object id="22" gid="525" x="475" y="223.333" width="44" height="48"/>
   <object id="23" gid="2147484173" x="634.333" y="85" width="44" height="48"/>
   <object id="24" gid="2147484173" x="588.667" y="264" width="44" height="48"/>
@@ -577,16 +586,18 @@
   <object id="184" gid="559" x="572" y="150" width="11" height="12"/>
  </objectgroup>
  <objectgroup id="22" name="Interactions">
-  <object id="185" name="Teleport Town" x="183" y="311.5">
-   <point/>
-  </object>
-  <object id="187" name="Teleport Farm" x="504" y="86">
-   <point/>
-  </object>
   <object id="188" name="Bed" x="544" y="384" width="32" height="32"/>
  </objectgroup>
- <objectgroup id="25" name="Entities">
-  <object id="190" name="Player" x="191.875" y="278.125">
+ <objectgroup id="25" name="Player">
+  <object id="385" name="from farm_new" x="496" y="120">
+   <point/>
+  </object>
+  <object id="386" name="from town" x="206" y="308">
+   <point/>
+  </object>
+  <object id="387" name="to farm_new" x="480" y="80" width="48" height="16"/>
+  <object id="388" name="to town" x="160" y="288" width="32" height="48"/>
+  <object id="389" name="spawnpoint" x="240" y="304">
    <point/>
   </object>
  </objectgroup>
@@ -618,6 +629,9 @@
   <object id="378" name="Cow" gid="563" x="260" y="430.5" width="27" height="17"/>
  </objectgroup>
  <layer id="9" name="Border" width="50" height="40">
+  <properties>
+   <property name="layer" value="BORDER"/>
+  </properties>
   <data encoding="csv">
 172,160,167,167,161,160,161,156,156,156,163,167,163,156,156,171,172,156,156,160,167,163,167,167,161,156,156,156,156,156,1073742017,1073741918,1073741919,1073742018,160,161,156,156,156,156,156,156,156,156,171,172,156,156,160,161,
 156,193,94,95,194,171,172,156,167,168,94,101,95,166,167,163,167,167,167,94,101,101,101,101,95,167,163,161,160,161,1073741984,1073741991,1073741991,1073741985,171,172,156,156,156,167,167,163,167,167,161,156,156,156,171,172,
