@@ -241,6 +241,32 @@ class EntityState(StrEnum):
     HOE = "hoe"
     WATER = "water"
 
+    # Special values for equipment rendering
+
+    GOGGLES_AXE = "goggles_axe"
+    GOGGLES_HOE = "goggles_hoe"
+    GOGGLES_IDLE = "goggles_idle"
+    GOGGLES_WALK = "goggles_walk"
+    GOGGLES_WATER = "goggles_water"
+
+    HAT_AXE = "hat_axe"
+    HAT_HOE = "hat_hoe"
+    HAT_IDLE = "hat_idle"
+    HAT_WALK = "hat_walk"
+    HAT_WATER = "hat_water"
+
+    HORN_AXE = "horn_axe"
+    HORN_HOE = "horn_hoe"
+    HORN_IDLE = "horn_idle"
+    HORN_WALK = "horn_walk"
+    HORN_WATER = "horn_water"
+
+    NECKLACE_AXE = "necklace_axe"
+    NECKLACE_HOE = "necklace_hoe"
+    NECKLACE_IDLE = "necklace_idle"
+    NECKLACE_WALK = "necklace_walk"
+    NECKLACE_WATER = "necklace_water"
+
 
 class Layer(IntEnum):
     WATER = 0
