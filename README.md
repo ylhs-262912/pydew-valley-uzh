@@ -1,12 +1,14 @@
 # PyDew Valley
 
-PyDew Valley is a project created by ClearCode in Python using pygame-ce to be used by the University of Zurich in an experimental study in psychology. In the experimental study, we investigate social influence on the adoption of health behaviors. For more details on the game levels, please [click here](https://docs.google.com/spreadsheets/d/1NAssjrPN4mv3kBC3e5YmJcYkJZLU7450cFR9EhCbfgE/edit?gid=374591304#gid=374591304). This project is due for completion on September 1st, 2024.
+PyDew Valley is a project originally created by ClearCode in Python using pygame-ce.
+
+This expanded version will be used by the [University of Zurich's Department of Psychology](https://www.psychologie.uzh.ch/en.html) in an experimental study in psychology. For more details on the game levels, please [click here](https://docs.google.com/spreadsheets/d/1NAssjrPN4mv3kBC3e5YmJcYkJZLU7450cFR9EhCbfgE/edit?gid=374591304#gid=374591304). This project is due for completion on September 1st, 2024.
 
 For more information, please contact s.kittelberger[at]psychologie.uzh.ch.
 
-## Build Instructions
+## Setup Instructions
 
-To see how this project works, please check [CONTRIBUTING.md](./CONTRIBUTING.md)
+This project requires Python 3.12 or above.
 
 1. Clone this repository
 
@@ -14,22 +16,48 @@ To see how this project works, please check [CONTRIBUTING.md](./CONTRIBUTING.md)
 git clone https://github.com/sloukit/pydew-valley-uzh.git
 ```
 
-2. Install dependencies
+2. Create and activate a virtual environment
+
+# For Linux/MacOS
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
+# For Windows
+```
+python -m venv venv
+venv\Scripts\activate
+```
+
+3. Install dependencies
 
 ```
-pip install pygame-ce
+pip install -r requirements.txt # For running the game (runtime dependencies)
+pip install -r requirements-dev.txt # For development
+pip install -r requirements-test.txt # For running tests
 ```
 
-3. Run this project
+4. Run this project
 ```
-python3 main.py
+python main.py
 ```
+
+## Local Development
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information on how contributions can be made.
+
+Remember to run `black` on code changes before committing. You can configure some IDEs or code editors (e.g. VSCode) to do format your code automatically anytime you save a file.
+
+## Contributing
+
+Please check [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
 
 ## Team
 
 This section is continuously updated.
 
--  [Sophie Kittelberger](https://github.com/sloukit), Project Director
+- [Sophie Kittelberger](https://github.com/sloukit), Project Director
 - [larsbutler](https://github.com/larsbutler), Project Director, Game Developer, & Quality Analyst
 - [bromeon](https://github.com/bromeon), Project Director, Game Developer, & Quality Analyst
 - [novial](https://github.com/novialriptide), Game Developer & Quality Analyst
