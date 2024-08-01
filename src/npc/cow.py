@@ -6,7 +6,7 @@ from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.cow_behaviour_tree import CowIndividualContext
 from src.npc.setup import AIData
-from src.settings import Coordinate, AniFrames, SCALED_TILE_SIZE
+from src.settings import Coordinate, AniFrames, LAYERS
 from src.sprites.character import Character
 from src.sprites.setup import EntityAsset
 from src.support import get_flight_matrix, near_tiles

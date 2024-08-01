@@ -12,6 +12,10 @@ from src.enums import FarmingTool, GameState, Layer, Map, InventoryResource, See
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.map_objects import MapObjects
+from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
+from src.npc.behaviour.cow_behaviour_tree import CowConditionalBehaviourTree, \
+    CowContinuousBehaviourTree
+from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow
 from src.npc.npc import NPC
@@ -391,7 +395,7 @@ class Level:
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
                 if plant.rect.colliderect(
-                        character.plant_collide_rect
+                        character.hitbox_rect
                 ):
                     x, y = map_coords_to_tile(plant.rect.center)
                     self.soil_layer.harvest(

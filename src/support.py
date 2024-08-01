@@ -13,7 +13,7 @@ from src import settings
 from src.enums import Direction
 from src.settings import (
     SCALE_FACTOR,
-    TILE_SIZE,
+    TILE_SIZE, SCALED_TILE_SIZE,
     Coordinate,
     SCALED_TILE_SIZE
 )
