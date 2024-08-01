@@ -4,14 +4,16 @@ from typing import Callable, Type
 
 import pygame  # noqa
 
+from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
-from src.enums import InventoryResource, FarmingTool, ItemToUse
+from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import AniFrames, Coordinate, SoundDict
+from src.settings import Coordinate, SoundDict, GogglesStatus
 from src.sprites.character import Character
-from src.sprites.entity import Entity
+from src.sprites.entities.entity import Entity
+from src.sprites.setup import EntityAsset
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
@@ -34,7 +36,7 @@ class Player(Character):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
@@ -53,7 +55,7 @@ class Player(Character):
 
         super().__init__(
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
             apply_tool=apply_tool,
@@ -68,6 +70,8 @@ class Player(Character):
         self.paused = False
         self.font = font
         self.interact = interact
+        self.has_goggles: GogglesStatus = save_data.get("goggles_status")
+        self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
 
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
@@ -119,7 +123,8 @@ class Player(Character):
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
         savefile.save(
-            self.current_tool, self.current_seed, self.money, compacted_inv
+            self.current_tool, self.current_seed, self.money, compacted_inv,
+            self.study_group, self.has_goggles
         )
 
     def load_controls(self):
@@ -137,12 +142,27 @@ class Player(Character):
         mouse_pressed = pygame.mouse.get_pressed()
 
         for control in self.controls.all_controls():
-            mouse_event = 1 <= control.control_value <= len(mouse_pressed)
-            if mouse_event:
-                control.hold = mouse_pressed[control.control_value - 1]
+            is_mouse_event = control.control_value in (1, 2, 3)
+
+            if is_mouse_event:
+                is_event_active = mouse_pressed[control.control_value - 1]
+                control.click = is_event_active
+                control.hold = is_event_active
             else:
                 control.click = keys_just_pressed[control.control_value]
                 control.hold = keys_pressed[control.control_value]
+
+    def assign_seed(self, seed: str):
+        computed_value = FarmingTool.from_serialised_string(seed)
+        if not computed_value.is_seed():
+            raise ValueError("given value is not a seed type")
+        self.current_seed = computed_value
+
+    def assign_tool(self, tool: str):
+        computed_value = FarmingTool.from_serialised_string(tool)
+        if computed_value.is_seed():
+            raise ValueError("given value is a seed")
+        self.current_tool = computed_value
 
     def handle_controls(self):
         self.update_controls()
@@ -199,6 +219,9 @@ class Player(Character):
             if self.controls.INTERACT.click:
                 self.interact()
 
+            if self.controls.INVENTORY.click:
+                post_event(OPEN_INVENTORY)
+
         # emotes
         if not self.blocked:
             if self.controls.EMOTE_WHEEL.click:
@@ -220,12 +243,21 @@ class Player(Character):
                     self.emote_manager.toggle_emote_wheel()
 
     def move(self, dt: float):
+        self.hitbox_rect.update(
+            (self.rect.x + self._current_hitbox.x,
+             self.rect.y + self._current_hitbox.y),
+            self._current_hitbox.size
+        )
+
         self.hitbox_rect.x += self.direction.x * self.speed * dt
-        self.collision('horizontal')
         self.hitbox_rect.y += self.direction.y * self.speed * dt
-        self.collision('vertical')
-        self.rect.center = self.hitbox_rect.center
-        self.plant_collide_rect.center = self.hitbox_rect.center
+        self.check_collision()
+
+        self.rect.update(
+            (self.hitbox_rect.x - self._current_hitbox.x,
+             self.hitbox_rect.y - self._current_hitbox.y),
+            self.rect.size
+        )
 
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()
@@ -233,9 +265,12 @@ class Player(Character):
     def get_current_seed_string(self):
         return self.current_seed.as_serialised_string()
 
-    def add_resource(self, resource: InventoryResource, amount: int = 1):
+    def add_resource(self, resource: InventoryResource,
+                     amount: int = 1,
+                     sound: str = 'success'):
         super().add_resource(resource, amount)
-        self.sounds['success'].play()
+        if sound:
+            self.sounds[sound].play()
 
     def update(self, dt):
         self.handle_controls()

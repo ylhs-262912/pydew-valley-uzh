@@ -3,6 +3,7 @@ import sys
 import pygame
 from pytmx import TiledMap
 
+from src.events import OPEN_INVENTORY
 from src import support
 from src.enums import GameState, Direction
 from src.gui.setup import setup_gui
@@ -12,12 +13,34 @@ from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
+from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
     CHAR_TILE_SIZE,
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
-from src.gui.health_bar import HealthProgressBar
+
+_COSMETICS = frozenset(
+    {
+        "goggles",
+        "horn",
+        "necklace",
+        "hat"
+    }
+)
+# Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed
+_COSMETIC_SCALE_FACTORS = {
+    "goggles": 2,
+    "horn": 4,
+    "necklace": 2,
+    "hat": 3
+}
+_COSMETIC_SUBSURF_AREAS = {
+    "goggles": pygame.Rect(0, 0, 27, 16),
+    "horn": pygame.Rect(32, 0, 16, 16),
+    "necklace": pygame.Rect(0, 16, 21, 22),
+    "hat": pygame.Rect(24, 16, 20, 11)
+}
 
 class Game:
     def __init__(self):
@@ -34,6 +57,7 @@ class Game:
         self.level_frames: dict | None = None
         self.tmx_maps: MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
+        self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
 
         # assets
@@ -57,6 +81,8 @@ class Game:
         self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
+        self.inventory_menu = InventoryMenu(self.player, self.frames, self.switch_state,
+                                            self.player.assign_tool, self.player.assign_seed)
 
         # dialog
         self.dm = DialogueManager(self.level.all_sprites)
@@ -67,15 +93,18 @@ class Game:
             GameState.PAUSE: self.pause_menu,
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
+            GameState.INVENTORY: self.inventory_menu
             # GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
-        # progress bar
-        self.health_bar = HealthProgressBar(100)
-
     def switch_state(self, state: GameState):
         self.current_state = state
+        if self.current_state == GameState.SAVE_AND_RESUME:
+            self.level.player.save()
+            self.current_state = GameState.LEVEL
+        if self.current_state == GameState.INVENTORY:
+            self.inventory_menu.refresh_buttons_content()
         if self.game_paused():
             self.player.blocked = True
             self.player.direction.update((0, 0))
@@ -86,11 +115,6 @@ class Game:
         self.tmx_maps = support.tmx_importer('data/maps')
 
         # frames
-        self.character_frames = support.entity_importer(
-            'images/characters', 48,
-            [Direction.DOWN, Direction.UP, Direction.RIGHT]
-        )
-
         self.emotes = support.animation_importer(
             "images/ui/emotes/sprout_lands",
             frame_size=EMOTE_SIZE, resize=EMOTE_SIZE
@@ -104,34 +128,30 @@ class Game:
             'corn': support.import_folder('images/plants/corn'),
             'rain drops': support.import_folder('images/rain/drops'),
             'rain floor': support.import_folder('images/rain/floor'),
-            'objects': support.import_folder_dict('images/objects')
+            'objects': support.import_folder_dict('images/objects'),
+            'drops': support.import_folder_dict('images/drops')
         }
         self.overlay_frames = support.import_folder_dict('images/overlay')
-        self.character_frames = support.entity_importer(
-            'images/characters', CHAR_TILE_SIZE,
-            [Direction.DOWN, Direction.UP, Direction.LEFT]
-        )
-        self.chicken_frames = support.entity_importer(
-            "images/entities/chicken", 16, [Direction.RIGHT]
-        )
-        self.cow_frames = support.entity_importer(
-            "images/entities/cow", 32, [Direction.RIGHT]
-        )
+        cosmetic_surf = pygame.image.load(
+            support.resource_path("images/cosmetics.png")
+        ).convert_alpha()
+        for cosmetic in _COSMETICS:
+            self.cosmetic_frames[cosmetic] = pygame.transform.scale_by(
+                cosmetic_surf.subsurface(
+                    _COSMETIC_SUBSURF_AREAS[cosmetic]
+                ),
+                _COSMETIC_SCALE_FACTORS[cosmetic]
+            )
         self.frames = {
-            'character': self.character_frames,
             "emotes": self.emotes,
-            "entities": {
-                "chicken": self.chicken_frames,
-                "cow": self.cow_frames
-            },
             'level': self.level_frames,
-            'overlay': self.overlay_frames
+            'overlay': self.overlay_frames,
+            "cosmetics": self.cosmetic_frames,
+            "checkmark": pygame.transform.scale_by(pygame.image.load(
+                support.resource_path("images/checkmark.png")
+            ).convert_alpha(), 4)
         }
-
-        # The chicken idle animation looks kinda weird,
-        #  that's why the second frame is getting removed
-        self.frames["entities"]["chicken"]["idle"][Direction.LEFT].pop(1)
-        self.frames["entities"]["chicken"]["idle"][Direction.RIGHT].pop(1)
+        prepare_checkmark_for_buttons(self.frames["checkmark"])
 
         setup_gui()
 
@@ -160,6 +180,8 @@ class Game:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == OPEN_INVENTORY:
+            self.switch_state(GameState.INVENTORY)
         return False
 
     def run(self):
@@ -169,8 +191,6 @@ class Game:
             self.event_loop()
 
             self.level.update(dt)
-
-            self.health_bar.update(self.display_surface, dt)
 
             if self.game_paused():
                 self.menus[self.current_state].update(dt)

@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, StrEnum, nonmember  # noqa
+from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
 
 class PlayerState(IntEnum):
@@ -32,6 +32,10 @@ class GameState(IntEnum):
     GAME_OVER = 6
     WIN = 7
     CREDITS = 8
+    # Special value: when switched to this value, the game
+    # saves and then sets its current state back to LEVEL
+    SAVE_AND_RESUME = 9
+    INVENTORY = 10
 
 
 # NOTE : DO NOT pay attention to anything the IDE might complain about in this class, as the enum generation mechanisms
@@ -62,6 +66,9 @@ class InventoryResource(_SerialisableEnum):
         (
             "wood",
             "apple",
+            "orange",
+            "peach",
+            "pear",
             "corn",
             "tomato",
             "corn_seed",
@@ -75,6 +82,9 @@ class InventoryResource(_SerialisableEnum):
         (
             8,  # WOOD
             4,  # APPLE
+            20,  # ORANGE
+            15,  # PEACH
+            10,  # PEAR
             20,  # CORN
             40,  # TOMATO
             4,  # CORN_SEED
@@ -84,16 +94,22 @@ class InventoryResource(_SerialisableEnum):
 
     WOOD = 0
     APPLE = 1
-    CORN = 2
-    TOMATO = 3
-    CORN_SEED = 4
-    TOMATO_SEED = 5
+    ORANGE = 2
+    PEACH = 3
+    PEAR = 4
+    CORN = 5
+    TOMATO = 6
+    CORN_SEED = 7
+    TOMATO_SEED = 8
 
     def get_worth(self):
         return self._ITEM_WORTHS[self]  # noqa
 
     def is_seed(self):
         return self >= self.CORN_SEED
+
+    def is_fruit(self):
+        return self.APPLE <= self <= self.PEAR
 
 
 class FarmingTool(_SerialisableEnum):
@@ -130,9 +146,15 @@ class FarmingTool(_SerialisableEnum):
         }
     )
 
-    @property
-    def _swinging_tools(self):
-        return {self.HOE, self.AXE}
+    # Using frozenset to ensure this cannot change
+    _swinging_tools = nonmember(
+        frozenset(
+            {
+                HOE,
+                AXE
+            }
+        )
+    )
 
     def is_swinging_tool(self):
         return self in self._swinging_tools
@@ -203,6 +225,9 @@ class SeedType(IntEnum):
     def from_inventory_resource(cls, val: InventoryResource):
         return cls(cls._AS_IRS.index(val))
 
+    def as_fts(self):
+        return self._AS_FTS[self]
+
     def as_ir(self):
         return self._AS_IRS[self]
 
@@ -216,13 +241,46 @@ class SeedType(IntEnum):
         return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
 
 
-class Direction(StrEnum):
-    UP = "up"
-    RIGHT = "right"
-    DOWN = "down"
-    LEFT = "left"
+class Direction(IntEnum):
+    UP = 0
+    RIGHT = auto()
+    DOWN = auto()
+    LEFT = auto()
 
 
 class EntityState(StrEnum):
     IDLE = "idle"
     WALK = "walk"
+
+    AXE = "axe"
+    HOE = "hoe"
+    WATER = "water"
+
+
+class Layer(IntEnum):
+    WATER = 0
+    LOWER_GROUND = auto()
+    UPPER_GROUND = auto()
+    SOIL = auto()
+    SOIL_WATER = auto()
+    RAIN_FLOOR = auto()
+    PLANT = auto()
+    MAIN = auto()
+    FRUIT = auto()
+    BORDER = auto()
+    RAIN_DROPS = auto()
+    PARTICLES = auto()
+    EMOTES = auto()
+    TEXT_BOX = auto()
+
+
+class Map(StrEnum):
+    FARM = "farm"
+    FOREST = "forest"
+
+
+class StudyGroup(IntEnum):
+    """The group in which a certain character belongs to."""
+    NO_GROUP = 0  # Set at the beginning of the game.
+    INGROUP = auto()
+    OUTGROUP = auto()

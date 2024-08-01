@@ -5,9 +5,12 @@ from typing import Self
 import pygame
 
 from src import settings
-from src.enums import FarmingTool, InventoryResource, ItemToUse, EntityState
-from src.settings import LAYERS, SCALE_FACTOR
-from src.sprites.entity import Entity
+from src.enums import (
+    FarmingTool, InventoryResource, ItemToUse, EntityState,
+    Layer, StudyGroup
+)
+from src.sprites.entities.entity import Entity
+from src.sprites.setup import EntityAsset
 
 
 class Character(Entity, ABC):
@@ -15,13 +18,14 @@ class Character(Entity, ABC):
     tool_active: bool
     just_used_tool: bool
     apply_tool: Callable[[FarmingTool, tuple[float, float], Self], None]
+    study_group: StudyGroup
 
     current_seed: FarmingTool
 
     def __init__(
             self,
             pos: settings.Coordinate,
-            frames: dict[str, settings.AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
@@ -30,16 +34,14 @@ class Character(Entity, ABC):
             plant_collision: Callable[
                 [Self], None
             ],
-            z=LAYERS['main']
+            z=Layer.MAIN
     ):
         Entity.__init__(
             self,
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
-
-            shrink=(38 * SCALE_FACTOR, 40 * SCALE_FACTOR),
 
             z=z
         )
@@ -59,6 +61,9 @@ class Character(Entity, ABC):
         self.inventory = {
             InventoryResource.WOOD: 0,
             InventoryResource.APPLE: 0,
+            InventoryResource.ORANGE: 0,
+            InventoryResource.PEACH: 0,
+            InventoryResource.PEAR: 0,
             InventoryResource.CORN: 0,
             InventoryResource.TOMATO: 0,
             InventoryResource.CORN_SEED: 0,
@@ -69,26 +74,31 @@ class Character(Entity, ABC):
         # so those that can't should not have money either
         self.money = 0
 
+        # TODO: implement compatibility with this, e.g. NPCs reacting differently to emotes
+        # depending on the group they belong to and the player's
+        self.study_group = StudyGroup.NO_GROUP
+
+    def get_state(self):
+        if self.tool_active:
+            self.state = EntityState(self.current_tool.as_serialised_string())
+        else:
+            super().get_state()
+
     def animate(self, dt):
         super().animate(dt)
-        if not self.tool_active:
-            self.image = self._current_ani_frame[int(
-                self.frame_index) % len(self._current_ani_frame)]
-        else:
-            tool_animation = self.frames[
-                self.current_tool.as_serialised_string()
-            ][self.facing_direction]
-            if self.frame_index < len(tool_animation):
-                self.image = tool_animation[min(
-                    (round(self.frame_index), len(tool_animation) - 1))]
-                if round(self.frame_index) == len(tool_animation) - \
-                        1 and not self.just_used_tool:
-                    self.just_used_tool = True
-                    self.use_tool(ItemToUse.REGULAR_TOOL)
-            else:
-                self.state = EntityState.IDLE
+        if self.tool_active:
+            if self.frame_index > len(self._current_ani):
                 self.tool_active = False
                 self.just_used_tool = False
+                # The state has to be changed to prevent the first image from
+                # being displayed a second time, because the state updates
+                # before the call to Entity.animate
+                self.state = EntityState.IDLE
+            else:
+                if (round(self.frame_index) == len(self._current_ani) - 1
+                        and not self.just_used_tool):
+                    self.just_used_tool = True
+                    self.use_tool(ItemToUse.REGULAR_TOOL)
 
     def use_tool(self, option: ItemToUse):
         self.apply_tool(

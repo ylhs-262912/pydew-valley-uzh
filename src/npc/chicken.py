@@ -1,22 +1,24 @@
 import pygame
 
+from src.enums import Layer
 from src.npc.bases.chicken_base import ChickenBase
 from src.npc.behaviour.chicken_behaviour_tree import ChickenIndividualContext
 from src.npc.setup import AIData
-from src.settings import Coordinate, AniFrames, LAYERS
+from src.settings import Coordinate, AniFrames
+from src.sprites.setup import EntityAsset
 
 
 class Chicken(ChickenBase):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group
     ):
         super().__init__(
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
 
@@ -26,5 +28,5 @@ class Chicken(ChickenBase):
 
             behaviour_tree_context=ChickenIndividualContext(self),
 
-            z=LAYERS["main"]
+            z=Layer.MAIN
         )

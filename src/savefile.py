@@ -1,6 +1,7 @@
 import json
-from .enums import InventoryResource, FarmingTool
-from .support import resource_path
+from src.enums import InventoryResource, FarmingTool, StudyGroup
+from src.settings import GogglesStatus
+from src.support import resource_path
 from jsmin import jsmin
 
 CONVERT_TO_FT = "__FarmingTool__"
@@ -31,13 +32,29 @@ def as_inventoryresource(o: dict):
     return o
 
 
+def extract_group(o: dict):
+    if "group" in o:
+        ret = o.copy()
+        ret["group"] = StudyGroup(ret["group"])
+        return ret
+    return o
+
+
 def decoder_object_hook(o):
     processed = as_farmingtool(o)
     processed = as_inventoryresource(processed)
+    processed = extract_group(processed)
     return processed
 
 
-def save(current_tool: FarmingTool, current_seed: FarmingTool, money: int, inventory: dict[InventoryResource, int]):
+def save(
+        current_tool: FarmingTool,
+        current_seed: FarmingTool,
+        money: int,
+        inventory: dict[InventoryResource, int],
+        group: StudyGroup,
+        has_goggles: GogglesStatus
+):
     with open(resource_path("data/save.json"), "w") as file:
         serialised_inventory = {k.as_serialised_string(): inventory[k] for k in inventory}
         keys_to_convert = list(serialised_inventory.keys())
@@ -47,6 +64,8 @@ def save(current_tool: FarmingTool, current_seed: FarmingTool, money: int, inven
             "money": money,
             "current_tool": current_tool.as_serialised_string(),
             "current_seed": current_seed.as_serialised_string(),
+            "group": group.value,
+            "goggles_status": has_goggles,
             "inventory": serialised_inventory
         }
         json.dump(obj_to_dump, file, indent=2)

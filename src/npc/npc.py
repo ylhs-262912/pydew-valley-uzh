@@ -4,23 +4,22 @@ from typing import Callable
 
 import pygame
 
-from src.enums import FarmingTool, InventoryResource
+from src.enums import FarmingTool, InventoryResource, Layer
 from src.gui.interface.emotes import NPCEmoteManager
 from src.npc.bases.npc_base import NPCBase
 from src.npc.behaviour.npc_behaviour_tree import NPCIndividualContext
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
-from src.settings import (
-    Coordinate, AniFrames, LAYERS
-)
+from src.settings import Coordinate
 from src.sprites.character import Character
+from src.sprites.setup import EntityAsset
 
 
 class NPC(NPCBase):
     def __init__(
             self,
             pos: Coordinate,
-            frames: dict[str, AniFrames],
+            assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
@@ -38,7 +37,7 @@ class NPC(NPCBase):
 
         super().__init__(
             pos=pos,
-            frames=frames,
+            assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
 
@@ -51,7 +50,7 @@ class NPC(NPCBase):
 
             behaviour_tree_context=NPCIndividualContext(self),
 
-            z=LAYERS["main"]
+            z=Layer.MAIN
         )
 
         # TODO: Ensure that the NPC always has all needed seeds it needs
@@ -59,6 +58,9 @@ class NPC(NPCBase):
         self.inventory = {
             InventoryResource.WOOD: 0,
             InventoryResource.APPLE: 0,
+            InventoryResource.ORANGE: 0,
+            InventoryResource.PEACH: 0,
+            InventoryResource.PEAR: 0,
             InventoryResource.CORN: 0,
             InventoryResource.TOMATO: 0,
             InventoryResource.CORN_SEED: 999,

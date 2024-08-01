@@ -5,11 +5,11 @@ from random import choice
 
 from pytmx import TiledMap
 
-from src.enums import SeedType, InventoryResource, FarmingTool
+from src.enums import SeedType, InventoryResource, FarmingTool, Layer
 from src.support import tile_to_screen
 from src.sprites.base import Sprite
-from src.sprites.plant import Plant
-from src.settings import LAYERS, SCALED_TILE_SIZE
+from src.sprites.objects.plant import Plant
+from src.settings import TILE_SIZE, SCALE_FACTOR, SoundDict, SCALED_TILE_SIZE
 
 
 class Tile(Sprite):
@@ -32,7 +32,7 @@ class Tile(Sprite):
             (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
         )
 
-        super().__init__(tile_to_screen(pos), surf, group, LAYERS["soil"])
+        super().__init__(tile_to_screen(pos), surf, group, Layer.SOIL)
 
         self.pos = pos
 
@@ -245,7 +245,10 @@ class SoilLayer:
                     self._unwatered_tiles.add(tile.pos)
 
     def create_soil_tiles(self, tmx_map):
-        farmable_layer = tmx_map.get_layer_by_name("Farmable")
+        try:
+            farmable_layer = tmx_map.get_layer_by_name("Farmable")
+        except ValueError:
+            return
         for x, y, _ in farmable_layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
 
@@ -295,7 +298,7 @@ class SoilLayer:
                 tile_to_screen(pos),
                 water_frame,
                 (self.all_sprites, self.water_sprites),
-                LAYERS["soil water"],
+                Layer.SOIL_WATER,
             )
             return True
 

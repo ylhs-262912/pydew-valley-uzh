@@ -1,5 +1,7 @@
+from src.enums import Layer
+from src.sprites.base import Sprite
 from src.support import resource_path
-from src.settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT, TB_LAYER
+from src.settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 from src.timer import Timer
 import pygame
 import json
@@ -8,7 +10,7 @@ from operator import attrgetter
 import textwrap
 
 
-class TextBox(pygame.sprite.Sprite):
+class TextBox(Sprite):
     """Text box sprite that contains a part of text."""
     _TXT_SURF_EXTREMITIES: tuple[pygame.Rect, pygame.Rect] = (pygame.Rect(0, 0, 14, 202), pygame.Rect(373, 0, 18, 202))
     _TXT_SURF_REGULAR_AREA: pygame.Rect = pygame.Rect(14, 0, 1, 202)
@@ -39,15 +41,13 @@ class TextBox(pygame.sprite.Sprite):
         :param character_name: The character meant to speak using this text box.
         :param text: The dialogue the character is supposed to say.
         :param font: The font used to render this dialogue."""
-        super().__init__()
-        self.z: int = TB_LAYER
         self.font: pygame.Font = font
         self.cname: str = character_name
         self.text: str = textwrap.fill(text, width=CHARS_PER_LINE)
         self.image: pygame.Surface = pygame.Surface(TB_SIZE, flags=pygame.SRCALPHA)
         self.__prepare_image()
         self._tmp_img: pygame.Surface = self._TB_IMAGE.copy()
-        cname: pygame.Surface = self.font.render(self.cname, True, color=pygame.Color("black"))
+        cname: pygame.Surface = self.font.render(character_name, True, color=pygame.Color("black"))
         cname_rect: pygame.Rect = cname.get_rect(center=self._CNAME_SURF_RECT.center)
         self._tmp_img.blit(cname, cname_rect)
         self._fin_img: pygame.Surface = self.image
@@ -56,7 +56,12 @@ class TextBox(pygame.sprite.Sprite):
         self._finished_advancing: bool = False
         self._txt_needs_rerender: bool = True
         self._chr_index: int = 1
-        self.rect: pygame.FRect = self.image.get_frect(bottom=SCREEN_HEIGHT, centerx=(SCREEN_WIDTH // 2))
+
+        super().__init__(
+            (SCREEN_WIDTH / 2 - self.image.width / 2,
+             SCREEN_HEIGHT - self.image.height),
+            self.image, tuple(), z=Layer.TEXT_BOX, name=character_name
+        )
 
     @property
     def finished_advancing(self):
@@ -98,7 +103,7 @@ class TextBox(pygame.sprite.Sprite):
             self._prerender_text_ani()
 
     def __prepare_image(self):
-        cname = self.font.render(self.cname, True, color=pygame.Color("black"))
+        cname = self.font.render(self.name, True, color=pygame.Color("black"))
         cname_rect = cname.get_rect(center=self._CNAME_SURF_RECT.center)
         text_surf = self.font.render(self.text, True, color=pygame.Color("black"))
         text_rect = text_surf.get_rect(topleft=(15, 78))
@@ -108,6 +113,9 @@ class TextBox(pygame.sprite.Sprite):
             (text_surf, text_rect)
         ]
         self.image.fblits(blit_list)
+    
+    def draw(self, display_surface: pygame.Surface, offset: pygame.Vector2):
+        display_surface.blit(self.image, self.rect)
 
 
 def prepare_tb_image(cname_surf: pygame.Surface, txt_surf: pygame.Surface):
@@ -191,3 +199,4 @@ class DialogueManager:
 
     def __getitem__(self, item):
         return self.dialogues[item]
+    
