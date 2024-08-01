@@ -7,11 +7,14 @@ If you want to add more character animations just check out the rabbit folder in
 In sprites.py there is a Player class that currently controls the rabbit in the game you could inherit from that and overwrite methods or use the Entity class as a parent and add more to it.
 (The Player class currently has too many methods, quite a few of those could be stored in Entity to make the whole setup more flexible)
 
-### Adding to the tileset
-The level was created in Tiled (mapeditor.org). The layers are fairly self-explanatory (or at least I hope they are). Add more things as needed and then expand the setup method in the Level class to import it.
-The graphics folders contain a few more graphics that could be used to decorate the map.
+### Adding to the maps
+The maps were created in [Tiled](https://www.mapeditor.org). The layers are fairly self-explanatory (or at least I hope they are).
 
-**Collisions**<br>
+Add more things as needed, be it new tiles, objects or even completely new maps. The
+[project tasklist](https://github.com/users/sloukit/projects/1) shows what, and with what priority, is still needed.
+The [images](images) folder contains a few more graphics that could be used to decorate the maps.
+
+**Object Collisions**<br>
 If you would like to add custom collisions to a new object that you have created, feel free to add them in Tiled's tile collision editor.
 To do this, simply open the corresponding tileset and click on the tile you want to edit. In the window on the right, you can then insert a rectangle that will then be used as hitbox for the object.
 <br>

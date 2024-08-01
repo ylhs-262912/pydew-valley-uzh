@@ -17,7 +17,7 @@ from src.settings import (
     SCREEN_WIDTH,
     MapDict,
     SoundDict,
-    GAME_SPAWN
+    GAME_MAP
 )
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
@@ -45,7 +45,7 @@ class Level:
     tree_sprites: PersistentSpriteGroup
     interaction_sprites: PersistentSpriteGroup
     drop_sprites: pygame.sprite.Group
-    map_exits: pygame.sprite.Group
+    player_exit_warps: pygame.sprite.Group
 
     # farming
     soil_layer: SoilLayer
@@ -92,7 +92,7 @@ class Level:
         self.tree_sprites = PersistentSpriteGroup()
         self.interaction_sprites = PersistentSpriteGroup()
         self.drop_sprites = pygame.sprite.Group()
-        self.map_exits = pygame.sprite.Group()
+        self.player_exit_warps = pygame.sprite.Group()
 
         self.soil_layer = SoilLayer(
             self.all_sprites,
@@ -131,12 +131,10 @@ class Level:
 
         # weather
         self.sky = Sky()
-        self.rain = Rain(
-            self.all_sprites, self.frames["level"], (0, 0)
-        )
+        self.rain = Rain(self.all_sprites, self.frames["level"])
         self.raining = False
 
-        self.load_map(GAME_SPAWN)
+        self.load_map(GAME_MAP)
         self.map_transition = Transition(
             lambda: self.switch_to_map(self.current_map),
             self.finish_transition,
@@ -156,12 +154,15 @@ class Level:
         self.show_hitbox_active = False
 
     def load_map(self, game_map: Map, from_map: str = None):
+        # prepare level state for new map
+        # clear all sprite groups
         self.all_sprites.empty()
         self.collision_sprites.empty()
         self.interaction_sprites.empty()
         self.tree_sprites.empty()
-        self.map_exits.empty()
+        self.player_exit_warps.empty()
 
+        # clear existing soil_layer
         self.soil_layer.reset()
 
         self.game_map = GameMap(
@@ -171,7 +172,7 @@ class Level:
             collision_sprites=self.collision_sprites,
             interaction_sprites=self.interaction_sprites,
             tree_sprites=self.tree_sprites,
-            map_exits=self.map_exits,
+            player_exit_warps=self.player_exit_warps,
 
             player=self.player,
 
@@ -188,22 +189,28 @@ class Level:
 
         player_spawn = None
 
+        # search for player entry warp depending on which map they came from
         if from_map:
-            player_spawn = self.game_map.player_entrances.get(from_map)
+            player_spawn = self.game_map.player_entry_warps.get(from_map)
             if not player_spawn:
                 print(f"No valid entry warp found for \"{game_map}\" "
                       f"from: \"{self.current_map}\"")
 
+        # use default spawnpoint if no origin map is specified,
+        # or if no entry warp for the player's origin map is found
         if not player_spawn:
             if self.game_map.player_spawnpoint:
                 player_spawn = self.game_map.player_spawnpoint
             else:
                 print(f"No default spawnpoint found on {game_map}")
-                player_spawn = list(self.game_map.player_entrances.values())[0]
+                # fallback to the first player entry warp
+                player_spawn = next(iter(
+                    self.game_map.player_entry_warps.values()
+                ))
 
         self.player.teleport(player_spawn)
 
-        self.rain.floor_w, self.rain.floor_h = self.game_map.get_size()
+        self.rain.set_floor_size(self.game_map.get_size())
 
         self.current_map = game_map
 
@@ -249,6 +256,9 @@ class Level:
             self.load_map(map_name, from_map=self.current_map)
         else:
             print(f"Error loading map: Map \"{map_name}\" not found")
+
+            # fallback which reloads the current map and sets the player to the
+            # entry warp of the map that should have been switched to
             self.load_map(self.current_map, from_map=map_name)
 
     def create_particle(self, sprite: pygame.sprite.Sprite):
@@ -358,10 +368,10 @@ class Level:
 
     def check_map_exit(self):
         if not self.map_transition:
-            for map_exit in self.map_exits:
-                if self.player.hitbox_rect.colliderect(map_exit.rect):
+            for warp_hitbox in self.player_exit_warps:
+                if self.player.hitbox_rect.colliderect(warp_hitbox.rect):
                     self.map_transition.reset = lambda: self.switch_to_map(
-                        map_exit.name
+                        warp_hitbox.name
                     )
                     self.start_map_transition()
                     return

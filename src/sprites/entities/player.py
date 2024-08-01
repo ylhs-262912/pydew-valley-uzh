@@ -253,7 +253,12 @@ class Player(Character):
         )
 
     def teleport(self, pos: tuple[float, float]):
-        self.rect.update((pos[0] - self.rect.width / 2, pos[1] - self.rect.height / 2), self.rect.size)
+        """
+        Moves the Player rect directly to the specified point without checking
+        for collision
+        """
+        self.rect.update((pos[0] - self.rect.width / 2,
+                          pos[1] - self.rect.height / 2), self.rect.size)
 
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()

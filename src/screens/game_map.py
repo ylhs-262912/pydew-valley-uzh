@@ -3,7 +3,13 @@ from collections.abc import Callable
 from typing import Any
 
 import pygame
-from pytmx import TiledMap, TiledTileLayer, TiledObjectGroup, TiledObject
+from pytmx import (
+    TiledMap,
+    TiledTileLayer,
+    TiledObjectGroup,
+    TiledObject,
+    TiledElement
+)
 
 from src.enums import Layer, FarmingTool, InventoryResource
 from src.groups import AllSprites, PersistentSpriteGroup
@@ -62,20 +68,28 @@ def _setup_object_layer(
     return objects
 
 
-def _get_layer_property(
-        layer: TiledTileLayer | TiledObjectGroup,
+def _get_element_property(
+        element: TiledElement,
         property_name: str,
         callback: Callable[[str], Any],
         default: Any
-):
-    prop = layer.properties.get("layer")
+) -> Any:
+    """
+    :param element: Element to retrieve the property value from
+    :param property_name: Name of the property
+    :param callback: Function that should be called with the property value
+                     retrieved from element
+    :param default: Default value to return if callback raises an exception
+    :return: Return value of callback
+    """
+    prop = element.properties.get("layer")
     if prop:
         try:
             return callback(prop)
         except Exception as e:
             print(
-                f"WARNING: Property {property_name} is invalid for layer "
-                f"{layer}. Full error: {e}\n"
+                f"WARNING: Property {property_name} with value {prop} is"
+                f"invalid for map element {element}. Full error: {e}\n"
             )
 
     if prop is None:
@@ -102,9 +116,10 @@ class GameMap:
         _pf_matrix: pathfinding matrix
 
         player_spawnpoint: default spawnpoint for the player
-        player_entrances: points where the player should enter the map,
-                          depending on which map they came from
-        map_exits: collision sprites where the player should exit the map
+        player_entry_warps: warps where the player should enter the map,
+                            depending on which map they came from
+        player_exit_warps: hitboxes where the player should exit the map on
+                           collision
 
         npcs: list of all NPCs on the map
         animals: list of all Animals on the map
@@ -118,10 +133,10 @@ class GameMap:
     # pathfinding
     _pf_matrix: list[list[int]]
 
-    # map traversing points
+    # map warp points
     player_spawnpoint: tuple[int, int] | None
-    player_entrances: dict[str, tuple[int, int]]
-    map_exits: pygame.sprite.Group
+    player_entry_warps: dict[str, tuple[int, int]]
+    player_exit_warps: pygame.sprite.Group
 
     # non-player entities
     npcs: list[NPC]
@@ -136,7 +151,7 @@ class GameMap:
             collision_sprites: PersistentSpriteGroup,
             interaction_sprites: PersistentSpriteGroup,
             tree_sprites: PersistentSpriteGroup,
-            map_exits: pygame.sprite.Group,
+            player_exit_warps: pygame.sprite.Group,
 
             # Player instance
             player: Player,
@@ -158,7 +173,7 @@ class GameMap:
     ):
         self._tilemap = tilemap
 
-        self.map_exits = map_exits
+        self.player_exit_warps = player_exit_warps
 
         self.all_sprites = all_sprites
         self.collision_sprites = collision_sprites
@@ -195,7 +210,7 @@ class GameMap:
         self._map_objects = MapObjects(self._tilemap)
 
         self.player_spawnpoint = None
-        self.player_entrances = {}
+        self.player_entry_warps = {}
 
         self.npcs = []
         self.animals = []
@@ -407,13 +422,13 @@ class GameMap:
         Add a new Player warp point.
         The type of the warp will be retrieved from the object's name.
 
-        The default spawnpoint should be named "spawnpoint", and teleport
+        The default spawnpoint should be named "spawnpoint", and warp
         destination points should be named "from " + map name (without .tmx),
-        e.g. a teleport point used when teleporting from forest should be named
-        "from forest". Teleport origins should be defined as rectangular
-        objects that teleport the player when colliding with them. They should
-        be named "to " + map name (without .tmx), e.g. a teleport point that
-        will be used when teleporting to farm_new should be named
+        e.g. a warp point used when warping from forest should be named
+        "from forest". Warp origins should be defined as rectangular
+        objects that warp the player when colliding with them. They should
+        be named "to " + map name (without .tmx), e.g. a warp point that
+        will be used when warping to farm_new should be named
         "to farm_new".
 
         :param pos: Position of the warp
@@ -422,26 +437,27 @@ class GameMap:
         name = obj.name
         if name == "spawnpoint":
             if self.player_spawnpoint:
-                print("WARNING: Multiple spawnpoints found")
+                print(f"WARNING: Multiple spawnpoints found "
+                      f"({self.player_spawnpoint}, {pos})")
             self.player_spawnpoint = pos
         else:
             name = name.split(" ")
             if len(name) == 2:
-                point_type = name[0]
-                point_map = name[1]
-                if point_type == "from":
-                    self.player_entrances[point_map] = pos
-                elif point_type == "to":
-                    teleport_hitbox = pygame.Surface(
+                warp_type = name[0]
+                warp_map = name[1]
+                if warp_type == "from":
+                    self.player_entry_warps[warp_map] = pos
+                elif warp_type == "to":
+                    warp_hitbox = pygame.Surface(
                         (obj.width * SCALE_FACTOR,
                          obj.height * SCALE_FACTOR)
                     )
                     Sprite(
                         (obj.x * SCALE_FACTOR,
                          obj.y * SCALE_FACTOR),
-                        teleport_hitbox,
-                        name=point_map
-                    ).add(self.map_exits)
+                        warp_hitbox,
+                        name=warp_map
+                    ).add(self.player_exit_warps)
                 else:
                     print(
                         f"WARNING: Invalid player warp \"{name}\""
@@ -530,9 +546,11 @@ class GameMap:
 
                 # create tile layers
                 # set layer if defined in the TileLayer properties
-                layer = _get_layer_property(
-                    tilemap_layer, "layer",
-                    lambda prop: Layer[prop], Layer.GROUND
+                layer = _get_element_property(
+                    element=tilemap_layer,
+                    property_name="layer",
+                    callback=lambda prop: Layer[prop],
+                    default=Layer.GROUND
                 )
 
                 if layer == Layer.WATER:
@@ -584,7 +602,7 @@ class GameMap:
                         lambda pos, obj: self._setup_player_warp(pos, obj)
                     )
 
-                    if (not self.player_entrances and
+                    if (not self.player_entry_warps and
                             not self.player_spawnpoint):
                         raise InvalidMapError(
                             "No Player warp point could be found in the map's "
@@ -608,7 +626,7 @@ class GameMap:
                         continue
                 else:
                     # set layer if defined in the TileLayer properties
-                    layer = _get_layer_property(
+                    layer = _get_element_property(
                         tilemap_layer, "layer",
                         lambda prop: Layer[prop], Layer.MAIN
                     )
