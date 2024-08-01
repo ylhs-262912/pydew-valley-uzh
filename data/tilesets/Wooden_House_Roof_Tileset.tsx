@@ -3,7 +3,7 @@
  <image source="../../images/tilesets/Wooden_House_Roof_Tileset.png" width="112" height="80"/>
  <tile id="6">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="2.95652" y="2" width="10.0435" height="7.13043"/>
+   <object id="1" x="3" y="2" width="10" height="7"/>
   </objectgroup>
  </tile>
 </tileset>

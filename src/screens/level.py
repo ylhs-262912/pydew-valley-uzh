@@ -248,6 +248,7 @@ class Level:
         if self.tmx_maps.get(map_name):
             self.load_map(map_name, from_map=self.current_map)
         else:
+            print(f"Error loading map: Map \"{map_name}\" not found")
             self.load_map(self.current_map, from_map=map_name)
 
     def create_particle(self, sprite: pygame.sprite.Sprite):

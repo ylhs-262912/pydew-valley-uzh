@@ -518,6 +518,15 @@ class GameMap:
                         )
                     )
                     continue
+                elif tilemap_layer.name == "Border":
+                    _setup_tile_layer(
+                        tilemap_layer,
+                        lambda pos, image: self._setup_collideable_tile(
+                            pos, image, layer,
+                            (self.all_sprites, self.collision_sprites,)
+                        )
+                    )
+                    continue
 
                 # create tile layers
                 # set layer if defined in the TileLayer properties
@@ -532,15 +541,6 @@ class GameMap:
                         tilemap_layer,
                         lambda pos, _: self._setup_water_tile(
                             pos, self.all_sprites
-                        )
-                    )
-                elif layer == Layer.BORDER:
-                    # tiles on the BORDER layer will always be collideable
-                    _setup_tile_layer(
-                        tilemap_layer,
-                        lambda pos, image: self._setup_collideable_tile(
-                            pos, image, layer,
-                            (self.all_sprites, self.collision_sprites,)
                         )
                     )
                 else:

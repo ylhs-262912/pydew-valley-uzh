@@ -244,19 +244,19 @@
  <tile id="62">
   <image source="../../images/objects/Piknik basket.png" width="16" height="16"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="-0.0625" y="5" width="15.9375" height="9.0625"/>
+   <object id="1" x="0" y="6" width="16" height="8"/>
   </objectgroup>
  </tile>
  <tile id="63">
   <image source="../../images/objects/Piknik blanket.png" width="48" height="48"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="14.625" y="23.5625"/>
+   <object id="1" x="0" y="0"/>
   </objectgroup>
  </tile>
  <tile id="64">
   <image source="../../images/objects/mailbox.png" width="8" height="17"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="1.9375" y="11.0625" width="4.0625" height="4.6875"/>
+   <object id="1" x="2" y="11" width="4" height="5"/>
   </objectgroup>
  </tile>
  <tile id="65">

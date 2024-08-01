@@ -72,15 +72,21 @@ class Game:
         self.load_assets()
 
         # screens
-        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(
+            self.switch_state, self.tmx_maps, self.frames, self.sounds
+        )
         self.player = self.level.player
 
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
+        self.settings_menu = SettingsMenu(
+            self.switch_state, self.sounds, self.player.controls
+        )
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
-        self.inventory_menu = InventoryMenu(self.player, self.frames, self.switch_state,
-                                            self.player.assign_tool, self.player.assign_seed)
+        self.inventory_menu = InventoryMenu(
+            self.player, self.frames, self.switch_state,
+            self.player.assign_tool, self.player.assign_seed
+        )
 
         # dialog
         self.all_sprites = AllSprites()
@@ -182,6 +188,7 @@ class Game:
             sys.exit()
         if event.type == OPEN_INVENTORY:
             self.switch_state(GameState.INVENTORY)
+            return True
         elif event.type == DIALOG_SHOW:
             if self.dialogue_manager.showing_dialogue:
                 pass

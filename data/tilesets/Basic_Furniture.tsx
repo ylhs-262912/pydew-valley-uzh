@@ -3,12 +3,12 @@
  <image source="../../images/tilesets/Basic_Furniture.png" width="144" height="96"/>
  <tile id="3">
   <objectgroup draworder="index" id="2">
-    <object id="1" x="5" y="10" width="7" height="5"/>
+   <object id="1" x="5" y="10" width="7" height="5"/>
   </objectgroup>
  </tile>
  <tile id="23">
   <objectgroup draworder="index" id="2">
-   <object id="1" x="3" y="1" width="10" height="13"/>
+   <object id="1" x="3" y="6" width="10" height="8"/>
   </objectgroup>
  </tile>
 </tileset>
