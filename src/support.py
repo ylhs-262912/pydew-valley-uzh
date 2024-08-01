@@ -308,3 +308,7 @@ def near_tiles(
         for j in vertical:
             yield int(pos[0] - radius + i), int(pos[1] - radius + j)
 
+
+def distance(pos1, pos2):
+    return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
+

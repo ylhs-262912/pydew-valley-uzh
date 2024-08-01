@@ -11,7 +11,7 @@ from src.npc.behaviour.ai_behaviour_tree_base import (
 )
 from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
-from src.support import near_tiles
+from src.support import near_tiles, distance
 
 
 class NPCSharedContext:
@@ -89,10 +89,10 @@ def wander(context: NPCIndividualContext) -> bool:
 # region farming-exclusive logic
 def will_farm(context: NPCIndividualContext) -> bool:
     """
-    1 in 3 chance to go farming instead of wandering around
-    :return: 1/3 true | 2/3 false
+    2 in 3 chance to go farming instead of wandering around
+    :return: 2/3 true | 1/3 false
     """
-    return True  # random.randint(0, 2) == 0
+    return random.randint(0, 2) < 2
 
 
 def will_harvest_plant(context: NPCIndividualContext) -> bool:
@@ -115,7 +115,7 @@ def harvest_plant(context: NPCIndividualContext) -> bool:
 
     tile_coord = context.npc.get_tile_pos()
 
-    for pos in near_tiles(tile_coord, radius):
+    for pos in near_tiles(tile_coord, radius, shuffle=True):
         if pos in soil_layer.harvestable_tiles:
             path_created = walk_to_pos(
                 context, pos
@@ -147,9 +147,9 @@ def will_create_new_farmland(context: NPCIndividualContext) -> bool:
 
 def create_new_farmland(context: NPCIndividualContext) -> bool:
     """
-    Finds a random untilled but farmable tile in a radius of 5 around the
-    NPC. Will prefer Tiles that are adjacent to already tilled Tiles in 6/7
-    of all cases.
+    Finds a random untilled but farmable tile, makes the NPC walk to and till
+    it. Will prefer Tiles that are adjacent to already tilled Tiles in 6/7 of
+    all cases. Will prefer Tiles within a 5 tile radius around the NPC.
     :return: True if such a Tile has been found and the NPC successfully
              created a path towards it, otherwise False
     """
@@ -198,6 +198,15 @@ def create_new_farmland(context: NPCIndividualContext) -> bool:
         if path_created:
             return True
 
+    for pos in sorted(context.npc.soil_layer.untilled_tiles,
+                      key=lambda tile: distance(tile, tile_coord)):
+        path_created = walk_to_pos(
+            context, pos,
+            on_path_completion=on_path_completion
+        )
+        if path_created:
+            return True
+
     return False
 
 
@@ -220,8 +229,8 @@ def plant_adjacent_or_random_seed(
         context: NPCIndividualContext
 ) -> bool:
     """
-    Finds a random unplanted but tilled tile in a radius of 5 around the
-    NPC, makes the NPC walk to and plant a seed on it.
+    Finds a random unplanted but tilled tile, makes the NPC walk to and plant
+    a seed on it. Prefers tiles within a 5 tile radius around the NPC.
     The seed selected is dependent on the respective amount of planted
     seeds from all seed types, as well as the seed types that have been
     planted on tiles adjacent to the randomly selected tile.
@@ -296,13 +305,22 @@ def plant_adjacent_or_random_seed(
             if path_created:
                 return True
 
+    for pos in sorted(soil_layer.unplanted_tiles,
+                      key=lambda tile: distance(tile, tile_coord)):
+        path_created = walk_to_pos(
+            context, pos,
+            on_path_completion=on_path_completion
+        )
+        if path_created:
+            return True
+
     return False
 
 
 def water_farmland(context: NPCIndividualContext) -> bool:
     """
-    Finds a random unwatered but planted tile in a radius of 5 around the
-    NPC, makes the NPC walk to and water it.
+    Finds a random unwatered but planted tile, makes the NPC walk to and water
+    it. Prefers tiles within a 5 tile radius around the NPC.
     :return: True if such a Tile has been found and the NPC successfully
              created a path towards it, otherwise False
     """
@@ -328,6 +346,15 @@ def water_farmland(context: NPCIndividualContext) -> bool:
             )
             if path_created:
                 return True
+
+    for pos in sorted(soil_layer.unwatered_tiles,
+                      key=lambda tile: distance(tile, tile_coord)):
+        path_created = walk_to_pos(
+            context, pos,
+            on_path_completion=on_path_completion
+        )
+        if path_created:
+            return True
 
     return False
 # endregion
