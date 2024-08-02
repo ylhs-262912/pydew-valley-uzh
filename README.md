@@ -31,7 +31,7 @@ This project requires Python 3.12 or above.
 3. **Install dependencies**
     ```
     pip install -r requirements.txt # For running the game (runtime dependencies)
-    pip install -r requirements-dev.txt # For development
+    pip install -r requirements-dev.txt # For local development
     pip install -r requirements-test.txt # For running tests
     ```
 
@@ -44,7 +44,17 @@ This project requires Python 3.12 or above.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information on how contributions can be made.
 
-Remember to run `black` on code changes before committing. You can configure some IDEs or code editors (e.g. VSCode) to do format your code automatically anytime you save a file.
+### Linting and Formatting
+
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip install -r requirements-dev.txt` to install it and other relevant dev dependencies.
+
+> [!IMPORTANT]
+> **Before opening a PR, please run the following commands to ensure that your code is formatted and doesn't upset the Ruff linter:**
+> 
+>```sh
+> ruffformat . && ruff check --include I --fix . #  format code and sort imports
+>ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule > is ignored
+> ```
 
 ## Contributing
 
