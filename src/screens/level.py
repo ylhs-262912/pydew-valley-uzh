@@ -26,6 +26,7 @@ from src.sprites.entities.player import Player
 from src.sprites.particle import ParticleSprite
 from src.sprites.setup import ENTITY_ASSETS
 from src.support import map_coords_to_tile, load_data, resource_path
+from src.gui.scene_animation import SceneAnimation
 
 
 class Level:
@@ -80,6 +81,12 @@ class Level:
         self.display_surface = pygame.display.get_surface()
         self.switch_screen = switch
 
+        # cutscene
+        target_points = [(100, 100), (200, 200), (300, 100), (800, 900)]
+        speeds = [100, 150, 200]  # Different speeds for each segment
+        pauses = [0, 1, 0.5, 2]  # Pauses at each point in seconds
+        self.cut_scene_animation = SceneAnimation(target_points, speeds, pauses)
+        
         # assets
         self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
         self.frames = frames
@@ -318,6 +325,12 @@ class Level:
                 return True
 
         return False
+    
+    def get_camera_center(self):
+        if self.cut_scene_animation:
+            return self.cut_scene_animation.get_current_position()
+
+        return self.player.rect.center
 
     def start_transition(self):
         self.player.blocked = True
@@ -403,7 +416,8 @@ class Level:
 
     def draw(self, dt):
         self.display_surface.fill((130, 168, 132))
-        self.all_sprites.draw(self.player.rect.center)
+        camera_center = self.get_camera_center()
+        self.all_sprites.draw(camera_center)
         self.sky.display(dt)
         self.draw_overlay()
         self.day_transition.draw()
@@ -413,6 +427,12 @@ class Level:
     def update_rain(self):
         if self.raining:
             self.rain.update()
+    
+    def update_cut_scene(self, dt):
+        if self.cut_scene_animation:
+            self.cut_scene_animation.update(dt)
+            if self.cut_scene_animation.is_finished:
+                self.cut_scene_animation = None
 
     def update(self, dt: float):
         # update
@@ -423,6 +443,7 @@ class Level:
         self.map_transition.update()
         self.all_sprites.update(dt)
         self.drops_manager.update()
+        self.update_cut_scene(dt)
 
         # draw
         self.draw(dt)
