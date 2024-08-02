@@ -10,38 +10,35 @@ For more information, please contact s.kittelberger[at]psychologie.uzh.ch.
 
 This project requires Python 3.12 or above.
 
-1. Clone this repository
+1. **Clone this repository:**
+    ```
+    git clone https://github.com/sloukit/pydew-valley-uzh.git
+    ```
 
-```
-git clone https://github.com/sloukit/pydew-valley-uzh.git
-```
+2. **Create and activate a virtual environment:**
 
-2. Create and activate a virtual environment
+    **Linux/MacOS**
+    ```
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+    **For Windows**
+    ```
+    python -m venv venv
+    venv\Scripts\activate
+    ```
 
-# For Linux/MacOS
-```
-python3 -m venv venv
-source venv/bin/activate
-```
-
-# For Windows
-```
-python -m venv venv
-venv\Scripts\activate
-```
-
-3. Install dependencies
-
-```
-pip install -r requirements.txt # For running the game (runtime dependencies)
-pip install -r requirements-dev.txt # For development
-pip install -r requirements-test.txt # For running tests
-```
+3. **Install dependencies**
+    ```
+    pip install -r requirements.txt # For running the game (runtime dependencies)
+    pip install -r requirements-dev.txt # For development
+    pip install -r requirements-test.txt # For running tests
+    ```
 
 4. Run this project
-```
-python main.py
-```
+    ```
+    python main.py
+    ```
 
 ## Local Development
 
