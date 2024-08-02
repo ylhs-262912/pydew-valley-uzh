@@ -46,14 +46,20 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information on how contributio
 
 ### Linting and Formatting
 
-We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip install -r requirements-dev.txt` to install it and other relevant dev dependencies.
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip install -r requirements-dev.txt` to install it and other relevant dependencies.
 
 > [!IMPORTANT]
-> **Before opening a PR, please run the following commands to ensure that your code is formatted and doesn't upset the Ruff linter:**
+> **Before opening a PR, please run the following command to ensure that your code is formatted and doesn't upset the Ruff linter:**
 > 
->```sh
-> ruffformat . && ruff check --include I --fix . #  format code and sort imports
->ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule > is ignored
+> ```sh
+> python formatlint.py
+> ```
+> 
+> Or alternatively, run the following commands individually:
+> 
+> ```sh
+> ruff format . && ruff check --include I --fix . #  format code and sort imports
+> ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule is ignored
 > ```
 
 ## Contributing
