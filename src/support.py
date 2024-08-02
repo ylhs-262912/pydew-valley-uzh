@@ -1,8 +1,8 @@
 import json
 import math
 import os
-import sys
 import random
+import sys
 
 import pygame
 import pygame.gfxdraw

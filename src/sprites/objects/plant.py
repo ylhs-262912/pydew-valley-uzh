@@ -1,7 +1,8 @@
+from pygame.math import Vector2 as vector
+
 from src.enums import Layer
 from src.settings import GROW_SPEED, SCALE_FACTOR
 from src.sprites.base import Sprite
-from pygame.math import Vector2 as vector
 
 
 class Plant(Sprite):

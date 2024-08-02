@@ -1,7 +1,7 @@
 import pygame
 
 from src.enums import Layer
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
+from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH, Coordinate
 
 
 class PersistentSpriteGroup(pygame.sprite.Group):

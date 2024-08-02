@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import pygame
 
 from src.npc.bases.cow_base import CowBase
-from src.npc.behaviour.ai_behaviour_tree_base import Context, Selector, Action
+from src.npc.behaviour.ai_behaviour_tree_base import Action, Context, Selector
 from src.settings import SCALED_TILE_SIZE
 
 
@@ -62,7 +62,7 @@ class CowBehaviourTree:
             )
         )
 
-        for i in range(min(len(avail_x_coords), len(avail_y_coords))):
+        for _ in range(min(len(avail_x_coords), len(avail_y_coords))):
             pos = (random.choice(avail_x_coords), random.choice(avail_y_coords))
             avail_x_coords.remove(pos[0])
             avail_y_coords.remove(pos[1])

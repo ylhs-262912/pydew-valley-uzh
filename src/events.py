@@ -1,8 +1,9 @@
 """Expansion over Pygame's event management system."""
 
+from types import NoneType, UnionType
+from typing import NoReturn, Self, Type, Union
+
 import pygame
-from typing import Union, Type, NoReturn, Self
-from types import UnionType, NoneType
 
 SpecialForm = type(NoReturn)
 
@@ -91,10 +92,7 @@ class _EventDefinition:
             attr_type = self.attrs[attr]
             if not isinstance(value, getattr(attr_type, "__args__", attr_type)):
                 typenames = ",".join(
-                    map(
-                        lambda tp: tp.__name__,
-                        getattr(attr_type, "__args__", (attr_type,)),
-                    )
+                    (tp.__name__ for tp in getattr(attr_type, "__args__", (attr_type,)))
                 )
                 raise TypeError(
                     f"given value ({value}) for attribute {attr}"
@@ -121,9 +119,9 @@ class _EventDefinition:
                         attrs[attr], getattr(attr_type, "__args__", attr_type)
                     ):
                         typenames = ",".join(
-                            map(
-                                lambda tp: tp.__name__,
-                                getattr(attr_type, "__args__", (attr_type,)),
+                            (
+                                tp.__name__
+                                for tp in getattr(attr_type, "__args__", (attr_type,))
                             )
                         )
                         raise TypeError(

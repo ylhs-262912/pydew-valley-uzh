@@ -7,7 +7,7 @@ from src.enums import Direction, EntityState, Layer
 from src.gui.interface import indicators
 from src.sprites.base import CollideableSprite, Sprite
 from src.sprites.setup import EntityAsset
-from src.support import screen_to_tile, get_entity_facing_direction
+from src.support import get_entity_facing_direction, screen_to_tile
 
 
 class Entity(CollideableSprite, ABC):

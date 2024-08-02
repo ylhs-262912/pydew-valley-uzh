@@ -4,10 +4,10 @@ import pygame
 
 from src import support
 from src.enums import GameState
-from src.events import OPEN_INVENTORY, DIALOG_SHOW, DIALOG_ADVANCE
+from src.events import DIALOG_ADVANCE, DIALOG_SHOW, OPEN_INVENTORY
 from src.groups import AllSprites
-from src.gui.setup import setup_gui
 from src.gui.interface.dialog import DialogueManager
+from src.gui.setup import setup_gui
 from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
@@ -15,15 +15,14 @@ from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
 from src.settings import (
-    SCREEN_WIDTH,
+    EMOTE_SIZE,
     SCREEN_HEIGHT,
+    SCREEN_WIDTH,
     AniFrames,
     MapDict,
     SoundDict,
-    EMOTE_SIZE,
 )
 from src.sprites.setup import setup_entity_assets
-
 
 _COSMETICS = frozenset({"goggles", "horn", "necklace", "hat"})
 # Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed

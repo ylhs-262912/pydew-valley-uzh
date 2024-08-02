@@ -1,7 +1,5 @@
 from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
-from src.events import create_custom_event_type
-
 
 class PlayerState(IntEnum):
     IDLE = 0

@@ -1,7 +1,8 @@
+from abc import ABC, abstractmethod
+
 import pygame
 from pygame.math import Vector2 as vector
 from pygame.mouse import get_pos as mouse_pos
-from abc import ABC, abstractmethod
 
 from src.controls import Control
 from src.support import resource_path

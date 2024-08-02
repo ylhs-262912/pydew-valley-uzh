@@ -1,26 +1,27 @@
 import warnings
 from collections.abc import Callable
+from functools import partial
 from random import randint
 
 import pygame
 
 from src.enums import FarmingTool, GameState, Map, SeedType
-from src.events import post_event, DIALOG_SHOW, DIALOG_ADVANCE
+from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
 from src.groups import AllSprites, PersistentSpriteGroup
-from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
+from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
+from src.gui.scene_animation import SceneAnimation
 from src.overlay.overlay import Overlay
-from src.overlay.sky import Sky, Rain
+from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.screens.game_map import GameMap
-from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH, MapDict, SoundDict, GAME_MAP
+from src.settings import GAME_MAP, SCREEN_HEIGHT, SCREEN_WIDTH, MapDict, SoundDict
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
 from src.sprites.particle import ParticleSprite
 from src.sprites.setup import ENTITY_ASSETS
-from src.support import map_coords_to_tile, load_data, resource_path
-from src.gui.scene_animation import SceneAnimation
+from src.support import load_data, map_coords_to_tile, resource_path
 
 
 class Level:
@@ -83,7 +84,7 @@ class Level:
         speeds = [100, 150, 200]  # Different speeds for each segment
         pauses = [0, 1, 0.5, 2]  # Pauses at each point in seconds
         self.cut_scene_animation = SceneAnimation(target_points, speeds, pauses)
-        
+
         # assets
         self.font = pygame.font.Font(resource_path("font/LycheeSoda.ttf"), 30)
         self.frames = frames
@@ -108,7 +109,7 @@ class Level:
         self.player = Player(
             pos=(0, 0),
             assets=ENTITY_ASSETS.RABBIT,
-            groups=tuple(),
+            groups=(),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
             interact=self.interact,
@@ -296,7 +297,7 @@ class Level:
                 return True
 
         return False
-    
+
     def get_camera_center(self):
         if self.cut_scene_animation:
             return self.cut_scene_animation.get_current_position()
@@ -355,8 +356,8 @@ class Level:
         if not self.map_transition:
             for warp_hitbox in self.player_exit_warps:
                 if self.player.hitbox_rect.colliderect(warp_hitbox.rect):
-                    self.map_transition.reset = lambda: self.switch_to_map(
-                        warp_hitbox.name
+                    self.map_transition.reset = partial(
+                        self.switch_to_map, warp_hitbox.name
                     )
                     self.start_map_transition()
                     return
@@ -400,7 +401,7 @@ class Level:
     def update_rain(self):
         if self.raining:
             self.rain.update()
-    
+
     def update_cut_scene(self, dt):
         if self.cut_scene_animation:
             self.cut_scene_animation.update(dt)

@@ -4,9 +4,9 @@ from collections.abc import Callable
 from typing import Any
 
 import pygame
-from pytmx import TiledMap, TiledTileLayer, TiledObjectGroup, TiledObject, TiledElement
+from pytmx import TiledElement, TiledMap, TiledObject, TiledObjectGroup, TiledTileLayer
 
-from src.enums import Layer, FarmingTool, InventoryResource
+from src.enums import FarmingTool, InventoryResource, Layer
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.map_objects import MapObjects
@@ -17,14 +17,14 @@ from src.npc.npc import NPC
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import (
-    SETUP_PATHFINDING,
     ENABLE_NPCS,
-    TEST_ANIMALS,
-    SCALED_TILE_SIZE,
     SCALE_FACTOR,
+    SCALED_TILE_SIZE,
+    SETUP_PATHFINDING,
+    TEST_ANIMALS,
     TILE_SIZE,
 )
-from src.sprites.base import Sprite, AnimatedSprite, CollideableMapObject
+from src.sprites.base import AnimatedSprite, CollideableMapObject, Sprite
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
@@ -515,7 +515,7 @@ class GameMap:
                         lambda pos, image: self._setup_collideable_tile(
                             pos,
                             image,
-                            layer,
+                            layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
                             (
                                 self.all_sprites,
                                 self.collision_sprites,
@@ -544,7 +544,10 @@ class GameMap:
                     _setup_tile_layer(
                         tilemap_layer,
                         lambda pos, image: self._setup_base_tile(
-                            pos, image, layer, self.all_sprites
+                            pos,
+                            image,
+                            layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
+                            self.all_sprites,
                         ),
                     )
 
@@ -615,7 +618,13 @@ class GameMap:
                     _setup_object_layer(
                         tilemap_layer,
                         lambda pos, obj: self._setup_collideable_object(
-                            pos, obj, layer, (self.all_sprites, self.collision_sprites)
+                            pos,
+                            obj,
+                            layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
+                            (
+                                self.all_sprites,
+                                self.collision_sprites,
+                            ),
                         ),
                     )
 

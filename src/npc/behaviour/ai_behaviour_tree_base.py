@@ -3,11 +3,11 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TypeVar, Callable
+from typing import Callable, TypeVar
 
 
 @dataclass
-class Context(ABC):
+class Context:
     pass
 
 

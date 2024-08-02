@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pygame
 
 from src.enums import Direction, EntityState
-from src.settings import SCALE_FACTOR, CHAR_TILE_SIZE
+from src.settings import CHAR_TILE_SIZE, SCALE_FACTOR
 from src.support import resource_path
 
 
@@ -154,7 +154,7 @@ def entity_importer(
 ) -> dict[EntityState, dict[Direction, _AniFrames]]:
     hitbox.scale_hitboxes(SCALE_FACTOR)
     states = {}
-    for folder_path, sub_folders, file_names in os.walk(path):
+    for folder_path, _sub_folders, file_names in os.walk(path):
         for file_name in file_names:
             current_state = EntityState(file_name.split(".")[0])
             states[current_state] = state_importer(

@@ -1,13 +1,13 @@
-import pygame
 from random import choice
 
+import pygame
 from pytmx import TiledTileLayer
 
-from src.enums import SeedType, Layer
-from src.support import tile_to_screen
+from src.enums import Layer, SeedType
+from src.settings import SCALE_FACTOR, TILE_SIZE, SoundDict
 from src.sprites.base import Sprite
 from src.sprites.objects.plant import Plant
-from src.settings import TILE_SIZE, SCALE_FACTOR, SoundDict
+from src.support import tile_to_screen
 
 
 class Tile(Sprite):

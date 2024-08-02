@@ -7,14 +7,14 @@ from typing import Callable
 import pygame
 
 from src.enums import FarmingTool, ItemToUse
+from src.npc.bases.npc_base import NPCBase
 from src.npc.behaviour.ai_behaviour_tree_base import (
+    Action,
+    Condition,
     Context,
     Selector,
     Sequence,
-    Condition,
-    Action,
 )
-from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
 
 
@@ -267,7 +267,7 @@ class NPCBehaviourTree:
             )
         )
 
-        for i in range(min(len(avail_x_coords), len(avail_y_coords))):
+        for _ in range(min(len(avail_x_coords), len(avail_y_coords))):
             pos = (random.choice(avail_x_coords), random.choice(avail_y_coords))
             avail_x_coords.remove(pos[0])
             avail_y_coords.remove(pos[1])

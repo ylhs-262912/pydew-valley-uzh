@@ -1,3 +1,5 @@
+import random
+
 import pygame
 
 from src.enums import Layer
@@ -6,7 +8,6 @@ from src.settings import (
     SCREEN_WIDTH,
 )
 from src.sprites.water_drop import WaterDrop
-import random
 
 
 class Sky:
@@ -51,7 +52,7 @@ class Sky:
             # Loop through each index of the current overlay color, then
             # increment it by the above determined increments between noon and
             # midnight
-            for index, value in enumerate(self.end_color):
+            for index in range(len(self.end_color)):
                 if self.game_hour >= 12:
                     self.start_color[index] -= self.color_increment[index]
                     if self.start_color[index] < 0:
@@ -80,13 +81,13 @@ class Sky:
                 self.end_color[1],
                 self.end_color[2],
             ]  # darkest color is midnight
-            for index, value in enumerate(self.end_color):
+            for index in range(len(self.end_color)):
                 new_color[index] += self.color_increment[index] * num_of_minutes
         else:
             num_of_minutes -= 720
             # brightest color is noon
             new_color = [255, 255, 255]
-            for index, value in enumerate(self.end_color):
+            for index in range(len(self.end_color)):
                 new_color[index] -= self.color_increment[index] * num_of_minutes
 
         self.start_color = new_color

@@ -4,8 +4,8 @@ import pygame
 from pygame.math import Vector2 as vector
 
 from src.controls import Controls
-from src.gui.menu.components import Button, Slider, KeySetup
-from src.support import load_data, save_data, resource_path
+from src.gui.menu.components import Button, KeySetup, Slider
+from src.support import load_data, resource_path, save_data
 
 
 class Description:

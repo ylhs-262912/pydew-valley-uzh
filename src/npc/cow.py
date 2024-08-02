@@ -14,7 +14,7 @@ from src.npc.behaviour.cow_flee_behaviour_tree import (
     CowFleeBehaviourTreeContext,
 )
 from src.npc.setup import AIData
-from src.settings import Coordinate, SCALED_TILE_SIZE
+from src.settings import SCALED_TILE_SIZE, Coordinate
 from src.sprites.setup import EntityAsset
 from src.support import get_flight_matrix
 
@@ -113,7 +113,7 @@ class Cow(CowBase):
                     )
                 )
 
-                for i in range(min(len(avail_x_coords), len(avail_y_coords))):
+                for _ in range(min(len(avail_x_coords), len(avail_y_coords))):
                     pos = (random.choice(avail_x_coords), random.choice(avail_y_coords))
                     avail_x_coords.remove(pos[0])
                     avail_y_coords.remove(pos[1])

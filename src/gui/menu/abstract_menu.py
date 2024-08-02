@@ -1,13 +1,12 @@
-import sys
-import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.support import resource_path
-from src.gui.menu.components import Button
-from src.enums import GameState
-from pygame.mouse import get_pressed as mouse_buttons
-from pygame.math import Vector2 as vector
 from abc import ABC, abstractmethod
+
+import pygame
+from pygame.math import Vector2 as vector
+from pygame.mouse import get_pressed as mouse_buttons
+
 from src.events import post_event
+from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH
+from src.support import resource_path
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
@@ -55,6 +54,7 @@ class AbstractMenu(ABC):
     def button_setup(self, *args, **kwargs):
         pass
 
+    @abstractmethod
     def handle_event(self, event: pygame.event.Event):
         pass
 

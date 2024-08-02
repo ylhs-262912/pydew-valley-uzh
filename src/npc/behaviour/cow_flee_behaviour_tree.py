@@ -2,11 +2,11 @@ from dataclasses import dataclass
 
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.ai_behaviour_tree_base import (
+    Action,
+    Condition,
     Context,
     Selector,
     Sequence,
-    Condition,
-    Action,
 )
 from src.settings import SCALED_TILE_SIZE
 from src.sprites.character import Character

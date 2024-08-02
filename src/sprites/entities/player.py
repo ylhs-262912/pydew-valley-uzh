@@ -4,13 +4,13 @@ from typing import Callable, Type
 
 import pygame  # noqa
 
-from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
-from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup, EntityState
+from src.enums import EntityState, FarmingTool, InventoryResource, ItemToUse, StudyGroup
+from src.events import OPEN_INVENTORY, post_event
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, SoundDict, GogglesStatus
+from src.settings import Coordinate, GogglesStatus, SoundDict
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset

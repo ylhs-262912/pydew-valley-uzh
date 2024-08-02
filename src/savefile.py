@@ -1,8 +1,10 @@
 import json
-from src.enums import InventoryResource, FarmingTool, StudyGroup
+
+from jsmin import jsmin
+
+from src.enums import FarmingTool, InventoryResource, StudyGroup
 from src.settings import GogglesStatus
 from src.support import resource_path
-from jsmin import jsmin
 
 CONVERT_TO_FT = "__FarmingTool__"
 CONVERT_TO_IR = "__InventoryResource__"

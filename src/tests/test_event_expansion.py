@@ -1,9 +1,10 @@
 """Test suite for the event queue"""
 
 import unittest
-import src.events
-from src.events import _EventDefinition as _EDef
+
 import pygame
+
+import src.events
 
 _DUMMY = object()
 IntOrStr = int | str

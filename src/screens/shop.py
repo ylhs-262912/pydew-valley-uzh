@@ -9,7 +9,6 @@ from src.settings import (
 )
 from src.sprites.entities.player import Player
 
-
 # TODO: Refactor this class
 
 

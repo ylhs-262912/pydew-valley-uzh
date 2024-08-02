@@ -9,7 +9,7 @@ from src.controls import Controls
 from src.enums import GameState
 from src.gui.menu.description import KeybindsDescription, VolumeDescription
 from src.gui.menu.general_menu import GeneralMenu
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
+from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 class SettingsMenu(GeneralMenu):

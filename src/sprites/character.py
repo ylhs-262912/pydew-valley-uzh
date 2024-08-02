@@ -6,10 +6,10 @@ import pygame
 
 from src import settings
 from src.enums import (
+    EntityState,
     FarmingTool,
     InventoryResource,
     ItemToUse,
-    EntityState,
     Layer,
     StudyGroup,
 )

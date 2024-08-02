@@ -6,7 +6,7 @@ from src import timer
 from src.enums import InventoryResource, Layer
 from src.map_objects import MapObjectType
 from src.settings import APPLE_POS
-from src.sprites.base import Sprite, CollideableMapObject
+from src.sprites.base import CollideableMapObject, Sprite
 from src.sprites.drops import DropsManager
 from src.support import generate_particle_surf
 

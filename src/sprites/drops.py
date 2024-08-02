@@ -1,13 +1,14 @@
-import pygame
-from typing import override
-import random
 import math
+import random
+from typing import override
 
-from src.settings import Coordinate, SCALE_FACTOR
-from src.sprites.base import Sprite
-from src.timer import Timer
+import pygame
+
 from src.enums import InventoryResource, Layer
-from src.support import generate_particle_surf, oscilating_lerp, rand_circular_pos
+from src.settings import SCALE_FACTOR, Coordinate
+from src.sprites.base import Sprite
+from src.support import oscilating_lerp, rand_circular_pos
+from src.timer import Timer
 
 
 class DropsManager:
@@ -246,7 +247,6 @@ class DropShadow(Sprite):
         self.rect.centery = self.drop.pos[1] + self.drop.rect.width / 2
 
         # change size depending on how far the drop is from the groud
-        max_size = self.surf.get_size()
         dist_from_floor = self.drop.pos.distance_to(self.drop.rect.center)
         max_dist = self.drop.max_height
         normalized_dist = 1 - dist_from_floor / max_dist

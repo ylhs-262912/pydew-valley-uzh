@@ -1,4 +1,5 @@
 import random
+
 import pygame
 
 from src.settings import SCALE_FACTOR

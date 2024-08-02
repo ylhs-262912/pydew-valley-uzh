@@ -1,13 +1,15 @@
+import json
+import textwrap
+from operator import attrgetter
+
+import pygame
+from jsmin import jsmin  # JSON minifier function (removes comments, notably)
+
 from src.enums import Layer
+from src.settings import CHARS_PER_LINE, SCREEN_HEIGHT, SCREEN_WIDTH, TB_SIZE
 from src.sprites.base import Sprite
 from src.support import resource_path
-from src.settings import CHARS_PER_LINE, TB_SIZE, SCREEN_WIDTH, SCREEN_HEIGHT
 from src.timer import Timer
-import pygame
-import json
-from jsmin import jsmin  # JSON minifier function (removes comments, notably)
-from operator import attrgetter
-import textwrap
 
 
 class TextBox(Sprite):
@@ -74,7 +76,7 @@ class TextBox(Sprite):
                 SCREEN_HEIGHT - self.image.height,
             ),
             self.image,
-            tuple(),
+            (),
             z=Layer.TEXT_BOX,
             name=character_name,
         )

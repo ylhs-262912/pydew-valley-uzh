@@ -1,5 +1,7 @@
 from collections.abc import Callable
+
 import pygame
+
 from src import settings
 from src.support import oscilating_lerp
 from src.timer import Timer
