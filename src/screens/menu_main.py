@@ -15,7 +15,7 @@ class MainMenu(GeneralMenu):
 
     def button_action(self, text):
         if text == 'Play':
-            self.switch_screen(GameState.LEVEL)
+            self.switch_screen(GameState.PLAY)
         if text == 'Quit':
             self.quit_game()
 
@@ -29,7 +29,7 @@ class MainMenu(GeneralMenu):
                 return True
 
             if event.key == pygame.K_RETURN:
-                self.switch_screen(GameState.LEVEL)
+                self.switch_screen(GameState.PLAY)
                 return True
 
         return False

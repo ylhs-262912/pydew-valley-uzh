@@ -94,11 +94,18 @@ class Sky:
 
 
 class Rain:
-    def __init__(self, all_sprites, level_frames, map_size):
+    def __init__(self, all_sprites, level_frames, map_size=None):
+        if map_size is None:
+            self.floor_w, self.floor_h = (0, 0)
+        else:
+            self.set_floor_size(map_size)
+
         self.all_sprites = all_sprites
-        self.floor_w, self.floor_h = map_size
         self.floor_frames = level_frames['rain floor']
         self.drop_frames = level_frames['rain drops']
+
+    def set_floor_size(self, size: tuple[int, int]):
+        self.floor_w, self.floor_h = size
 
     def create_floor(self):
         WaterDrop(

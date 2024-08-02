@@ -4,6 +4,7 @@ from typing import TypeVar
 
 import pygame
 
+from src.groups import PersistentSpriteGroup
 from src.sprites.base import Sprite
 from src.timer import Timer
 
@@ -66,7 +67,7 @@ EmoteBoxType = TypeVar("EmoteBoxType", bound=EmoteBoxBase)
 
 
 class EmoteManagerBase:
-    groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+    groups: tuple[pygame.sprite.Group, ...]
 
     emotes: dict[str, list[pygame.Surface]]
 

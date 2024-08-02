@@ -140,16 +140,16 @@
  </objectgroup>
  <objectgroup id="7" name="BG decoration objects"/>
  <objectgroup id="6" name="Collidable objects">
-  <object id="2" name="Tree" gid="212" x="336" y="272" width="24" height="30"/>
-  <object id="3" name="Tree" gid="212" x="272" y="256" width="24" height="30"/>
   <object id="4" gid="207" x="224" y="288" width="16" height="12"/>
   <object id="5" gid="216" x="320" y="352" width="16" height="12"/>
   <object id="12" gid="220" x="56.8024" y="198.474" width="14" height="17"/>
   <object id="13" gid="219" x="288.381" y="162.665" width="14" height="22"/>
-  <object id="113" name="Tree" gid="388" x="412.846" y="137.385" width="24" height="31"/>
-  <object id="114" name="Tree" gid="389" x="379.465" y="81.2442" width="24" height="31"/>
-  <object id="115" name="Tree" gid="390" x="441.675" y="96.9346" width="24" height="30"/>
-  <object id="116" name="Tree" gid="391" x="408.294" y="46.8634" width="24" height="30"/>
+ </objectgroup>
+ <objectgroup id="14" name="Trees">
+  <object id="113" gid="388" x="412.846" y="137.385" width="24" height="31"/>
+  <object id="114" gid="389" x="379.465" y="81.2442" width="24" height="31"/>
+  <object id="115" gid="390" x="441.675" y="96.9346" width="24" height="30"/>
+  <object id="116" gid="391" x="408.294" y="46.8634" width="24" height="30"/>
  </objectgroup>
  <objectgroup id="13" name="Animals">
   <object id="108" name="Chicken" gid="221" x="192" y="176" width="11" height="11"/>
@@ -166,8 +166,8 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="5" name="Entities">
-  <object id="1" name="Player" x="112" y="192">
+ <objectgroup id="5" name="Player">
+  <object id="1" name="spawnpoint" x="112" y="192">
    <point/>
   </object>
  </objectgroup>

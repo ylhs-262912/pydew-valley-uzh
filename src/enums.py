@@ -1,5 +1,7 @@
 from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
+from src.events import create_custom_event_type
+
 
 class PlayerState(IntEnum):
     IDLE = 0
@@ -24,7 +26,7 @@ _FT_SERIALISED_STRINGS = (
 
 class GameState(IntEnum):
     MAIN_MENU = 0
-    LEVEL = 1
+    PLAY = 1
     PAUSE = 2
     SETTINGS = 3
     SHOP = 4
@@ -33,7 +35,7 @@ class GameState(IntEnum):
     WIN = 7
     CREDITS = 8
     # Special value: when switched to this value, the game
-    # saves and then sets its current state back to LEVEL
+    # saves and then sets its current state back to PLAY
     SAVE_AND_RESUME = 9
     INVENTORY = 10
 
@@ -241,11 +243,37 @@ class EntityState(StrEnum):
     HOE = "hoe"
     WATER = "water"
 
+    # Special values for equipment rendering
+
+    GOGGLES_AXE = "goggles_axe"
+    GOGGLES_HOE = "goggles_hoe"
+    GOGGLES_IDLE = "goggles_idle"
+    GOGGLES_WALK = "goggles_walk"
+    GOGGLES_WATER = "goggles_water"
+
+    HAT_AXE = "hat_axe"
+    HAT_HOE = "hat_hoe"
+    HAT_IDLE = "hat_idle"
+    HAT_WALK = "hat_walk"
+    HAT_WATER = "hat_water"
+
+    HORN_AXE = "horn_axe"
+    HORN_HOE = "horn_hoe"
+    HORN_IDLE = "horn_idle"
+    HORN_WALK = "horn_walk"
+    HORN_WATER = "horn_water"
+
+    NECKLACE_AXE = "necklace_axe"
+    NECKLACE_HOE = "necklace_hoe"
+    NECKLACE_IDLE = "necklace_idle"
+    NECKLACE_WALK = "necklace_walk"
+    NECKLACE_WATER = "necklace_water"
+
 
 class Layer(IntEnum):
     WATER = 0
-    LOWER_GROUND = auto()
-    UPPER_GROUND = auto()
+    GROUND = auto()
+    GROUND_OBJECTS = auto()
     SOIL = auto()
     SOIL_WATER = auto()
     RAIN_FLOOR = auto()
@@ -261,7 +289,9 @@ class Layer(IntEnum):
 
 class Map(StrEnum):
     FARM = "farm"
+    NEW_FARM = "farm_new"
     FOREST = "forest"
+    TOWN = "town"
 
 
 class StudyGroup(IntEnum):

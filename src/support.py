@@ -83,11 +83,8 @@ def animation_importer(*ani_path: str, frame_size: int = None, resize: int = Non
             surf = pygame.image.load(full_path).convert_alpha()
             animation_dict[str(file_name.split('.')[0])] = []
             for col in range(surf.get_width() // frame_size):
-                cutout_surf = pygame.Surface(
-                    (frame_size, frame_size), pygame.SRCALPHA)
-                cutout_rect = pygame.Rect(
-                    col * frame_size, 0, frame_size, frame_size)
-                cutout_surf.blit(surf, (0, 0), cutout_rect)
+                subsurf_rect = pygame.Rect(col*frame_size, 0, frame_size, frame_size)
+                cutout_surf = surf.subsurface(subsurf_rect)
 
                 if resize:
                     animation_dict[str(file_name.split('.')[0])].append(

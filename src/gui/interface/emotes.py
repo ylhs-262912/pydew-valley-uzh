@@ -6,6 +6,7 @@ import pygame
 import pygame.gfxdraw
 
 from src.enums import Layer
+from src.groups import PersistentSpriteGroup
 from src.gui.interface.emotes_base import (
     EmoteBoxBase, EmoteManagerBase, EmoteWheelBase
 )
@@ -21,7 +22,7 @@ class EmoteBox(EmoteBoxBase):
             self,
             pos: tuple[int, int],
             emote: list[pygame.Surface],
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+            *groups: pygame.sprite.Group
     ):
         """
         Displays an emote in a small speech bubble.
@@ -104,7 +105,7 @@ class EmoteManager(EmoteManagerBase, ABC):
     def __init__(
             self,
             emotes: dict[str, list[pygame.Surface]],
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+            *groups: pygame.sprite.Group
     ):
         """
         Base class for all EmoteManagers
@@ -118,12 +119,12 @@ class EmoteManager(EmoteManagerBase, ABC):
 
         self._emote_boxes = {}
 
-    def _check_obj(self, obj: object) -> bool:
+    def _check_obj(self, obj_id: int) -> bool:
         """
         :return: Whether the Emote animation attached to a given object is
                  still playing or not.
         """
-        if id(obj) in self._emote_boxes.keys():
+        if obj_id in self._emote_boxes.keys():
             return True
         return False
 
@@ -138,10 +139,10 @@ class EmoteManager(EmoteManagerBase, ABC):
                 f"Available emotes: {list(self.emotes.keys())}"
             )
 
-        if self._check_obj(obj):
+        if self._check_obj(id(obj)):
             self._remove_emote_box(id(obj))
 
-        self[id(obj)] = EmoteBox((0, 0), self.emotes[emote], self.groups)
+        self[id(obj)] = EmoteBox((0, 0), self.emotes[emote], *self.groups)
 
         @self[id(obj)].on_finish_animation
         def on_finish_animation():
@@ -151,7 +152,7 @@ class EmoteManager(EmoteManagerBase, ABC):
         """
         Updates the position of the Emote attached to the given object.
         """
-        if not self._check_obj(obj):
+        if not self._check_obj(id(obj)):
             return
         self[id(obj)].pos = pos
 
@@ -186,19 +187,19 @@ class NPCEmoteManager(EmoteManager):
     def __init__(
             self,
             emotes: dict[str, list[pygame.Surface]],
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+            *groups: pygame.sprite.Group
     ):
         """
         EmoteManager for all NPCs
         """
-        super().__init__(emotes, groups)
+        super().__init__(emotes, *groups)
 
 
 class EmoteWheel(EmoteWheelBase):
     def __init__(
             self,
             emote_manager: EmoteManagerBase,
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+            *groups: PersistentSpriteGroup,
     ):
         """
         The Player's emote selection wheel
@@ -228,9 +229,11 @@ class EmoteWheel(EmoteWheelBase):
         self._setup_image()
 
         super().__init__(
-            (0, 0), self._image.copy(), groups,
+            (0, 0), self._image.copy(),
             z=Layer.TEXT_BOX
         )
+        for group in groups:
+            group.add_persistent(self)
 
         self.visible = False
 
@@ -383,12 +386,15 @@ class PlayerEmoteManager(EmoteManager):
     def __init__(
             self,
             emotes: dict[str, list[pygame.Surface]],
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+            *groups: PersistentSpriteGroup
     ):
-        super().__init__(emotes, groups)
+        super().__init__(emotes, *groups)
 
-        self.emote_wheel = EmoteWheel(self, groups)
+        self.emote_wheel = EmoteWheel(self, *groups)
 
+        self.reset()
+
+    def reset(self):
         self.__on_show_emote_funcs = []
         self.__on_emote_wheel_opened_funcs = []
         self.__on_emote_wheel_closed_funcs = []

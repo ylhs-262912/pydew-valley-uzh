@@ -6,8 +6,7 @@ from src.npc.behaviour.chicken_behaviour_tree import (
     ChickenBehaviourTree,
     ChickenBehaviourTreeContext
 )
-from src.npc.setup import AIData
-from src.settings import Coordinate, AniFrames
+from src.settings import Coordinate
 from src.sprites.setup import EntityAsset
 
 
@@ -24,10 +23,6 @@ class Chicken(ChickenBase):
             assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
-
-            pf_matrix=AIData.Matrix,
-            pf_grid=AIData.Grid,
-            pf_finder=AIData.ChickenPathFinder,
 
             z=Layer.MAIN
         )

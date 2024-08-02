@@ -1,7 +1,7 @@
 import pygame
 from random import choice
 
-from pytmx import TiledMap
+from pytmx import TiledTileLayer
 
 from src.enums import SeedType, Layer
 from src.support import tile_to_screen
@@ -47,7 +47,7 @@ class SoilLayer:
     sounds: SoundDict
     neighbor_directions: list[tuple[int, int]]
 
-    def __init__(self, all_sprites: pygame.sprite.Group, tmx_map: TiledMap, frames: dict, sounds: SoundDict):
+    def __init__(self, all_sprites: pygame.sprite.Group, frames: dict, sounds: SoundDict):
         self.all_sprites = all_sprites
         self.level_frames = frames
 
@@ -56,19 +56,20 @@ class SoilLayer:
         self.plant_sprites = pygame.sprite.Group()
 
         self.tiles = {}
-        self.create_soil_tiles(tmx_map)
         self.sounds = sounds
         self.neighbor_directions = [
             (0, -1), (1, -1), (1, 0), (1, 1),
             (0, 1), (-1, 1), (-1, 0), (-1, -1)
         ]
 
-    def create_soil_tiles(self, tmx_map):
-        try:
-            farmable_layer = tmx_map.get_layer_by_name("Farmable")
-        except ValueError:
-            return
-        for x, y, _ in farmable_layer.tiles():
+    def reset(self):
+        self.tiles = {}
+        self.soil_sprites.empty()
+        self.water_sprites.empty()
+        self.plant_sprites.empty()
+
+    def create_soil_tiles(self, layer: TiledTileLayer):
+        for x, y, _ in layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
             tile.farmable = True
             self.tiles[(x, y)] = tile

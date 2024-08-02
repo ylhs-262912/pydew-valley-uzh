@@ -70,7 +70,7 @@ class ShopMenu:
     def handle_event(self, event: pygame.event.Event) -> bool:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                self.switch_screen(GameState.LEVEL)
+                self.switch_screen(GameState.PLAY)
                 return True
 
             elif event.key == pygame.K_SPACE:

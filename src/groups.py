@@ -2,14 +2,45 @@ import pygame
 
 from src.enums import Layer
 from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
-from src.gui.interface.dialog import TextBox
+
+
+class PersistentSpriteGroup(pygame.sprite.Group):
+    _persistent_sprites: list[pygame.sprite.Sprite]
+
+    def __init__(self):
+        """
+        This Group subclass allows certain Sprites to be added as persistent
+        Sprites, which will not be removed when calling Group.empty.
+        When needing to remove all Sprites, including persistent Sprites, you
+        should call PersistentSpriteGroup.empty_persistent.
+        """
+        super().__init__()
+        self._persistent_sprites = []
+
+    def add_persistent(self, *sprites: pygame.sprite.Sprite):
+        """
+        Add a persistent Sprite. This Sprite will not be removed
+        from the Group when Group.empty is called.
+        """
+        super().add(*sprites)
+        self._persistent_sprites.extend(sprites)
+
+    def empty(self):
+        super().empty()
+        self.add(*self._persistent_sprites)
+
+    def empty_persistent(self):
+        """
+        Remove all sprites, including persistent Sprites.
+        """
+        super().empty()
 
 
 # TODO : we could replace this with pygame.sprite.LayeredUpdates, as that
 #  is a subclass of pygame.sprite.Group that natively supports layers
 
 
-class AllSprites(pygame.sprite.Group):
+class AllSprites(PersistentSpriteGroup):
     def __init__(self):
         super().__init__()
         self.display_surface = pygame.display.get_surface()
@@ -21,7 +52,7 @@ class AllSprites(pygame.sprite.Group):
         self.offset.y = -(target_pos[1] - SCREEN_HEIGHT / 2)
 
         sorted_sprites = sorted(self.sprites(),
-                                key=lambda spr: spr.hitbox_rect.centery)
+                                key=lambda spr: spr.hitbox_rect.bottom)
 
         for layer in Layer:
             for sprite in sorted_sprites:

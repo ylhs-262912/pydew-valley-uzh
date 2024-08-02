@@ -12,10 +12,14 @@ class Sprite(pygame.sprite.Sprite):
                  pos: tuple[int | float,
                             int | float],
                  surf: pygame.Surface,
-                 groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+                 groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+                 = None,
                  z: int = Layer.MAIN,
                  name: str | None = None):
-        super().__init__(groups)
+        if groups:
+            super().__init__(groups)
+        else:
+            super().__init__()
         self.surf = surf
         self.image = surf
         self.rect = self.image.get_frect(topleft=pos)
@@ -36,7 +40,8 @@ class CollideableMapObject(CollideableSprite):
             self,
             pos: tuple[int, int],
             object_type: MapObjectType,
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group
+            = None,
             z=Layer.MAIN,
             name=None
     ):
@@ -50,7 +55,7 @@ class CollideableMapObject(CollideableSprite):
 
 
 class AnimatedSprite(Sprite):
-    def __init__(self, pos, frames, groups, z=Layer.MAIN):
+    def __init__(self, pos, frames, groups=None, z=Layer.MAIN):
         self.frames, self.frame_index = frames, 0
         super().__init__(pos, frames[0], groups, z)
 

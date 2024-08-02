@@ -1,4 +1,4 @@
-from types import FunctionType as Function
+from collections.abc import Callable
 import pygame
 from src import settings
 from src.support import oscilating_lerp
@@ -6,7 +6,10 @@ from src.timer import Timer
 
 
 class Transition:
-    def __init__(self, reset: Function, finish_reset: Function, dur: int):
+    def __init__(
+            self, reset: Callable[[], None], finish_reset: Callable[[], None],
+            dur: int
+    ):
         # setup
         self.display_surface = pygame.display.get_surface()
         self.reset = reset
