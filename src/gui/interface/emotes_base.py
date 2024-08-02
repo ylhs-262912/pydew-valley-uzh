@@ -4,7 +4,6 @@ from typing import TypeVar
 
 import pygame
 
-from src.groups import PersistentSpriteGroup
 from src.sprites.base import Sprite
 from src.timer import Timer
 
@@ -30,6 +29,7 @@ class EmoteBoxBase(Sprite, ABC):
 
         timer: Timer triggering the next animation frames
     """
+
     emote: list[pygame.Surface]
     _current_emote_image = pygame.Surface
 

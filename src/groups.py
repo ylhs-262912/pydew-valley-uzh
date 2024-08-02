@@ -1,7 +1,7 @@
 import pygame
 
 from src.enums import Layer
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, Coordinate
+from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH, Coordinate
 
 
 class PersistentSpriteGroup(pygame.sprite.Group):
@@ -51,8 +51,7 @@ class AllSprites(PersistentSpriteGroup):
         self.offset.x = -(target_pos[0] - SCREEN_WIDTH / 2)
         self.offset.y = -(target_pos[1] - SCREEN_HEIGHT / 2)
 
-        sorted_sprites = sorted(self.sprites(),
-                                key=lambda spr: spr.hitbox_rect.bottom)
+        sorted_sprites = sorted(self.sprites(), key=lambda spr: spr.hitbox_rect.bottom)
 
         for layer in Layer:
             for sprite in sorted_sprites:

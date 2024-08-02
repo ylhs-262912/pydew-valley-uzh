@@ -1,13 +1,13 @@
-import pygame
 from random import choice
 
+import pygame
 from pytmx import TiledTileLayer
 
-from src.enums import SeedType, Layer
-from src.support import tile_to_screen
+from src.enums import Layer, SeedType
+from src.settings import SCALE_FACTOR, TILE_SIZE, SoundDict
 from src.sprites.base import Sprite
 from src.sprites.objects.plant import Plant
-from src.settings import TILE_SIZE, SCALE_FACTOR, SoundDict
+from src.support import tile_to_screen
 
 
 class Tile(Sprite):
@@ -47,7 +47,9 @@ class SoilLayer:
     sounds: SoundDict
     neighbor_directions: list[tuple[int, int]]
 
-    def __init__(self, all_sprites: pygame.sprite.Group, frames: dict, sounds: SoundDict):
+    def __init__(
+        self, all_sprites: pygame.sprite.Group, frames: dict, sounds: SoundDict
+    ):
         self.all_sprites = all_sprites
         self.level_frames = frames
 
@@ -58,8 +60,14 @@ class SoilLayer:
         self.tiles = {}
         self.sounds = sounds
         self.neighbor_directions = [
-            (0, -1), (1, -1), (1, 0), (1, 1),
-            (0, 1), (-1, 1), (-1, 0), (-1, -1)
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
         ]
 
     def reset(self):

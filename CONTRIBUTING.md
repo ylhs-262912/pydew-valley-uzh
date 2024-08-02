@@ -14,6 +14,21 @@ For code contributions outside of the tasklist, please open an issue first to di
 Please note that Python 3.12 or above is required to run and develop the project.
 
 
+### Linting and Formatting
+
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip install -r requirements-dev.txt` to install it and other relevant dependencies.
+
+
+<--! The bold text above can be put into a GitHub markdown info callout like this: -->
+
+> [!IMPORTANT]
+> **Before opening a PR, please run the following commands to ensure that your code is formatted and doesn't upset the Ruff linter:**
+> 
+>```sh
+> ruffformat . && ruff check --include I --fix . #  format code and sort imports
+>ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule > is ignored
+> ```
+
 ## Adding new Assets
 
 ### Characters
