@@ -41,6 +41,7 @@ from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS, setup_entity_assets
 from src.sprites.drops import DropsManager
 from src.support import map_coords_to_tile, load_data, resource_path
+from src.gui.scene_animation import SceneAnimation
 
 
 class Level:
@@ -51,6 +52,12 @@ class Level:
         # main setup
         self.display_surface = pygame.display.get_surface()
         self.switch_screen = switch
+
+        # cut scene
+        target_points = [(100, 100), (200, 200), (300, 100), (800, 900)]
+        speeds = [100, 150, 200]  # Different speeds for each segment
+        pauses = [0, 1, 0.5, 2]  # Pauses at each point in seconds
+        self.cut_scene_animation = SceneAnimation(target_points, speeds, pauses)
 
         # pathfinding
         self.pf_matrix_size = (0, 0)
@@ -443,6 +450,9 @@ class Level:
         return False
     
     def get_camera_center(self):
+        if self.cut_scene_animation:
+            return self.cut_scene_animation.get_current_position()
+
         return self.player.rect.center
 
     # reset
@@ -524,6 +534,12 @@ class Level:
     def update_rain(self):
         if self.raining and not self.shop_active:
             self.rain.update()
+    
+    def update_cut_scene(self, dt):
+        if self.cut_scene_animation:
+            self.cut_scene_animation.update(dt)
+            if self.cut_scene_animation.is_finished:
+                self.cut_scene_animation = None
 
     def update(self, dt: float):
         # update
@@ -532,6 +548,7 @@ class Level:
         self.day_transition.update()
         self.all_sprites.update(dt)
         self.drops_manager.update()
+        self.update_cut_scene(dt)
 
         # draw
         self.draw(dt)
