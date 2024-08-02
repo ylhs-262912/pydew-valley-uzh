@@ -1,5 +1,7 @@
 from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
+from src.events import create_custom_event_type
+
 
 class PlayerState(IntEnum):
     IDLE = 0
@@ -24,7 +26,7 @@ _FT_SERIALISED_STRINGS = (
 
 class GameState(IntEnum):
     MAIN_MENU = 0
-    LEVEL = 1
+    PLAY = 1
     PAUSE = 2
     SETTINGS = 3
     SHOP = 4
@@ -33,7 +35,7 @@ class GameState(IntEnum):
     WIN = 7
     CREDITS = 8
     # Special value: when switched to this value, the game
-    # saves and then sets its current state back to LEVEL
+    # saves and then sets its current state back to PLAY
     SAVE_AND_RESUME = 9
     INVENTORY = 10
 
@@ -270,8 +272,8 @@ class EntityState(StrEnum):
 
 class Layer(IntEnum):
     WATER = 0
-    LOWER_GROUND = auto()
-    UPPER_GROUND = auto()
+    GROUND = auto()
+    GROUND_OBJECTS = auto()
     SOIL = auto()
     SOIL_WATER = auto()
     RAIN_FLOOR = auto()
@@ -287,7 +289,9 @@ class Layer(IntEnum):
 
 class Map(StrEnum):
     FARM = "farm"
+    NEW_FARM = "farm_new"
     FOREST = "forest"
+    TOWN = "town"
 
 
 class StudyGroup(IntEnum):

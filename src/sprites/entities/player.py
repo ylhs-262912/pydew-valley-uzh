@@ -29,7 +29,6 @@ class Player(Character):
 
     blocked: bool
     paused: bool
-    font: pygame.font.Font
     interact: Callable[[], None]
     sounds: SoundDict
 
@@ -40,12 +39,11 @@ class Player(Character):
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
             apply_tool: Callable[
-                [FarmingTool, tuple[int, int], Character], None
+                [FarmingTool, tuple[float, float], Character], None
             ],
             interact: Callable[[], None],
             emote_manager: PlayerEmoteManager,
-            sounds: SoundDict,
-            font: pygame.font.Font
+            sounds: SoundDict
     ):
 
         save_data = savefile.load_savefile()
@@ -64,7 +62,6 @@ class Player(Character):
         self.speed = 250
         self.blocked = False
         self.paused = False
-        self.font = font
         self.interact = interact
         self.has_goggles: GogglesStatus = save_data.get("goggles_status")
         self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
@@ -319,6 +316,14 @@ class Player(Character):
              self.hitbox_rect.y - self._current_hitbox.y),
             self.rect.size
         )
+
+    def teleport(self, pos: tuple[float, float]):
+        """
+        Moves the Player rect directly to the specified point without checking
+        for collision
+        """
+        self.rect.update((pos[0] - self.rect.width / 2,
+                          pos[1] - self.rect.height / 2), self.rect.size)
 
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()

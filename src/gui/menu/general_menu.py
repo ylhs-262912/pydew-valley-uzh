@@ -72,7 +72,7 @@ class GeneralMenu(AbstractMenu):
     def button_action(self, text: str):
         if text == 'Play':
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
-            self.switch_screen(GameState.LEVEL)
+            self.switch_screen(GameState.PLAY)
         if text == 'Quit':
             self.quit_game()
 

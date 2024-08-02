@@ -1,24 +1,25 @@
 import sys
 
 import pygame
-from pytmx import TiledMap
 
-from src.events import OPEN_INVENTORY
 from src import support
-from src.enums import GameState, Direction
+from src.enums import GameState
+from src.events import OPEN_INVENTORY, DIALOG_SHOW, DIALOG_ADVANCE
+from src.groups import AllSprites
 from src.gui.setup import setup_gui
 from src.gui.interface.dialog import DialogueManager
+from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
-from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.settings import (
     SCREEN_WIDTH, SCREEN_HEIGHT,
-    CHAR_TILE_SIZE,
     AniFrames, MapDict, SoundDict, EMOTE_SIZE
 )
+from src.sprites.setup import setup_entity_assets
+
 
 _COSMETICS = frozenset(
     {
@@ -42,6 +43,7 @@ _COSMETIC_SUBSURF_AREAS = {
     "hat": pygame.Rect(24, 16, 20, 11)
 }
 
+
 class Game:
     def __init__(self):
         # main setup
@@ -51,17 +53,13 @@ class Game:
         pygame.display.set_caption('PyDew')
 
         # frames
-        self.character_frames: dict[str, AniFrames] | None = None
-        self.chicken_frames: dict[str, AniFrames] | None = None
-        self.cow_frames: dict[str, AniFrames] | None = None
         self.level_frames: dict | None = None
-        self.tmx_maps: MapDict | None = None
         self.overlay_frames: dict[str, pygame.Surface] | None = None
         self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
 
         # assets
-        self.tmx_maps: dict[str, TiledMap] | None = {}
+        self.tmx_maps: MapDict | None = None
 
         self.emotes: AniFrames | None = None
 
@@ -74,18 +72,25 @@ class Game:
         self.load_assets()
 
         # screens
-        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(
+            self.switch_state, self.tmx_maps, self.frames, self.sounds
+        )
         self.player = self.level.player
 
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
-        self.settings_menu = SettingsMenu(self.switch_state, self.sounds, self.player.controls)
+        self.settings_menu = SettingsMenu(
+            self.switch_state, self.sounds, self.player.controls
+        )
         self.shop_menu = ShopMenu(self.player, self.switch_state, self.font)
-        self.inventory_menu = InventoryMenu(self.player, self.frames, self.switch_state,
-                                            self.player.assign_tool, self.player.assign_seed)
+        self.inventory_menu = InventoryMenu(
+            self.player, self.frames, self.switch_state,
+            self.player.assign_tool, self.player.assign_seed
+        )
 
         # dialog
-        self.dm = DialogueManager(self.level.all_sprites)
+        self.all_sprites = AllSprites()
+        self.dialogue_manager = DialogueManager(self.all_sprites)
 
         # screens
         self.menus = {
@@ -94,7 +99,6 @@ class Game:
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
             GameState.INVENTORY: self.inventory_menu
-            # GameState.LEVEL: self.level
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -102,7 +106,7 @@ class Game:
         self.current_state = state
         if self.current_state == GameState.SAVE_AND_RESUME:
             self.level.player.save()
-            self.current_state = GameState.LEVEL
+            self.current_state = GameState.PLAY
         if self.current_state == GameState.INVENTORY:
             self.inventory_menu.refresh_buttons_content()
         if self.game_paused():
@@ -153,6 +157,8 @@ class Game:
         }
         prepare_checkmark_for_buttons(self.frames["checkmark"])
 
+        setup_entity_assets()
+
         setup_gui()
 
         # sounds
@@ -161,7 +167,7 @@ class Game:
         self.font = support.import_font(30, 'font/LycheeSoda.ttf')
 
     def game_paused(self):
-        return self.current_state != GameState.LEVEL
+        return self.current_state != GameState.PLAY
 
     # events
     def event_loop(self):
@@ -182,6 +188,21 @@ class Game:
             sys.exit()
         if event.type == OPEN_INVENTORY:
             self.switch_state(GameState.INVENTORY)
+            return True
+        elif event.type == DIALOG_SHOW:
+            if self.dialogue_manager.showing_dialogue:
+                pass
+            else:
+                self.dialogue_manager.open_dialogue(event.dial)
+                self.player.blocked = True
+                self.player.direction.update((0, 0))
+            return True
+        elif event.type == DIALOG_ADVANCE:
+            if self.dialogue_manager.showing_dialogue:
+                self.dialogue_manager.advance()
+                if not self.dialogue_manager.showing_dialogue:
+                    self.player.blocked = False
+            return True
         return False
 
     def run(self):
@@ -194,6 +215,12 @@ class Game:
 
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
+
+            self.all_sprites.update(dt)
+            self.all_sprites.draw(
+                (self.display_surface.width / 2,
+                 self.display_surface.height / 2)
+            )
 
             pygame.display.update()
 

@@ -14,8 +14,7 @@ from src.npc.behaviour.cow_flee_behaviour_tree import (
     CowFleeBehaviourTreeContext
 )
 from src.npc.setup import AIData
-from src.settings import Coordinate, AniFrames, SCALED_TILE_SIZE
-from src.sprites.character import Character
+from src.settings import Coordinate, SCALED_TILE_SIZE
 from src.sprites.setup import EntityAsset
 from src.support import get_flight_matrix
 
@@ -26,9 +25,7 @@ class Cow(CowBase):
             pos: Coordinate,
             assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
-            collision_sprites: pygame.sprite.Group,
-
-            player: Character
+            collision_sprites: pygame.sprite.Group
     ):
         super().__init__(
             pos=pos,
@@ -36,14 +33,8 @@ class Cow(CowBase):
             groups=groups,
             collision_sprites=collision_sprites,
 
-            pf_matrix=AIData.Matrix,
-            pf_grid=AIData.Grid,
-            pf_finder=AIData.CowPathFinder,
-
             z=Layer.MAIN
         )
-
-        self.player = player
 
         self.fleeing = False
 
@@ -56,7 +47,7 @@ class Cow(CowBase):
 
     def update(self, dt: float):
         CowFleeBehaviourTree.tree.run(
-            CowFleeBehaviourTreeContext(self, self.player)
+            CowFleeBehaviourTreeContext(self, AIData.player)
         )
         super().update(dt)
 

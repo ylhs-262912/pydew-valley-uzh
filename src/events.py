@@ -217,10 +217,14 @@ def post_event(code: int, **attrs: Type | SpecialForm):
     pygame.event.post(edef(**attrs))
 
 
+# Custom Events:
+
 # Adding this to the event definition cache so we can easily post quit events
 _EventDefinition.add_to_edef_cache(
     _EventDefinition("Quit", pygame.QUIT)
 )
 
-
 OPEN_INVENTORY = create_custom_event_type("OpenInventory")
+
+DIALOG_SHOW = create_custom_event_type("DIALOG_SHOW", dial=str)
+DIALOG_ADVANCE = create_custom_event_type("DIALOG_ADVANCE")
