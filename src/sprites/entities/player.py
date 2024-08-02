@@ -7,7 +7,7 @@ import pygame  # noqa
 from src.events import post_event, OPEN_INVENTORY
 from src import savefile, support
 from src.controls import Controls
-from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup
+from src.enums import InventoryResource, FarmingTool, ItemToUse, StudyGroup, EntityState
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
 from src.settings import Coordinate, SoundDict, GogglesStatus
@@ -94,6 +94,71 @@ class Player(Character):
 
         # sounds
         self.sounds = sounds
+
+    def draw(self, display_surface, offset):
+        super().draw(display_surface, offset)
+
+        blit_list = []
+
+        # TODO: allow for more combos (i.e. stop assuming the player
+        # has all the items of one group)
+        # Render the necklace if the player has it and is in the ingroup
+        is_in_ingroup = (self.study_group == StudyGroup.INGROUP)
+        if is_in_ingroup:
+            necklace_state = EntityState(
+                f"necklace_{self.state.value}"
+            )
+            necklace_ani = self.assets[necklace_state][self.facing_direction]
+            necklace_frame = necklace_ani.get_frame(self.frame_index)
+
+            blit_list.append(
+                (
+                    necklace_frame,
+                    self.rect.topleft + offset
+                )
+            )
+
+        # Render the goggles
+        if self.has_goggles:
+            goggles_state = EntityState(
+                f"goggles_{self.state.value}"
+            )
+            goggles_ani = self.assets[goggles_state][self.facing_direction]
+            goggles_frame = goggles_ani.get_frame(self.frame_index)
+            blit_list.append(
+                (
+                    goggles_frame,
+                    self.rect.topleft + offset
+                )
+            )
+
+        # Render the hat/horn (depending on the group)
+        if is_in_ingroup:
+            hat_state = EntityState(
+                f"hat_{self.state.value}"
+            )
+            hat_ani = self.assets[hat_state][self.facing_direction]
+            hat_frame = hat_ani.get_frame(self.frame_index)
+            blit_list.append(
+                (
+                    hat_frame,
+                    self.rect.topleft + offset
+                )
+            )
+        elif self.study_group == StudyGroup.OUTGROUP:
+            horn_state = EntityState(
+                f"horn_{self.state.value}"
+            )
+            horn_ani = self.assets[horn_state][self.facing_direction]
+            horn_frame = horn_ani.get_frame(self.frame_index)
+            blit_list.append(
+                (
+                    horn_frame,
+                    self.rect.topleft + offset
+                )
+            )
+
+        display_surface.fblits(blit_list)
 
     def focus_entity(self, entity: Entity):
         if self.focused_entity:
