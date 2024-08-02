@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Callable
 from random import randint
 
@@ -193,8 +194,8 @@ class Level:
         if from_map:
             player_spawn = self.game_map.player_entry_warps.get(from_map)
             if not player_spawn:
-                print(f"No valid entry warp found for \"{game_map}\" "
-                      f"from: \"{self.current_map}\"")
+                warnings.warn(f"No valid entry warp found for \"{game_map}\" "
+                              f"from: \"{self.current_map}\"")
 
         # use default spawnpoint if no origin map is specified,
         # or if no entry warp for the player's origin map is found
@@ -202,7 +203,7 @@ class Level:
             if self.game_map.player_spawnpoint:
                 player_spawn = self.game_map.player_spawnpoint
             else:
-                print(f"No default spawnpoint found on {game_map}")
+                warnings.warn(f"No default spawnpoint found on {game_map}")
                 # fallback to the first player entry warp
                 player_spawn = next(iter(
                     self.game_map.player_entry_warps.values()
@@ -255,7 +256,7 @@ class Level:
         if self.tmx_maps.get(map_name):
             self.load_map(map_name, from_map=self.current_map)
         else:
-            print(f"Error loading map: Map \"{map_name}\" not found")
+            warnings.warn(f"Error loading map: Map \"{map_name}\" not found")
 
             # fallback which reloads the current map and sets the player to the
             # entry warp of the map that should have been switched to

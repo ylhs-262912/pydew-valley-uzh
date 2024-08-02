@@ -1,4 +1,5 @@
 import random
+import warnings
 from abc import ABC
 from collections.abc import Callable
 
@@ -92,7 +93,9 @@ class AIBehaviour(AIBehaviourBase, ABC):
         except IndexError as e:
             # FIXME: Occurs when NPCs get stuck inside each other at the edge
             #  of the map and one of them gets pushed out of the walkable area
-            print(f"NPC is at invalid location {tile_coord}\nFull error: {e}")
+            warnings.warn(
+                f"NPC is at invalid location {tile_coord}\nFull error: {e}"
+            )
             return False
         end = self.pf_grid.node(*[int(i) for i in coord])
 
