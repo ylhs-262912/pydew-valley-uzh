@@ -1,0 +1,83 @@
+# pyproject.toml boilerplate for a video game project
+# https://github.com/pypa/sampleproject/blob/main/setup.cfg
+
+
+[project]
+name = "pydew-valley-uzh"
+version = "0.1.0"
+authors = [
+    { name = "Sophie Kittelberger", email = "s.kittelberger@psychologie.uzh.ch" },
+    { name = "larsbutler" },
+    { name = "bromeon" },
+    { name = "novial" },
+    { name = "fortwoone" },
+    { name = "richkdev" },
+    { name = "pmp-p" },
+    { name = "bydariogamer" },
+    { name = "Brody Epstein" },
+    { name = "Danilo Saiu" },
+    { name = "TMN-SGR" },
+    { name = "Adrienne Bradley" },
+    { name = "farg-eh" },
+    { name = "nteinert2005" },
+    { name = "Evelin Toth" },
+    { name = "Leon" },
+    { name = "MortalCoder" },
+    { name = "asterli6" },
+    { name = "dee-a-go" },
+]
+description = "A game based on Pydeew Valley by ClearCode, used by the University of Zurich in an experimental study in psychology."
+
+[tool.black]
+line-length = 88
+target-version = ['py312']
+include = '\.pyi?$'
+extend-exclude = '''
+# A regex preceded with ^/ will apply only to files and directories
+# in the root of the project.
+^/main.py
+'''
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+minversion = 4.16.0
+envlist = py312,style
+
+[testenv]
+skip_installi = True
+install_command = pip install -U {opts} {packages}
+setenv = VIRTUAL_ENV={envdir}
+deps = -r{toxinidir}/requirements.txt
+       -r{toxinidir}/requirements-test.txt
+       -r{toxinidir}/requirements-dev.txt
+
+# TODO: add test invocation
+allowlist_externals=echo,flake8
+commands=echo "TODO: add tests"
+# commands = pytest src --doctest-modules
+
+[testenv:style]
+commands = flake8 main.py src
+"""
