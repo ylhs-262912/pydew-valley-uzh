@@ -205,10 +205,12 @@ class Level:
     def activate_music(self):
         volume = 0.1
         try:
-            volume = load_data("volume.json") / 1000
+            sound_data = load_data('volume.json') 
+            volume = sound_data['music']
+            sfx = sound_data['sfx']
         except FileNotFoundError:
             pass
-        self.sounds["music"].set_volume(volume)
+        self.sounds["music"].set_volume(min((volume / 1000), 0.4))
         self.sounds["music"].play(-1)
 
     # plant collision
