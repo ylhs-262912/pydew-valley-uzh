@@ -27,12 +27,16 @@ class Description:
         # description
         self.description_rect = pygame.Rect(0, 0, 600, 400)
         self.description_rect.topright = self.rect.topright
-        self.description_surface = pygame.Surface(self.description_rect.size, pygame.SRCALPHA)
+        self.description_surface = pygame.Surface(
+            self.description_rect.size, pygame.SRCALPHA
+        )
         self.description_surface.fill('green')
         self.description_surface.set_colorkey('green')
 
         # slider
-        self.description_slider_surface = pygame.Surface((600, 600), pygame.SRCALPHA)
+        self.description_slider_surface = pygame.Surface(
+            (600, 600), pygame.SRCALPHA
+        )
         self.description_slider_rect = self.description_surface.get_rect()
         self.description_slider_surface.fill('green')
         self.description_slider_surface.set_colorkey('green')
@@ -40,6 +44,9 @@ class Description:
     # events
     def handle_event(self, event) -> bool:
         return self.mouse_wheel(event)
+    
+    def reset(self):
+        self.description_slider_rect.y = 0
 
     def mouse_wheel(self, event) -> bool:
         if event.type == pygame.MOUSEWHEEL:
@@ -91,7 +98,6 @@ class Description:
         self.draw_slider_bar()
 
 
-
 class KeybindsDescription(Description):
     def __init__(self, pos: tuple[int, int], controls: Type[Controls]):
         super().__init__(pos)
@@ -117,10 +123,12 @@ class KeybindsDescription(Description):
     def create_keybinds(self):
         margin = 10
         size = (600, 60 * self.controls.length() + 2 * margin)
-        self.description_slider_surface = pygame.Surface((size), pygame.SRCALPHA)
-        self.description_slider_rect = self.description_slider_surface.get_rect()
+        self.description_slider_surface = pygame.Surface(
+            (size), pygame.SRCALPHA
+        )
+        rect = self.description_slider_surface.get_rect()
+        self.description_slider_rect = rect
         self.description_slider_surface.set_colorkey("green")
-
 
         self.keys_group.clear()
         index = 0
@@ -146,7 +154,11 @@ class KeybindsDescription(Description):
             or self.set_key(event)
             or self.handle_click(event)
         )
-
+    
+    def reset(self):
+        super().reset()
+        self.remove_selection()
+    
     # keybinds
     def get_hovered_key(self):
         s1_pos = self.description_rect.topleft
@@ -311,7 +323,7 @@ class VolumeDescription(Description):
     # setup
     def create_slider(self):
         offset = self.rect.topleft
-        
+
         sound_slider_rect = pygame.Rect((30, 30), (200, 10))
         self.sound_slider = Slider(sound_slider_rect, 0, 100, 50, self.sounds, offset)
 
@@ -340,7 +352,7 @@ class VolumeDescription(Description):
         return (super().handle_event(event) or
                 self.sound_slider.handle_event(event) or
                 self.sfx_slider.handle_event(event))
-    
+
     def update_music(self, value):
         self.sounds['music'].set_volume(min((value / 1000), 0.4))
 
@@ -362,7 +374,6 @@ class VolumeDescription(Description):
 
         self.sfx_slider.draw(self.description_slider_surface)
         self.draw_text('SFX', self.sfx_slider.rect.topleft + offset)
-
 
     def draw(self):
         self.make_surface_transparent()

@@ -279,7 +279,6 @@ class Slider:
 
         return False
 
-
     def set_value(self, value):
         self.value = value
 
