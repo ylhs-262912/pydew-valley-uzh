@@ -61,7 +61,7 @@ class Description:
     # draw
     def make_surface_transparent(self):
         self.description_surface.fill('green')
-        # self.description_surface.fill(pygame.Color(0, 0, 0, 0))
+        self.description_slider_surface.fill('green')
 
     def draw_slider_bar(self):
         height1 = self.description_slider_surface.get_height()
@@ -176,7 +176,7 @@ class KeybindsDescription(Description):
 
                 if self.pressed_key.hover(offset):
                     self.selection_key = self.pressed_key
-                    self.selection_key.bg_color = "red"
+                    self.selection_key.bg_color = 'cadetblue4'
                 else:
                     self.remove_selection()
 
@@ -294,8 +294,7 @@ class KeybindsDescription(Description):
             key.draw(self.description_slider_surface)
 
     def draw(self):
-        self.description_surface.fill('green')
-        self.description_slider_surface.fill('green')
+        self.make_surface_transparent()
         self.draw_keybinds()
         super().draw()
 
@@ -366,8 +365,7 @@ class VolumeDescription(Description):
 
 
     def draw(self):
-        self.description_surface.fill('green')
-        self.description_slider_surface.fill('green')
+        self.make_surface_transparent()
         self.draw_slider()
         super().draw()
 
