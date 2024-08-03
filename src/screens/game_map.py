@@ -211,6 +211,10 @@ class GameMap:
             if ENABLE_NPCS:
                 self._setup_emote_interactions()
 
+    @property
+    def size(self):
+        return self._tilemap_scaled_size
+
     def _add_pf_matrix_collision(
         self, pos: tuple[float, float], size: tuple[float, float]
     ):

@@ -89,8 +89,9 @@ class Player(Character):
         # sounds
         self.sounds = sounds
 
-    def draw(self, display_surface, offset):
-        super().draw(display_surface, offset)
+    def draw(self, *args):
+        display_surface, rect = args[:2]
+        super().draw(display_surface, rect)
 
         blit_list = []
 
@@ -103,26 +104,26 @@ class Player(Character):
             necklace_ani = self.assets[necklace_state][self.facing_direction]
             necklace_frame = necklace_ani.get_frame(self.frame_index)
 
-            blit_list.append((necklace_frame, self.rect.topleft + offset))
+            blit_list.append((necklace_frame, rect))
 
         # Render the goggles
         if self.has_goggles:
             goggles_state = EntityState(f"goggles_{self.state.value}")
             goggles_ani = self.assets[goggles_state][self.facing_direction]
             goggles_frame = goggles_ani.get_frame(self.frame_index)
-            blit_list.append((goggles_frame, self.rect.topleft + offset))
+            blit_list.append((goggles_frame, rect))
 
         # Render the hat/horn (depending on the group)
         if is_in_ingroup:
             hat_state = EntityState(f"hat_{self.state.value}")
             hat_ani = self.assets[hat_state][self.facing_direction]
             hat_frame = hat_ani.get_frame(self.frame_index)
-            blit_list.append((hat_frame, self.rect.topleft + offset))
+            blit_list.append((hat_frame, rect))
         elif self.study_group == StudyGroup.OUTGROUP:
             horn_state = EntityState(f"horn_{self.state.value}")
             horn_ani = self.assets[horn_state][self.facing_direction]
             horn_frame = horn_ani.get_frame(self.frame_index)
-            blit_list.append((horn_frame, self.rect.topleft + offset))
+            blit_list.append((horn_frame, rect))
 
         display_surface.fblits(blit_list)
 

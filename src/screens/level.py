@@ -5,6 +5,7 @@ from random import randint
 
 import pygame
 
+from src.camera import Camera
 from src.enums import FarmingTool, GameState, Map, SeedType
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
 from src.groups import AllSprites, PersistentSpriteGroup
@@ -100,6 +101,8 @@ class Level:
         self.drop_sprites = pygame.sprite.Group()
         self.player_exit_warps = pygame.sprite.Group()
 
+        self.camera = Camera(0, 0)
+
         self.soil_layer = SoilLayer(self.all_sprites, self.frames["level"], self.sounds)
 
         self._emotes = self.frames["emotes"]
@@ -174,6 +177,8 @@ class Level:
             apply_tool=self.apply_tool,
             frames=self.frames,
         )
+
+        self.camera.change_size(*self.game_map.size)
 
         player_spawn = None
 
@@ -390,8 +395,7 @@ class Level:
 
     def draw(self, dt):
         self.display_surface.fill((130, 168, 132))
-        camera_center = self.get_camera_center()
-        self.all_sprites.draw(camera_center)
+        self.all_sprites.draw(self.camera)
         self.sky.display(dt)
         self.draw_overlay()
         self.day_transition.draw()
@@ -418,6 +422,7 @@ class Level:
         self.all_sprites.update(dt)
         self.drops_manager.update()
         self.update_cut_scene(dt)
+        self.camera.update(self.cut_scene_animation or self.player)
 
         # draw
         self.draw(dt)

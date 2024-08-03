@@ -9,7 +9,9 @@ class SceneAnimation:
         self.speeds = speeds if speeds else [200] * (len(target_points) - 1)
         self.pauses = pauses if pauses else [0] * len(target_points)
         self.current_index = 0
+        self.rect = pygame.Rect(0, 0, 8, 8)
         self.current_pos = pygame.Vector2(target_points[0])
+        self.rect.center = self.current_pos
         self.is_finished = False
         self.pause_start_time = None
 
@@ -18,6 +20,7 @@ class SceneAnimation:
 
     def reset(self):
         self.current_index = 0
+        self.rect.center = self.target_points[0]
         self.current_pos = pygame.Vector2(self.target_points[0])
         self.is_finished = False
         self.pause_start_time = None
@@ -40,14 +43,17 @@ class SceneAnimation:
         distance_to_target = direction.length()
 
         if distance_to_target <= self.speeds[self.current_index - 1] * dt:
-            self.current_pos = target
+            self.rect.center = self.current_pos = target
             self.pause_start_time = time.time()
         else:
             direction = direction.normalize()
             self.current_pos += direction * self.speeds[self.current_index - 1] * dt
+            self.rect.center = self.current_pos
 
     def has_more_targets(self):
         return self.current_index < len(self.target_points)
+
+    __bool__ = has_more_targets
 
     def animate(self, dt):
         if self.is_finished:

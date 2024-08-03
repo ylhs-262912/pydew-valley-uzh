@@ -58,6 +58,7 @@ class Description:
     # draw
     def make_surface_transparent(self):
         self.description_surface.fill(pygame.Color(0, 0, 0, 0))
+        self.description_slider_surface.fill(pygame.Color(0, 0, 0, 0))
 
     def draw_slider_bar(self):
         height1 = self.description_slider_surface.get_height()
@@ -104,9 +105,8 @@ class KeybindsDescription(Description):
     def create_keybinds(self):
         margin = 10
         size = (600, 60 * self.controls.length() + 2 * margin)
-        self.description_slider_surface = pygame.Surface((size))
+        self.description_slider_surface = pygame.Surface(size, pygame.SRCALPHA)
         self.description_slider_rect = self.description_slider_surface.get_rect()
-        self.description_slider_surface.set_colorkey("green")
 
         self.keys_group.clear()
         index = 0
@@ -276,6 +276,8 @@ class KeybindsDescription(Description):
 
     # draw
     def draw_keybinds(self):
+        self.make_surface_transparent()
+
         for key in self.keys_group:
             key.draw(self.description_slider_surface)
 

@@ -210,7 +210,7 @@ class Game:
 
             self.all_sprites.update(dt)
             self.all_sprites.draw(
-                (self.display_surface.width / 2, self.display_surface.height / 2)
+                self.level.camera
             )
 
             pygame.display.update()
