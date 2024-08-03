@@ -44,7 +44,7 @@ class Description:
     # events
     def handle_event(self, event) -> bool:
         return self.mouse_wheel(event)
-    
+
     def reset(self):
         self.description_slider_rect.y = 0
 
@@ -154,11 +154,11 @@ class KeybindsDescription(Description):
             or self.set_key(event)
             or self.handle_click(event)
         )
-    
+
     def reset(self):
         super().reset()
         self.remove_selection()
-    
+
     # keybinds
     def get_hovered_key(self):
         s1_pos = self.description_rect.topleft
