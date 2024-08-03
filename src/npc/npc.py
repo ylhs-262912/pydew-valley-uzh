@@ -29,11 +29,14 @@ class NPC(NPCBase):
                 [Character], None
             ],
             soil_layer: SoilLayer,
-            emote_manager: NPCEmoteManager
+            emote_manager: NPCEmoteManager,
+            tree_sprites: pygame.sprite.Group,
     ):
         self.soil_layer = soil_layer
 
         self.emote_manager = emote_manager
+
+        self.tree_sprites = tree_sprites
 
         super().__init__(
             pos=pos,

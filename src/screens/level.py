@@ -1,4 +1,5 @@
 import math
+import warnings
 from collections.abc import Callable
 from random import randint
 
@@ -8,13 +9,15 @@ from pathfinding.core.grid import Grid as PF_Grid
 from pathfinding.finder.a_star import AStarFinder as PF_AStarFinder
 
 
-from src.enums import FarmingTool, GameState, Layer, Map, InventoryResource, SeedType
+from src.enums import FarmingTool, GameState, Layer, Map, InventoryResource
 from src.groups import AllSprites
 from src.gui.interface.emotes import PlayerEmoteManager, NPCEmoteManager
 from src.map_objects import MapObjects
 from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
-from src.npc.behaviour.cow_behaviour_tree import CowConditionalBehaviourTree, \
+from src.npc.behaviour.cow_behaviour_tree import (
+    CowConditionalBehaviourTree,
     CowContinuousBehaviourTree
+)
 from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow
@@ -239,20 +242,30 @@ class Level:
 
         for w in range(tile_w):
             for h in range(tile_h):
-                self.pf_matrix[tile_y + h][tile_x + w] = 0
+                try:
+                    self.pf_matrix[tile_y + h][tile_x + w] = 0
+                except IndexError:
+                    warnings.warn(
+                        f"An error occurred while setting up pathfinding "
+                        f"matrix collision: {tile_y, h, tile_x, w, pos, size}")
 
     def setup_collideable_object(self, pos: tuple[int, int], obj: pytmx.TiledObject):
+        object_type = self.map_objects[obj.gid]
+
         if obj.name == 'Tree':
             self.setup_tree(pos, obj)
         else:
-            object_type = self.map_objects[obj.gid]
-
             CollideableMapObject(
                 pos, object_type, (self.all_sprites, self.collision_sprites)
             )
 
         if SETUP_PATHFINDING:
-            self.pf_matrix_setup_collision((obj.x, obj.y), (obj.width, obj.height))
+            self.pf_matrix_setup_collision(
+                (obj.x + object_type.hitbox.x / SCALE_FACTOR,
+                 obj.y + object_type.hitbox.y / SCALE_FACTOR),
+                (object_type.hitbox.width / SCALE_FACTOR,
+                 object_type.hitbox.height / SCALE_FACTOR)
+            )
 
     def setup_collision(self, pos: tuple[int, int], obj: pytmx.TiledObject):
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
@@ -291,6 +304,7 @@ class Level:
             plant_collision=self.plant_collision,
             soil_layer=self.soil_layer,
             emote_manager=self.npc_emote_manager,
+            tree_sprites=self.tree_sprites,
         )
         self.npcs[obj.name].conditional_behaviour_tree = (
             NPCBehaviourTree.Farming
@@ -499,6 +513,26 @@ class Level:
             offset = pygame.Vector2(0, 0)
             offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
             offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
+
+            for y in range(len(self.pf_matrix)):
+                for x in range(len(self.pf_matrix[y])):
+                    if not self.pf_matrix[y][x]:
+                        surf = pygame.Surface(
+                            (SCALED_TILE_SIZE, SCALED_TILE_SIZE),
+                            pygame.SRCALPHA
+                        )
+                        surf.fill((255, 128, 128))
+                        pygame.draw.rect(
+                            surf, (0, 0, 0),
+                            (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE), 2
+                        )
+                        surf.set_alpha(92)
+
+                        self.display_surface.blit(
+                            surf, (x * SCALED_TILE_SIZE + offset.x,
+                                   y * SCALED_TILE_SIZE + offset.y)
+                        )
+
             for sprite in self.collision_sprites:
                 rect = sprite.rect.copy()
                 rect.topleft += offset
@@ -507,6 +541,12 @@ class Level:
                 hitbox = sprite.hitbox_rect.copy()
                 hitbox.topleft += offset
                 pygame.draw.rect(self.display_surface, 'blue', hitbox, 2)
+
+                if isinstance(sprite, Character):
+                    hitbox = sprite.axe_hitbox.copy()
+                    hitbox.topleft += offset
+                    pygame.draw.rect(self.display_surface, 'green', hitbox, 2)
+
             for drop in self.drop_sprites:
                 pygame.draw.rect(self.display_surface, 'red',
                                  drop.rect.move(*offset), 2)

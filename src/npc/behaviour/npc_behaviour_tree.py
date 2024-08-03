@@ -5,12 +5,15 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Callable
 
-from src.enums import FarmingTool, ItemToUse, SeedType
+import pygame
+
+from src.enums import FarmingTool, ItemToUse, SeedType, Direction
 from src.npc.behaviour.ai_behaviour_tree_base import (
     Context, NodeWrapper, Selector, Sequence, Condition, Action
 )
 from src.npc.bases.npc_base import NPCBase
 from src.settings import SCALED_TILE_SIZE
+from src.sprites.objects.tree import Tree
 from src.support import near_tiles, distance
 
 
@@ -360,6 +363,127 @@ def water_farmland(context: NPCIndividualContext) -> bool:
 # endregion
 
 
+# region woodcutting-exclusive logic
+def will_cut_wood(context: NPCIndividualContext) -> bool:
+    """
+    1 in 5 chance to go woodcutting instead of wandering around
+    :return: 1/5 true | 4/5 false
+    """
+    return random.randint(0, 4) == 0
+
+
+def direction_to_vector(
+        direction: Direction, invert: bool = False
+) -> tuple[int, int]:
+    """
+    Translate a Direction enum member to a movement vector
+    :param direction: Direction to use
+    :param invert: Whether the returned vector should be inverted
+    :return: Movement vector (i.e. (0, -1) for Direction.UP etc.)
+    """
+    dir_ = (0, 0)
+    match direction:
+        case Direction.UP:
+            dir_ = 0, -1
+        case Direction.DOWN:
+            dir_ = 0, 1
+        case Direction.LEFT:
+            dir_ = -1, 0
+        case Direction.RIGHT:
+            dir_ = 1, 0
+    
+    return dir_ if not invert else (-dir_[0], -dir_[1])
+
+
+def offset_edge_midpoint(
+        direction: Direction, rect: pygame.FRect,
+        hitbox_size: tuple[float, float]
+) -> tuple[float, float]:
+    """
+    Calculate the coordinate of the midpoint of an object's edge in the given
+    direction, offset by half the given hitbox size.
+    :param direction: Direction of the edge
+    :param rect: Rect whose edges should be used
+    :param hitbox_size: Size of the hitbox by which size the edge midpoint
+                        should be offset
+    """
+    hitbox_size = hitbox_size[0] / 2, hitbox_size[1] / 2
+    midpoint = (0, 0)
+    match direction:
+        case Direction.UP:
+            midpoint = rect.centerx, rect.top - hitbox_size[1]
+        case Direction.DOWN:
+            midpoint = rect.centerx, rect.bottom + hitbox_size[1]
+        case Direction.LEFT:
+            midpoint = rect.left - hitbox_size[0], rect.centery
+        case Direction.RIGHT:
+            midpoint = rect.right + hitbox_size[0], rect.centery
+
+    return midpoint
+
+
+def chop_tree(context: NPCIndividualContext) -> bool:
+    """
+    Finds a random tree, makes the NPC walk to and chop it. Prefers trees
+    within an 8 tile radius around the NPC.
+    :return: True if a Tree has been found and the NPC successfully
+             created a path towards it, otherwise False
+    """
+    if not context.npc.tree_sprites:
+        return False
+
+    radius = 8
+
+    directions = [Direction.LEFT, Direction.RIGHT]
+    random.shuffle(directions)
+
+    trees = [tree for tree in context.npc.tree_sprites if tree.alive]
+    random.shuffle(trees)
+
+    def on_path_completion(tree: Tree, direction_: Direction):
+        def inner():
+            if tree.alive:
+                context.npc.tool_active = True
+                context.npc.current_tool = FarmingTool.AXE
+                context.npc.tool_index = context.npc.current_tool.value - 1
+                context.npc.frame_index = 0
+
+            context.npc.direction.update(
+                direction_to_vector(direction_, invert=True)
+            )
+            context.npc.get_facing_direction()
+            context.npc.direction.update((0, 0))
+        return inner
+
+    first_iteration = True
+
+    for _ in range(2):
+        for tree in trees:
+            if first_iteration:
+                if distance(
+                        tree.hitbox_rect.center, context.npc.hitbox_rect.center
+                ) > radius * SCALED_TILE_SIZE:
+                    continue
+            for direction in directions:
+                tree_pos = (int(tree.hitbox_rect.center[0] / SCALED_TILE_SIZE),
+                            int(tree.hitbox_rect.center[1] / SCALED_TILE_SIZE))
+                tup = direction_to_vector(direction)
+                path_created = walk_to_pos(
+                    context,
+                    (tree_pos[0] + tup[0], tree_pos[1] + tup[1]),
+                    on_path_completion=on_path_completion(tree, direction)
+                )
+                if path_created:
+                    test = offset_edge_midpoint(direction, tree.hitbox_rect,
+                                                context.npc.hitbox_rect.size)
+                    context.npc.create_step_to_coord(test)
+                    return True
+
+        first_iteration = False
+    return False
+# endregion
+
+
 # region behaviour trees
 class NPCBehaviourTree(NodeWrapper, Enum):
     Farming = Selector([
@@ -379,6 +503,16 @@ class NPCBehaviourTree(NodeWrapper, Enum):
                     Action(plant_adjacent_or_random_seed)
                 ]),
                 Action(water_farmland)
+            ])
+        ]),
+        Action(wander)
+    ])
+
+    Woodcutting = Selector([
+        Sequence([
+            Condition(will_cut_wood),
+            Selector([
+                Action(chop_tree)
             ])
         ]),
         Action(wander)

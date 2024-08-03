@@ -157,6 +157,11 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         return True
 
+    def create_step_to_coord(self, coord: tuple[float, float]) -> bool:
+        self.pf_path.append((coord[0] / SCALED_TILE_SIZE,
+                             coord[1] / SCALED_TILE_SIZE))
+        return True
+
     def move(self, dt: float):
         self.hitbox_rect.update(
             (self.rect.x + self._current_hitbox.x,
@@ -194,8 +199,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
         next_point = self.pf_path[0]
         # current exact NPC position on the tilemap
         current_point = (
-            self.rect.centerx / SCALED_TILE_SIZE,
-            self.rect.centery / SCALED_TILE_SIZE
+            self.hitbox_rect.centerx / SCALED_TILE_SIZE,
+            self.hitbox_rect.centery / SCALED_TILE_SIZE
         )
 
         # remaining distance the NPC moves in the current frame
@@ -243,10 +248,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
                                        round(dy / distance)))
 
         self.hitbox_rect.update((
-            current_point[0] * SCALED_TILE_SIZE
-            - self.rect.width / 2 + self._current_hitbox.x,
-            current_point[1] * SCALED_TILE_SIZE
-            - self.rect.height / 2 + self._current_hitbox.y
+            current_point[0] * SCALED_TILE_SIZE - self.hitbox_rect.width / 2,
+            current_point[1] * SCALED_TILE_SIZE - self.hitbox_rect.height / 2
         ), self.hitbox_rect.size)
 
         self.check_collision()

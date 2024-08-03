@@ -18,6 +18,7 @@ from src.sprites.setup import EntityAsset
 
 class NPCBase(Character, AIBehaviour, ABC):
     soil_layer: SoilLayer
+    tree_sprites: pygame.sprite.Group
 
     def __init__(
             self,

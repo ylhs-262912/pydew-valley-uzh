@@ -73,7 +73,7 @@ class Entity(CollideableSprite, ABC):
                 self.axe_hitbox.y = self.rect.centery + 24
             case Direction.UP:
                 self.axe_hitbox.x = self.rect.centerx - 8
-                self.axe_hitbox.bottom = self.rect.centery - 24
+                self.axe_hitbox.bottom = self.rect.centery + 8
             case Direction.LEFT:
                 self.axe_hitbox.right = self.rect.centerx - 16
                 self.axe_hitbox.y = self.rect.centery + 8
