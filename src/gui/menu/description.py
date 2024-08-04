@@ -32,9 +32,7 @@ class Description:
         )
 
         # slider
-        self.description_slider_surface = pygame.Surface(
-            (600, 600), pygame.SRCALPHA
-        )
+        self.description_slider_surface = pygame.Surface((600, 600), pygame.SRCALPHA)
         self.description_slider_rect = self.description_surface.get_rect()
 
     # events
@@ -81,7 +79,7 @@ class Description:
         pygame.draw.rect(self.display_surface, "grey", slide_bar_rect, 0, 4)
 
     def draw(self):
-        pygame.draw.rect(self.display_surface, 'White', self.rect, 0, 4)
+        pygame.draw.rect(self.display_surface, "White", self.rect, 0, 4)
 
         # blit description slider
         pos = self.description_slider_rect.topleft
@@ -119,9 +117,7 @@ class KeybindsDescription(Description):
     def create_keybinds(self):
         margin = 10
         size = (600, 60 * self.controls.length() + 2 * margin)
-        self.description_slider_surface = pygame.Surface(
-            (size), pygame.SRCALPHA
-        )
+        self.description_slider_surface = pygame.Surface((size), pygame.SRCALPHA)
         rect = self.description_slider_surface.get_rect()
         self.description_slider_rect = rect
 
@@ -183,7 +179,7 @@ class KeybindsDescription(Description):
 
                 if self.pressed_key.hover(offset):
                     self.selection_key = self.pressed_key
-                    self.selection_key.bg_color = 'cadetblue4'
+                    self.selection_key.bg_color = "cadetblue4"
                 else:
                     self.remove_selection()
 
@@ -327,48 +323,50 @@ class VolumeDescription(Description):
 
     def save_data(self):
         data = {
-            'music': self.sound_slider.get_value(),
-            'sfx': self.sfx_slider.get_value()
+            "music": self.sound_slider.get_value(),
+            "sfx": self.sfx_slider.get_value(),
         }
-        save_data(data, 'volume.json')
+        save_data(data, "volume.json")
 
     def import_data(self):
         try:
-            data = load_data('volume.json')
-            self.sound_slider.set_value(data['music'])
-            self.sfx_slider.set_value(data['sfx'])
-            self.update_music(data['music'])
-            self.update_sfx(data['sfx'])
+            data = load_data("volume.json")
+            self.sound_slider.set_value(data["music"])
+            self.sfx_slider.set_value(data["sfx"])
+            self.update_music(data["music"])
+            self.update_sfx(data["sfx"])
         except FileNotFoundError:
             pass
 
     # events
     def handle_event(self, event) -> bool:
-        return (super().handle_event(event) or
-                self.sound_slider.handle_event(event) or
-                self.sfx_slider.handle_event(event))
+        return (
+            super().handle_event(event)
+            or self.sound_slider.handle_event(event)
+            or self.sfx_slider.handle_event(event)
+        )
 
     def update_music(self, value):
-        self.sounds['music'].set_volume(min((value / 1000), 0.4))
+        self.sounds["music"].set_volume(min((value / 1000), 0.4))
 
     def update_sfx(self, value):
         for key in self.sounds:
-            if key != 'music':
+            if key != "music":
                 self.sounds[key].set_volume(min((value / 1000), 0.4))
 
     # draw
     def draw_text(self, text, pos):
-        text = self.font.render(text, True, 'black', 'white')
+        text = self.font.render(text, True, "black", "white")
         self.description_slider_surface.blit(text, pos)
 
     def draw_slider(self):
         offset = vector(0, 20)
 
         self.sound_slider.draw(self.description_slider_surface)
-        self.draw_text('Music', self.sound_slider.rect.topleft + offset)
+        self.draw_text("Music", self.sound_slider.rect.topleft + offset)
 
         self.sfx_slider.draw(self.description_slider_surface)
-        self.draw_text('SFX', self.sfx_slider.rect.topleft + offset)
+        self.draw_text("SFX", self.sfx_slider.rect.topleft + offset)
 
     def draw(self):
         self.make_surface_transparent()
