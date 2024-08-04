@@ -33,6 +33,7 @@ class Character(Entity, ABC):
         groups: tuple[pygame.sprite.Group, ...],
         collision_sprites: pygame.sprite.Group,
         apply_tool: Callable[[FarmingTool, tuple[float, float], Self], None],
+        plant_collision: Callable[[Self], None],
         z=Layer.MAIN,
     ):
         Entity.__init__(
@@ -52,6 +53,8 @@ class Character(Entity, ABC):
 
         # seeds
         self.current_seed = FarmingTool(FarmingTool.get_first_seed_id())
+
+        self.plant_collision = plant_collision
 
         # inventory
         self.inventory = {
@@ -105,3 +108,13 @@ class Character(Entity, ABC):
 
     def add_resource(self, resource, amount=1):
         self.inventory[resource] += amount
+
+    def remove_resource(self, resource, amount=1) -> bool:
+        if self.inventory[resource] >= amount:
+            self.inventory[resource] -= amount
+            return True
+        return False
+
+    def update(self, dt: float):
+        super().update(dt)
+        self.plant_collision(self)

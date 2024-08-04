@@ -9,6 +9,7 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.ai_behaviour import AIBehaviour
+from src.npc.behaviour.ai_behaviour_tree_base import ContextType
 from src.settings import Coordinate
 from src.sprites.character import Character
 from src.sprites.setup import EntityAsset
@@ -29,6 +30,7 @@ class CowBase(Animal, AIBehaviour, ABC):
         assets: EntityAsset,
         groups: tuple[pygame.sprite.Group, ...],
         collision_sprites: pygame.sprite.Group,
+        behaviour_tree_context: ContextType,
         z: int,
     ):
         Animal.__init__(
@@ -39,7 +41,7 @@ class CowBase(Animal, AIBehaviour, ABC):
             collision_sprites=collision_sprites,
             z=z,
         )
-        AIBehaviour.__init__(self)
+        AIBehaviour.__init__(self, behaviour_tree_context=behaviour_tree_context)
 
         self.speed = 150
 

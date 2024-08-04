@@ -160,7 +160,7 @@
   </properties>
   <image width="24" height="30" source="../../images/objects/tree.png"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="7" y="26" width="10" height="4"/>
+   <object id="1" x="7" y="25" width="10" height="4"/>
   </objectgroup>
  </tile>
  <tile id="73">
@@ -172,7 +172,7 @@
   </properties>
   <image width="24" height="31" source="../../images/objects/tree_medium_apple.png"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="7" y="26" width="10" height="4"/>
+   <object id="1" x="7" y="25" width="10" height="4"/>
   </objectgroup>
  </tile>
  <tile id="74">
@@ -184,7 +184,7 @@
   </properties>
   <image width="24" height="31" source="../../images/objects/tree_medium_orange.png"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="7" y="26" width="10" height="4"/>
+   <object id="1" x="7" y="25" width="10" height="4"/>
   </objectgroup>
  </tile>
  <tile id="75">
@@ -196,7 +196,7 @@
   </properties>
   <image width="24" height="30" source="../../images/objects/tree_medium_peach.png"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="7" y="26" width="10" height="4"/>
+   <object id="1" x="7" y="25" width="10" height="4"/>
   </objectgroup>
  </tile>
  <tile id="76">
@@ -208,7 +208,7 @@
   </properties>
   <image width="24" height="30" source="../../images/objects/tree_medium_pear.png"/>
   <objectgroup draworder="index" id="2">
-   <object id="1" x="7" y="26" width="10" height="4"/>
+   <object id="1" x="7" y="25" width="10" height="4"/>
   </objectgroup>
  </tile>
 </tileset>

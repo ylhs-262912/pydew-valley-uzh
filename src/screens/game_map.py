@@ -11,6 +11,12 @@ from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.map_objects import MapObjects
 from src.npc.bases.animal import Animal
+from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
+from src.npc.behaviour.cow_behaviour_tree import (
+    CowConditionalBehaviourTree,
+    CowContinuousBehaviourTree,
+)
+from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow
 from src.npc.npc import NPC
@@ -158,6 +164,7 @@ class GameMap:
         # SoilLayer and Tool applying function for farming NPCs
         soil_layer: SoilLayer,
         apply_tool: Callable[[FarmingTool, tuple[float, float], Character], None],
+        plant_collision: Callable[[Character], None],
         # assets
         frames: dict,
     ):
@@ -179,6 +186,7 @@ class GameMap:
 
         self.soil_layer = soil_layer
         self.apply_tool = apply_tool
+        self.plant_collision = plant_collision
 
         self.frames = frames
 
@@ -271,11 +279,7 @@ class GameMap:
 
         if SETUP_PATHFINDING:
             self._add_pf_matrix_collision(
-                pos,
-                (
-                    int(surf.width / SCALED_TILE_SIZE),
-                    int(surf.height / SCALED_TILE_SIZE),
-                ),
+                (pos[0] / SCALE_FACTOR, pos[1] / SCALE_FACTOR), surf.size
             )
 
     def _setup_water_tile(
@@ -348,10 +352,21 @@ class GameMap:
         If this map's MapObjects instance doesn't contain this object's GID,
         this method will raise an exception
         """
-        CollideableMapObject(pos, self._map_objects[obj.gid], z=layer).add(groups)
+        object_type = self._map_objects[obj.gid]
+
+        CollideableMapObject(pos, object_type, z=layer).add(groups)
 
         if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision((obj.x, obj.y), (obj.width, obj.height))
+            self._add_pf_matrix_collision(
+                (
+                    obj.x + object_type.hitbox.x / SCALE_FACTOR,
+                    obj.y + object_type.hitbox.y / SCALE_FACTOR,
+                ),
+                (
+                    object_type.hitbox.width / SCALE_FACTOR,
+                    object_type.hitbox.height / SCALE_FACTOR,
+                ),
+            )
 
     def _setup_tree_object(
         self,
@@ -368,6 +383,7 @@ class GameMap:
                     (the obj.image will be used as Tree image)
         :param groups: Groups the Sprite should be added to
         """
+        object_type = self._map_objects[obj.gid]
         props = obj.properties
         if props.get("type") == "tree":
             if props.get("size") == "medium" and props.get("breakable"):
@@ -381,7 +397,7 @@ class GameMap:
 
                 tree = Tree(
                     pos,
-                    self._map_objects[obj.gid],
+                    object_type,
                     (self.all_sprites, self.collision_sprites, self.tree_sprites),
                     obj.name,
                     fruit_frames,
@@ -393,8 +409,17 @@ class GameMap:
                 tree.image = self.frames["level"]["objects"]["tree"]
                 tree.surf = tree.image
 
-        if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision((obj.x, obj.y), (obj.width, obj.height))
+                if SETUP_PATHFINDING:
+                    self._add_pf_matrix_collision(
+                        (
+                            obj.x + object_type.hitbox.x / SCALE_FACTOR,
+                            obj.y + object_type.hitbox.y / SCALE_FACTOR,
+                        ),
+                        (
+                            object_type.hitbox.width / SCALE_FACTOR,
+                            object_type.hitbox.height / SCALE_FACTOR,
+                        ),
+                    )
 
     def _setup_player_warp(self, pos: tuple[int, int], obj: TiledObject):
         """
@@ -441,19 +466,27 @@ class GameMap:
             else:
                 warnings.warn(f'Invalid player warp "{name}"')
 
-    def _setup_npc(self, pos: tuple[int, int]):
+    def _setup_npc(self, pos: tuple[int, int], obj: TiledObject):
         """
         Creates a new NPC sprite at the given position
         """
-        return NPC(
+        npc = NPC(
             pos=pos,
             assets=ENTITY_ASSETS.RABBIT,
             groups=(self.all_sprites, self.collision_sprites),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
+            plant_collision=self.plant_collision,
             soil_layer=self.soil_layer,
             emote_manager=self.npc_emote_manager,
+            tree_sprites=self.tree_sprites,
         )
+        behaviour = obj.properties.get("behaviour")
+        if behaviour == "Woodcutting":
+            npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
+        else:
+            npc.conditional_behaviour_tree = NPCBehaviourTree.Farming
+        return npc
 
     def _setup_animal(self, pos: tuple[int, int], obj: TiledObject):
         """
@@ -463,19 +496,24 @@ class GameMap:
         create Cows.
         """
         if obj.name == "Chicken":
-            return Chicken(
+            animal = Chicken(
                 pos=pos,
                 assets=ENTITY_ASSETS.CHICKEN,
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
             )
+            animal.conditional_behaviour_tree = ChickenBehaviourTree.Wander
+            return animal
         elif obj.name == "Cow":
-            return Cow(
+            animal = Cow(
                 pos=pos,
                 assets=ENTITY_ASSETS.COW,
                 groups=(self.all_sprites, self.collision_sprites),
                 collision_sprites=self.collision_sprites,
             )
+            animal.conditional_behaviour_tree = CowConditionalBehaviourTree.Wander
+            animal.continuous_behaviour_tree = CowContinuousBehaviourTree.Flee
+            return animal
         else:
             warnings.warn(f'Malformed animal object name "{obj.name}" in tilemap')
 
@@ -515,7 +553,7 @@ class GameMap:
                         lambda pos, image: self._setup_collideable_tile(
                             pos,
                             image,
-                            layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
+                            Layer.BORDER,
                             (
                                 self.all_sprites,
                                 self.collision_sprites,
@@ -597,7 +635,7 @@ class GameMap:
                 elif tilemap_layer.name == "NPCs":
                     if ENABLE_NPCS:
                         self.npcs = _setup_object_layer(
-                            tilemap_layer, lambda pos, obj: self._setup_npc(pos)
+                            tilemap_layer, lambda pos, obj: self._setup_npc(pos, obj)
                         )
                     else:
                         continue

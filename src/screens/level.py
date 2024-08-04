@@ -5,17 +5,25 @@ from random import randint
 
 import pygame
 
-from src.enums import FarmingTool, GameState, Map, SeedType
+from src.enums import FarmingTool, GameState, Map
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.gui.scene_animation import SceneAnimation
+from src.npc.setup import AIData
 from src.overlay.overlay import Overlay
 from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.screens.game_map import GameMap
-from src.settings import GAME_MAP, SCREEN_HEIGHT, SCREEN_WIDTH, MapDict, SoundDict
+from src.settings import (
+    GAME_MAP,
+    SCALED_TILE_SIZE,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    MapDict,
+    SoundDict,
+)
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
@@ -100,7 +108,7 @@ class Level:
         self.drop_sprites = pygame.sprite.Group()
         self.player_exit_warps = pygame.sprite.Group()
 
-        self.soil_layer = SoilLayer(self.all_sprites, self.frames["level"], self.sounds)
+        self.soil_layer = SoilLayer(self.all_sprites, self.frames["level"])
 
         self._emotes = self.frames["emotes"]
         self.player_emote_manager = PlayerEmoteManager(self._emotes, self.all_sprites)
@@ -112,6 +120,7 @@ class Level:
             groups=(),
             collision_sprites=self.collision_sprites,
             apply_tool=self.apply_tool,
+            plant_collision=self.plant_collision,
             interact=self.interact,
             emote_manager=self.player_emote_manager,
             sounds=self.sounds,
@@ -172,6 +181,7 @@ class Level:
             drops_manager=self.drops_manager,
             soil_layer=self.soil_layer,
             apply_tool=self.apply_tool,
+            plant_collision=self.plant_collision,
             frames=self.frames,
         )
 
@@ -212,26 +222,14 @@ class Level:
         self.sounds["music"].play(-1)
 
     # plant collision
-    def plant_collision(self):
+    def plant_collision(self, character: Character):
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
-                is_player_near = plant.rect.colliderect(self.player.hitbox_rect)
-
-                if plant.harvestable and is_player_near:
-                    # add resource
-                    ressource: SeedType = plant.seed_type
-                    quantity = 3
-                    self.player.add_resource(ressource.as_nonseed_ir(), quantity)
-
-                    # update grid
+                if plant.rect.colliderect(character.hitbox_rect):
                     x, y = map_coords_to_tile(plant.rect.center)
-                    tile = self.soil_layer.tiles.get((x, y))
-                    if tile:
-                        tile.planted = False
-
-                    # remove plant
-                    plant.kill()
-                    self.create_particle(plant)
+                    self.soil_layer.harvest(
+                        (x, y), character.add_resource, self.create_particle
+                    )
 
     def switch_to_map(self, map_name: Map):
         if self.tmx_maps.get(map_name):
@@ -246,6 +244,10 @@ class Level:
     def create_particle(self, sprite: pygame.sprite.Sprite):
         ParticleSprite(sprite.rect.topleft, sprite.image, self.all_sprites)
 
+    def _play_playeronly_sound(self, sound: str, entity: Character):
+        if isinstance(entity, Player):
+            self.sounds[sound].play()
+
     def apply_tool(self, tool: FarmingTool, pos: tuple[int, int], entity: Character):
         match tool:
             case FarmingTool.AXE:
@@ -258,14 +260,18 @@ class Level:
                     ),
                 ):
                     tree.hit(entity)
-                    self.sounds["axe"].play()
+                    self._play_playeronly_sound("axe", entity)
             case FarmingTool.HOE:
-                self.soil_layer.hoe(pos)
+                if self.soil_layer.hoe(pos):
+                    self._play_playeronly_sound("hoe", entity)
             case FarmingTool.WATERING_CAN:
                 self.soil_layer.water(pos)
-                self.sounds["water"].play()
+                self._play_playeronly_sound("water", entity)
             case _:  # All seeds
-                self.soil_layer.plant(pos, tool, entity.inventory)
+                if self.soil_layer.plant(pos, tool, entity.remove_resource):
+                    self._play_playeronly_sound("plant", entity)
+                else:
+                    self._play_playeronly_sound("cant_plant", entity)
 
     def interact(self):
         collided_interactions = pygame.sprite.spritecollide(
@@ -320,19 +326,10 @@ class Level:
         self.current_day += 1
 
         # plants + soil
-        for tile in self.soil_layer.tiles.values():
-            if tile.plant:
-                tile.plant.grow()
-            tile.watered = False
-            for sprite in self.soil_layer.water_sprites:
-                sprite.kill()
+        self.soil_layer.update()
 
         self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining
-        if self.raining:
-            for pos, tile in self.soil_layer.tiles.items():
-                self.soil_layer.water(pos, play_sound=False)
-                self.soil_layer.update_tile_image(tile, pos)
 
         # apples on the trees
 
@@ -368,6 +365,30 @@ class Level:
             offset = pygame.Vector2(0, 0)
             offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
             offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
+
+            for y in range(len(AIData.Matrix)):
+                for x in range(len(AIData.Matrix[y])):
+                    if not AIData.Matrix[y][x]:
+                        surf = pygame.Surface(
+                            (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
+                        )
+                        surf.fill((255, 128, 128))
+                        pygame.draw.rect(
+                            surf,
+                            (0, 0, 0),
+                            (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE),
+                            2,
+                        )
+                        surf.set_alpha(92)
+
+                        self.display_surface.blit(
+                            surf,
+                            (
+                                x * SCALED_TILE_SIZE + offset.x,
+                                y * SCALED_TILE_SIZE + offset.y,
+                            ),
+                        )
+
             for sprite in self.collision_sprites:
                 rect = sprite.rect.copy()
                 rect.topleft += offset
@@ -376,6 +397,11 @@ class Level:
                 hitbox = sprite.hitbox_rect.copy()
                 hitbox.topleft += offset
                 pygame.draw.rect(self.display_surface, "blue", hitbox, 2)
+
+                if isinstance(sprite, Character):
+                    hitbox = sprite.axe_hitbox.copy()
+                    hitbox.topleft += offset
+                    pygame.draw.rect(self.display_surface, "green", hitbox, 2)
             for drop in self.drop_sprites:
                 pygame.draw.rect(
                     self.display_surface, "red", drop.rect.move(*offset), 2
@@ -411,7 +437,6 @@ class Level:
     def update(self, dt: float):
         # update
         self.check_map_exit()
-        self.plant_collision()
         self.update_rain()
         self.day_transition.update()
         self.map_transition.update()

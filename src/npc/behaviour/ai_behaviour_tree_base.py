@@ -24,15 +24,23 @@ class Node(ABC):
         pass
 
 
-class Composite(Node, ABC):
-    children: list[Node]
+@dataclass
+class NodeWrapper:
+    root_node: Node
 
-    def __init__(self, children: list[Node] = None):
+    def run(self, context: Context):
+        self.root_node.run(context)
+
+
+class Composite(Node, ABC):
+    children: tuple[Node, ...]
+
+    def __init__(self, *children: Node):
         """
         Base class for all composite nodes.
         :param children: List of nodes to compose
         """
-        self.children = children or []
+        self.children = children
 
 
 class Sequence(Composite):

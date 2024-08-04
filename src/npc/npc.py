@@ -7,10 +7,7 @@ import pygame
 from src.enums import FarmingTool, InventoryResource, Layer
 from src.gui.interface.emotes import NPCEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.npc.behaviour.npc_behaviour_tree import (
-    NPCBehaviourTree,
-    NPCBehaviourTreeContext,
-)
+from src.npc.behaviour.npc_behaviour_tree import NPCIndividualContext
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate
 from src.sprites.character import Character
@@ -25,12 +22,16 @@ class NPC(NPCBase):
         groups: tuple[pygame.sprite.Group, ...],
         collision_sprites: pygame.sprite.Group,
         apply_tool: Callable[[FarmingTool, tuple[float, float], Character], None],
+        plant_collision: Callable[[Character], None],
         soil_layer: SoilLayer,
         emote_manager: NPCEmoteManager,
+        tree_sprites: pygame.sprite.Group,
     ):
         self.soil_layer = soil_layer
 
         self.emote_manager = emote_manager
+
+        self.tree_sprites = tree_sprites
 
         super().__init__(
             pos=pos,
@@ -38,6 +39,8 @@ class NPC(NPCBase):
             groups=groups,
             collision_sprites=collision_sprites,
             apply_tool=apply_tool,
+            plant_collision=plant_collision,
+            behaviour_tree_context=NPCIndividualContext(self),
             z=Layer.MAIN,
         )
 
@@ -54,9 +57,6 @@ class NPC(NPCBase):
             InventoryResource.CORN_SEED: 999,
             InventoryResource.TOMATO_SEED: 999,
         }
-
-    def exit_idle(self):
-        NPCBehaviourTree.tree.run(NPCBehaviourTreeContext(self))
 
     def update(self, dt):
         super().update(dt)

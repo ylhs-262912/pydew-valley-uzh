@@ -5,10 +5,6 @@ from pathfinding.finder.a_star import AStarFinder
 from src.npc.bases.chicken_base import ChickenBase
 from src.npc.bases.cow_base import CowBase
 from src.npc.bases.npc_base import NPCBase
-from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
-from src.npc.behaviour.cow_behaviour_tree import CowBehaviourTree
-from src.npc.behaviour.cow_flee_behaviour_tree import CowFleeBehaviourTree
-from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
 from src.sprites.entities.player import Player
 
 
@@ -23,11 +19,6 @@ class AIData:
     @classmethod
     def update(cls, pathfinding_matrix: list[list[int]], player: Player) -> None:
         if not cls._setup:
-            NPCBehaviourTree.init()
-            ChickenBehaviourTree.init()
-            CowBehaviourTree.init()
-            CowFleeBehaviourTree.init()
-
             NPCBase.pf_finder = AStarFinder()
             ChickenBase.pf_finder = AStarFinder(
                 diagonal_movement=DiagonalMovement.only_when_no_obstacle
