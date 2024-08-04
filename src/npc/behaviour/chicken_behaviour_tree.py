@@ -63,4 +63,4 @@ def wander(context: ChickenIndividualContext) -> bool:
 
 
 class ChickenBehaviourTree(NodeWrapper, Enum):
-    Wander = Selector([Action(wander)])
+    Wander = Selector(Action(wander))

@@ -125,7 +125,7 @@ def load_data(file_name):
 
 
 def map_coords_to_tile(pos):
-    return (pos[0] // SCALED_TILE_SIZE, pos[1] // SCALED_TILE_SIZE)
+    return pos[0] // SCALED_TILE_SIZE, pos[1] // SCALED_TILE_SIZE
 
 
 def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
@@ -196,16 +196,16 @@ def get_flight_matrix(
             # Angle from the centre of the matrix to the currently checked pos
             current_angle = math.atan2((p1[0] - x), (p1[1] - y))
             # Angular distance of the dangerous angle and the current angle
-            distance = dangerous_angle - current_angle
+            distance_ = dangerous_angle - current_angle
 
             # Distance could be greater than half a turn,
             # in which case the result is rotated to the other extreme
-            if distance > math.pi:
-                distance = distance - (math.pi * 2)
-            elif distance < -math.pi:
-                distance = distance + (math.pi * 2)
+            if distance_ > math.pi:
+                distance_ = distance_ - (math.pi * 2)
+            elif distance_ < -math.pi:
+                distance_ = distance_ + (math.pi * 2)
 
-            if -angle < distance < angle:
+            if -angle < distance_ < angle:
                 matrix[y][x] = 0
             else:
                 matrix[y][x] = 1

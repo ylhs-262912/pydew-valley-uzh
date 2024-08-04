@@ -88,8 +88,8 @@ def flee_from_player(context: CowIndividualContext) -> bool:
 
 
 class CowConditionalBehaviourTree(NodeWrapper, Enum):
-    Wander = Selector([Action(wander)])
+    Wander = Selector(Action(wander))
 
 
 class CowContinuousBehaviourTree(NodeWrapper, Enum):
-    Flee = Selector([Sequence([Condition(player_nearby), Action(flee_from_player)])])
+    Flee = Selector(Sequence(Condition(player_nearby), Action(flee_from_player)))
