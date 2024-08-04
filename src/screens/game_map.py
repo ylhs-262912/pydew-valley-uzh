@@ -6,9 +6,11 @@ from typing import Any
 import pygame
 from pytmx import TiledElement, TiledMap, TiledObject, TiledObjectGroup, TiledTileLayer
 
-from src.enums import FarmingTool, InventoryResource, Layer
+from src.camera_target import CameraTarget
+from src.enums import FarmingTool, InventoryResource, Layer, SpecialObjectLayer
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
+from src.gui.scene_animation import SceneAnimation
 from src.map_objects import MapObjects
 from src.npc.bases.animal import Animal
 from src.npc.chicken import Chicken
@@ -63,6 +65,38 @@ def _setup_object_layer(
         pos = (x, y)
         objects.append(func(pos, obj))
     return objects
+
+
+def _setup_camera_layer(layer):
+    # BEWARE! THIS FUNCTION IS A GENERATOR!
+    # DO NOT TRY TO USE THIS AS A LIST!
+    """Sets up all camera targets for a cutscene using the layer objects."""
+    targs = sorted(layer, key=lambda targ: targ.properties["targ_id"])
+    for target in targs:
+        target_props = target.properties
+
+        speed_and_pause = {}
+        speed = target_props.get("speed")
+        pause = target_props.get("pause")
+
+        # Fields are private inside CameraTarget,
+        # the only public access to them is through properties.
+        # As CameraTarget is a dataclass, the parameters' names
+        # in its generated __init__ match the field names
+        # (i.e. there HAS to be an underscore when defining these keys
+        # inside this additional keyword argument dictionary
+        # or else when generating the CameraTarget object
+        # Python will raise TypeErrors for unexpected arguments)
+        if speed is not None:
+            speed_and_pause["_speed"] = speed
+        if pause is not None:
+            speed_and_pause["_pause"] = pause
+
+        yield CameraTarget(
+            (target.x * SCALE_FACTOR, target.y * SCALE_FACTOR),
+            target_props["targ_id"],
+            **speed_and_pause,
+        )
 
 
 def _get_element_property(
@@ -143,6 +177,7 @@ class GameMap:
     def __init__(
         self,
         tilemap: TiledMap,
+        scene_ani: SceneAnimation,
         # Sprite groups
         all_sprites: AllSprites,
         collision_sprites: PersistentSpriteGroup,
@@ -203,7 +238,7 @@ class GameMap:
         self.npcs = []
         self.animals = []
 
-        self._setup_layers()
+        self._setup_layers(scene_ani)
 
         if SETUP_PATHFINDING:
             AIData.update(self._pf_matrix, self.player)
@@ -485,7 +520,7 @@ class GameMap:
 
     # endregion
 
-    def _setup_layers(self):
+    def _setup_layers(self, scene_ani: SceneAnimation):
         """
         Iterates over all map layers, updates the GameMap state and creates
         all Sprites for the map.
@@ -556,82 +591,82 @@ class GameMap:
                     )
 
             elif isinstance(tilemap_layer, TiledObjectGroup):
-                if tilemap_layer.name == "Interactions":
-                    _setup_object_layer(
-                        tilemap_layer,
-                        lambda pos, obj: self._setup_base_object(
-                            pos,
-                            obj,
-                            Layer.MAIN,
-                            self.interaction_sprites,
-                            name=obj.name,
-                        ),
-                    )
-                elif tilemap_layer.name == "Collisions":
-                    _setup_object_layer(
-                        tilemap_layer,
-                        lambda pos, obj: self._setup_collision_rect(
-                            pos, obj, Layer.MAIN, self.collision_sprites
-                        ),
-                    )
-                elif tilemap_layer.name == "Trees":
-                    _setup_object_layer(
-                        tilemap_layer,
-                        lambda pos, obj: self._setup_tree_object(
-                            pos,
-                            obj,
-                            (
-                                self.all_sprites,
-                                self.collision_sprites,
-                                self.tree_sprites,
+                match tilemap_layer.name:
+                    case SpecialObjectLayer.INTERACTIONS:
+                        _setup_object_layer(
+                            tilemap_layer,
+                            lambda pos, obj: self._setup_base_object(
+                                pos,
+                                obj,
+                                Layer.MAIN,
+                                self.interaction_sprites,
+                                name=obj.name,
                             ),
-                        ),
-                    )
-                elif tilemap_layer.name == "Player":
-                    _setup_object_layer(
-                        tilemap_layer,
-                        lambda pos, obj: self._setup_player_warp(pos, obj),
-                    )
-
-                    if not self.player_entry_warps and not self.player_spawnpoint:
-                        raise InvalidMapError(
-                            "No Player warp point could be found in the map's "
-                            "Player layer"
                         )
-                elif tilemap_layer.name == "NPCs":
-                    if ENABLE_NPCS:
+                    case SpecialObjectLayer.COLLISIONS:
+                        _setup_object_layer(
+                            tilemap_layer,
+                            lambda pos, obj: self._setup_collision_rect(
+                                pos, obj, Layer.MAIN, self.collision_sprites
+                            ),
+                        )
+                    case SpecialObjectLayer.TREES:
+                        _setup_object_layer(
+                            tilemap_layer,
+                            lambda pos, obj: self._setup_tree_object(
+                                pos,
+                                obj,
+                                (
+                                    self.all_sprites,
+                                    self.collision_sprites,
+                                    self.tree_sprites,
+                                ),
+                            ),
+                        )
+                    case SpecialObjectLayer.PLAYER:
+                        _setup_object_layer(
+                            tilemap_layer,
+                            lambda pos, obj: self._setup_player_warp(pos, obj),
+                        )
+
+                        if not self.player_entry_warps and not self.player_spawnpoint:
+                            raise InvalidMapError(
+                                "No Player warp point could be found in the map's "
+                                "Player layer"
+                            )
+                    case SpecialObjectLayer.NPCS:
+                        if not ENABLE_NPCS:
+                            continue
                         self.npcs = _setup_object_layer(
                             tilemap_layer, lambda pos, obj: self._setup_npc(pos)
                         )
-                    else:
-                        continue
-                elif tilemap_layer.name == "Animals":
-                    if TEST_ANIMALS:
+                    case SpecialObjectLayer.ANIMALS:
+                        if not TEST_ANIMALS:
+                            continue
                         self.animals = _setup_object_layer(
                             tilemap_layer, lambda pos, obj: self._setup_animal(pos, obj)
                         )
-                    else:
-                        continue
-                else:
-                    # set layer if defined in the TileLayer properties
-                    layer = _get_element_property(
-                        tilemap_layer, "layer", lambda prop: Layer[prop], Layer.MAIN
-                    )
+                    case SpecialObjectLayer.CAMERA_TARGETS:
+                        scene_ani.set_target_points(_setup_camera_layer(tilemap_layer))
+                    case _:
+                        # set layer if defined in the TileLayer properties
+                        layer = _get_element_property(
+                            tilemap_layer, "layer", lambda prop: Layer[prop], Layer.MAIN
+                        )
 
-                    # decorative objects will be created as collideable object
-                    _setup_object_layer(
-                        tilemap_layer,
-                        lambda pos, obj: self._setup_collideable_object(
-                            pos,
-                            obj,
-                            layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
-                            (
-                                self.all_sprites,
-                                self.collision_sprites,
+                        # decorative objects will be created as collideable object
+                        _setup_object_layer(
+                            tilemap_layer,
+                            lambda pos, obj: self._setup_collideable_object(
+                                pos,
+                                obj,
+                                layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
+                                (
+                                    self.all_sprites,
+                                    self.collision_sprites,
+                                ),
                             ),
-                        ),
-                    )
-
+                        )
             else:
                 # This should be the case when an Image or Group layer is found
                 warnings.warn(

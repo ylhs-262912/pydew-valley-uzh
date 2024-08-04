@@ -1,8 +1,7 @@
 import pygame
 
-from src.enums import Layer
-from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH, Coordinate
 from src.camera import Camera
+from src.enums import Layer
 
 
 class PersistentSpriteGroup(pygame.sprite.Group):
@@ -49,7 +48,6 @@ class AllSprites(PersistentSpriteGroup):
         self.cam_surf = pygame.Surface(self.display_surface.get_size())
 
     def draw(self, camera: Camera):
-
         sorted_sprites = sorted(self.sprites(), key=lambda spr: spr.hitbox_rect.bottom)
 
         for layer in Layer:

@@ -209,9 +209,7 @@ class Game:
                 self.menus[self.current_state].update(dt)
 
             self.all_sprites.update(dt)
-            self.all_sprites.draw(
-                self.level.camera
-            )
+            self.all_sprites.draw(self.level.camera)
 
             pygame.display.update()
 

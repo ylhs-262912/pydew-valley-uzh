@@ -250,6 +250,16 @@ class Layer(IntEnum):
     TEXT_BOX = auto()
 
 
+class SpecialObjectLayer(StrEnum):
+    INTERACTIONS = "Interactions"
+    COLLISIONS = "Collisions"
+    TREES = "Trees"
+    PLAYER = "Player"
+    NPCS = "NPCs"
+    ANIMALS = "Animals"
+    CAMERA_TARGETS = "Camera Targets"
+
+
 class Map(StrEnum):
     FARM = "farm"
     NEW_FARM = "farm_new"

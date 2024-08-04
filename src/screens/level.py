@@ -6,6 +6,7 @@ from random import randint
 import pygame
 
 from src.camera import Camera
+from src.camera_target import CameraTarget
 from src.enums import FarmingTool, GameState, Map, SeedType
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
 from src.groups import AllSprites, PersistentSpriteGroup
@@ -81,10 +82,10 @@ class Level:
         self.switch_screen = switch
 
         # cutscene
-        target_points = [(100, 100), (200, 200), (300, 100), (800, 900)]
-        speeds = [100, 150, 200]  # Different speeds for each segment
-        pauses = [0, 1, 0.5, 2]  # Pauses at each point in seconds
-        self.cut_scene_animation = SceneAnimation(target_points, speeds, pauses)
+        # target_points = [(100, 100), (200, 200), (300, 100), (800, 900)]
+        # speeds = [100, 150, 200]  # Different speeds for each segment
+        # pauses = [0, 1, 0.5, 2]  # Pauses at each point in seconds
+        self.cutscene_animation = SceneAnimation([CameraTarget.get_null_target()])
 
         # assets
         self.font = pygame.font.Font(resource_path("font/LycheeSoda.ttf"), 30)
@@ -164,6 +165,7 @@ class Level:
 
         self.game_map = GameMap(
             tilemap=self.tmx_maps[game_map],
+            scene_ani=self.cutscene_animation,
             all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,
             interaction_sprites=self.interaction_sprites,
@@ -206,6 +208,7 @@ class Level:
         self.rain.set_floor_size(self.game_map.get_size())
 
         self.current_map = game_map
+        self.cutscene_animation.start()
 
     def activate_music(self):
         volume = 0.1
@@ -304,8 +307,8 @@ class Level:
         return False
 
     def get_camera_center(self):
-        if self.cut_scene_animation:
-            return self.cut_scene_animation.get_current_position()
+        if self.cutscene_animation:
+            return self.cutscene_animation.get_current_position()
 
         return self.player.rect.center
 
@@ -406,11 +409,9 @@ class Level:
         if self.raining:
             self.rain.update()
 
-    def update_cut_scene(self, dt):
-        if self.cut_scene_animation:
-            self.cut_scene_animation.update(dt)
-            if self.cut_scene_animation.is_finished:
-                self.cut_scene_animation = None
+    def update_cutscene(self, dt):
+        if self.cutscene_animation.active:
+            self.cutscene_animation.update(dt)
 
     def update(self, dt: float):
         # update
@@ -421,8 +422,8 @@ class Level:
         self.map_transition.update()
         self.all_sprites.update(dt)
         self.drops_manager.update()
-        self.update_cut_scene(dt)
-        self.camera.update(self.cut_scene_animation or self.player)
+        self.update_cutscene(dt)
+        self.camera.update(self.cutscene_animation if self.cutscene_animation.active else self.player)
 
         # draw
         self.draw(dt)
