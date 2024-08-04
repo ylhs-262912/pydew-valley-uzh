@@ -255,7 +255,7 @@ class Slider:
         self.drag_active = False
 
     def get_value(self):
-        return self.value
+        return int(self.value)
 
     # events
     def handle_event(self, event) -> bool:
@@ -275,16 +275,12 @@ class Slider:
                 size = self.rect.width - 10
                 self.value = self.min_value + diff * origin_x / size
                 self.value = max(self.min_value, min(self.max_value, self.value))
-                self.update_volume()
                 return True
 
         return False
 
-    def update_volume(self):
-        self.sounds["music"].set_volume(min((self.value / 1000), 0.4))
-        for key in self.sounds:
-            if key != "music":
-                self.sounds[key].set_volume((self.value / 100))
+    def set_value(self, value):
+        self.value = value
 
     # draw
     def draw_value(self):
@@ -313,7 +309,6 @@ class Slider:
 
     def draw(self, surface):
         self.surface = surface
-        self.surface.fill(pygame.Color(0, 0, 0, 0))
         self.draw_rect()
         self.draw_knob()
         self.draw_value()

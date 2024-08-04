@@ -3,6 +3,7 @@ import math
 import os
 import random
 import sys
+from collections.abc import Generator
 
 import pygame
 import pygame.gfxdraw
@@ -10,7 +11,7 @@ import pytmx
 
 from src import settings
 from src.enums import Direction
-from src.settings import SCALE_FACTOR, TILE_SIZE, Coordinate
+from src.settings import SCALE_FACTOR, SCALED_TILE_SIZE, TILE_SIZE, Coordinate
 
 
 def resource_path(relative_path: str):
@@ -124,7 +125,7 @@ def load_data(file_name):
 
 
 def map_coords_to_tile(pos):
-    return pos[0] // (TILE_SIZE * SCALE_FACTOR), pos[1] // (TILE_SIZE * SCALE_FACTOR)
+    return pos[0] // SCALED_TILE_SIZE, pos[1] // SCALED_TILE_SIZE
 
 
 def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
@@ -195,16 +196,16 @@ def get_flight_matrix(
             # Angle from the centre of the matrix to the currently checked pos
             current_angle = math.atan2((p1[0] - x), (p1[1] - y))
             # Angular distance of the dangerous angle and the current angle
-            distance = dangerous_angle - current_angle
+            distance_ = dangerous_angle - current_angle
 
             # Distance could be greater than half a turn,
             # in which case the result is rotated to the other extreme
-            if distance > math.pi:
-                distance = distance - (math.pi * 2)
-            elif distance < -math.pi:
-                distance = distance + (math.pi * 2)
+            if distance_ > math.pi:
+                distance_ = distance_ - (math.pi * 2)
+            elif distance_ < -math.pi:
+                distance_ = distance_ + (math.pi * 2)
 
-            if -angle < distance < angle:
+            if -angle < distance_ < angle:
                 matrix[y][x] = 0
             else:
                 matrix[y][x] = 1
@@ -292,3 +293,32 @@ def oscilating_lerp(a: float | int, b: float | int, t: float) -> float:
     # the sine of this range of angles (0 to pi) gives a value from 0 to 1 to 0
     t = math.sin(angle)
     return pygame.math.lerp(a, b, t)
+
+
+def near_tiles(
+    pos: tuple[int, int], radius: int, shuffle: bool = False
+) -> Generator[tuple[int, int], None, None]:
+    """
+    :param pos: The centre of the generated positions
+    :param radius: The radius of the square
+    :param shuffle: Whether the positions should be yielded in a random order
+    :return: Generator for all positions within a square of the width and
+    height of radius * 2 + 1 around the given position
+    """
+    horizontal = list(range(radius * 2 + 1))
+    vertical = list(range(radius * 2 + 1))
+
+    horizontal.pop(radius)
+    vertical.pop(radius)
+
+    if shuffle:
+        random.shuffle(horizontal)
+        random.shuffle(vertical)
+
+    for i in horizontal:
+        for j in vertical:
+            yield int(pos[0] - radius + i), int(pos[1] - radius + j)
+
+
+def distance(pos1, pos2):
+    return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
