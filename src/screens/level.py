@@ -450,7 +450,9 @@ class Level:
         self.all_sprites.update(dt)
         self.drops_manager.update()
         self.update_cutscene(dt)
-        self.camera.update(self.cutscene_animation if self.cutscene_animation.active else self.player)
+        self.camera.update(
+            self.cutscene_animation if self.cutscene_animation.active else self.player
+        )
 
         # draw
         self.draw(dt)
