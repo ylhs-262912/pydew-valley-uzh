@@ -279,11 +279,7 @@ class GameMap:
 
         if SETUP_PATHFINDING:
             self._add_pf_matrix_collision(
-                pos,
-                (
-                    int(surf.width / SCALED_TILE_SIZE),
-                    int(surf.height / SCALED_TILE_SIZE),
-                ),
+                (pos[0] / SCALE_FACTOR, pos[1] / SCALE_FACTOR), surf.size
             )
 
     def _setup_water_tile(
@@ -356,10 +352,21 @@ class GameMap:
         If this map's MapObjects instance doesn't contain this object's GID,
         this method will raise an exception
         """
-        CollideableMapObject(pos, self._map_objects[obj.gid], z=layer).add(groups)
+        object_type = self._map_objects[obj.gid]
+
+        CollideableMapObject(pos, object_type, z=layer).add(groups)
 
         if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision((obj.x, obj.y), (obj.width, obj.height))
+            self._add_pf_matrix_collision(
+                (
+                    obj.x + object_type.hitbox.x / SCALE_FACTOR,
+                    obj.y + object_type.hitbox.y / SCALE_FACTOR,
+                ),
+                (
+                    object_type.hitbox.width / SCALE_FACTOR,
+                    object_type.hitbox.height / SCALE_FACTOR,
+                ),
+            )
 
     def _setup_tree_object(
         self,
@@ -376,6 +383,7 @@ class GameMap:
                     (the obj.image will be used as Tree image)
         :param groups: Groups the Sprite should be added to
         """
+        object_type = self._map_objects[obj.gid]
         props = obj.properties
         if props.get("type") == "tree":
             if props.get("size") == "medium" and props.get("breakable"):
@@ -389,7 +397,7 @@ class GameMap:
 
                 tree = Tree(
                     pos,
-                    self._map_objects[obj.gid],
+                    object_type,
                     (self.all_sprites, self.collision_sprites, self.tree_sprites),
                     obj.name,
                     fruit_frames,
@@ -401,8 +409,17 @@ class GameMap:
                 tree.image = self.frames["level"]["objects"]["tree"]
                 tree.surf = tree.image
 
-        if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision((obj.x, obj.y), (obj.width, obj.height))
+                if SETUP_PATHFINDING:
+                    self._add_pf_matrix_collision(
+                        (
+                            obj.x + object_type.hitbox.x / SCALE_FACTOR,
+                            obj.y + object_type.hitbox.y / SCALE_FACTOR,
+                        ),
+                        (
+                            object_type.hitbox.width / SCALE_FACTOR,
+                            object_type.hitbox.height / SCALE_FACTOR,
+                        ),
+                    )
 
     def _setup_player_warp(self, pos: tuple[int, int], obj: TiledObject):
         """
@@ -449,7 +466,7 @@ class GameMap:
             else:
                 warnings.warn(f'Invalid player warp "{name}"')
 
-    def _setup_npc(self, pos: tuple[int, int]):
+    def _setup_npc(self, pos: tuple[int, int], obj: TiledObject):
         """
         Creates a new NPC sprite at the given position
         """
@@ -464,7 +481,11 @@ class GameMap:
             emote_manager=self.npc_emote_manager,
             tree_sprites=self.tree_sprites,
         )
-        npc.conditional_behaviour_tree = NPCBehaviourTree.Farming
+        conditional_behaviour = obj.properties.get("conditional_behaviour")
+        if conditional_behaviour == "Woodcutting":
+            npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
+        else:
+            npc.conditional_behaviour_tree = NPCBehaviourTree.Farming
         return npc
 
     def _setup_animal(self, pos: tuple[int, int], obj: TiledObject):
@@ -614,7 +635,7 @@ class GameMap:
                 elif tilemap_layer.name == "NPCs":
                     if ENABLE_NPCS:
                         self.npcs = _setup_object_layer(
-                            tilemap_layer, lambda pos, obj: self._setup_npc(pos)
+                            tilemap_layer, lambda pos, obj: self._setup_npc(pos, obj)
                         )
                     else:
                         continue

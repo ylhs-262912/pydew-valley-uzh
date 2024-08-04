@@ -62,7 +62,7 @@ def walk_to_pos(
         NPCSharedContext.targets.add(target_position)
 
         @context.npc.on_path_completion
-        def on_path_completion():
+        def _():
             context.npc.direction.update(facing)
             context.npc.get_facing_direction()
             context.npc.direction.update((0, 0))
@@ -71,7 +71,7 @@ def walk_to_pos(
                 on_path_completion()
 
         @context.npc.on_stop_moving
-        def on_stop_moving():
+        def _():
             NPCSharedContext.targets.discard(target_position)
 
         return True

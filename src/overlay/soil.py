@@ -143,7 +143,7 @@ class SoilLayer:
 
         self.tiles = {}
 
-        self._untilled_tiles = set(self.tiles.keys())
+        self._untilled_tiles = set(self.tiles)
         self._unplanted_tiles = set()
         self._unwatered_tiles = set()
         self._harvestable_tiles = set()
