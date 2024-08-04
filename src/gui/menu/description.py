@@ -30,16 +30,12 @@ class Description:
         self.description_surface = pygame.Surface(
             self.description_rect.size, pygame.SRCALPHA
         )
-        self.description_surface.fill('green')
-        self.description_surface.set_colorkey('green')
 
         # slider
         self.description_slider_surface = pygame.Surface(
             (600, 600), pygame.SRCALPHA
         )
         self.description_slider_rect = self.description_surface.get_rect()
-        self.description_slider_surface.fill('green')
-        self.description_slider_surface.set_colorkey('green')
 
     # events
     def handle_event(self, event) -> bool:
@@ -67,8 +63,8 @@ class Description:
 
     # draw
     def make_surface_transparent(self):
-        self.description_surface.fill('green')
-        self.description_slider_surface.fill('green')
+        self.description_surface.fill((255, 255, 255, 0))
+        self.description_slider_surface.fill((255, 255, 255, 0))
 
     def draw_slider_bar(self):
         height1 = self.description_slider_surface.get_height()
@@ -128,7 +124,6 @@ class KeybindsDescription(Description):
         )
         rect = self.description_slider_surface.get_rect()
         self.description_slider_rect = rect
-        self.description_slider_surface.set_colorkey("green")
 
         self.keys_group.clear()
         index = 0
