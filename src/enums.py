@@ -255,6 +255,7 @@ class Map(StrEnum):
     NEW_FARM = "farm_new"
     FOREST = "forest"
     TOWN = "town"
+    MINIGAME = "minigame"
 
 
 class StudyGroup(IntEnum):
