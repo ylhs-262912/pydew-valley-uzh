@@ -30,6 +30,7 @@ class Description:
         self.description_surface = pygame.Surface(
             self.description_rect.size, pygame.SRCALPHA
         )
+
         # slider
         self.description_slider_surface = pygame.Surface((600, 600), pygame.SRCALPHA)
         self.description_slider_rect = self.description_surface.get_rect()
@@ -37,6 +38,9 @@ class Description:
     # events
     def handle_event(self, event) -> bool:
         return self.mouse_wheel(event)
+
+    def reset(self):
+        self.description_slider_rect.y = 0
 
     def mouse_wheel(self, event) -> bool:
         if event.type == pygame.MOUSEWHEEL:
@@ -57,7 +61,8 @@ class Description:
 
     # draw
     def make_surface_transparent(self):
-        self.description_surface.fill(pygame.Color(0, 0, 0, 0))
+        self.description_surface.fill((255, 255, 255, 0))
+        self.description_slider_surface.fill((255, 255, 255, 0))
 
     def draw_slider_bar(self):
         height1 = self.description_slider_surface.get_height()
@@ -75,7 +80,15 @@ class Description:
 
     def draw(self):
         pygame.draw.rect(self.display_surface, "White", self.rect, 0, 4)
-        self.make_surface_transparent()
+
+        # blit description slider
+        pos = self.description_slider_rect.topleft
+        self.description_surface.blit(self.description_slider_surface, pos)
+
+        # blit description
+        pos = self.description_rect.topleft
+        self.display_surface.blit(self.description_surface, pos)
+
         self.draw_slider_bar()
 
 
@@ -104,9 +117,9 @@ class KeybindsDescription(Description):
     def create_keybinds(self):
         margin = 10
         size = (600, 60 * self.controls.length() + 2 * margin)
-        self.description_slider_surface = pygame.Surface((size))
-        self.description_slider_rect = self.description_slider_surface.get_rect()
-        self.description_slider_surface.set_colorkey("green")
+        self.description_slider_surface = pygame.Surface((size), pygame.SRCALPHA)
+        rect = self.description_slider_surface.get_rect()
+        self.description_slider_rect = rect
 
         self.keys_group.clear()
         index = 0
@@ -132,6 +145,10 @@ class KeybindsDescription(Description):
             or self.set_key(event)
             or self.handle_click(event)
         )
+
+    def reset(self):
+        super().reset()
+        self.remove_selection()
 
     # keybinds
     def get_hovered_key(self):
@@ -162,7 +179,7 @@ class KeybindsDescription(Description):
 
                 if self.pressed_key.hover(offset):
                     self.selection_key = self.pressed_key
-                    self.selection_key.bg_color = "red"
+                    self.selection_key.bg_color = "cadetblue4"
                 else:
                     self.remove_selection()
 
@@ -279,17 +296,10 @@ class KeybindsDescription(Description):
         for key in self.keys_group:
             key.draw(self.description_slider_surface)
 
-        # blit description slider
-        pos = self.description_slider_rect.topleft
-        self.description_surface.blit(self.description_slider_surface, pos)
-
-        # blit description
-        pos = self.description_rect.topleft
-        self.display_surface.blit(self.description_surface, pos)
-
     def draw(self):
-        super().draw()
+        self.make_surface_transparent()
         self.draw_keybinds()
+        super().draw()
 
 
 class VolumeDescription(Description):
@@ -303,36 +313,65 @@ class VolumeDescription(Description):
 
     # setup
     def create_slider(self):
-        slider_rect = pygame.Rect((30, 30), (200, 10))
-        pos = self.rect.topleft
-        self.slider = Slider(slider_rect, 0, 100, 50, self.sounds, pos)
+        offset = self.rect.topleft
+
+        sound_slider_rect = pygame.Rect((30, 30), (200, 10))
+        self.sound_slider = Slider(sound_slider_rect, 0, 100, 50, self.sounds, offset)
+
+        sfx_slider_rect = pygame.Rect((30, 100), (200, 10))
+        self.sfx_slider = Slider(sfx_slider_rect, 0, 100, 50, self.sounds, offset)
 
     def save_data(self):
-        data = self.slider.get_value()
-        save_data(int(data), "volume.json")
+        data = {
+            "music": self.sound_slider.get_value(),
+            "sfx": self.sfx_slider.get_value(),
+        }
+        save_data(data, "volume.json")
 
     def import_data(self):
         try:
-            self.slider.value = load_data("volume.json")
+            data = load_data("volume.json")
+            self.sound_slider.set_value(data["music"])
+            self.sfx_slider.set_value(data["sfx"])
+            self.update_music(data["music"])
+            self.update_sfx(data["sfx"])
         except FileNotFoundError:
             pass
 
     # events
     def handle_event(self, event) -> bool:
-        return super().handle_event(event) or self.slider.handle_event(event)
+        return (
+            super().handle_event(event)
+            or self.sound_slider.handle_event(event)
+            or self.sfx_slider.handle_event(event)
+        )
+
+    def update_music(self, value):
+        self.sounds["music"].set_volume(min((value / 1000), 0.4))
+
+    def update_sfx(self, value):
+        for key in self.sounds:
+            if key != "music":
+                self.sounds[key].set_volume(min((value / 1000), 0.4))
 
     # draw
+    def draw_text(self, text, pos):
+        text = self.font.render(text, True, "black", "white")
+        self.description_slider_surface.blit(text, pos)
+
     def draw_slider(self):
-        self.slider.draw(self.description_slider_surface)
+        offset = vector(0, 20)
 
-        # blit description slider
-        pos = self.description_slider_rect.topleft
-        self.description_surface.blit(self.description_slider_surface, pos)
+        self.sound_slider.draw(self.description_slider_surface)
+        self.draw_text("Music", self.sound_slider.rect.topleft + offset)
 
-        # blit description
-        pos = self.description_rect.topleft
-        self.display_surface.blit(self.description_surface, pos)
+        self.sfx_slider.draw(self.description_slider_surface)
+        self.draw_text("SFX", self.sfx_slider.rect.topleft + offset)
 
     def draw(self):
-        super().draw()
+        self.make_surface_transparent()
         self.draw_slider()
+        super().draw()
+
+        self.update_music(self.sound_slider.get_value())
+        self.update_sfx(self.sfx_slider.get_value())

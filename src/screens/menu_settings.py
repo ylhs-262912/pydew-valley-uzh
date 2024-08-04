@@ -37,6 +37,8 @@ class SettingsMenu(GeneralMenu):
 
     # setup
     def button_action(self, text: str):
+        self.current_description.reset()
+
         if text == "Keybinds":
             self.current_description = self.keybinds_description
         if text == "Volume":
