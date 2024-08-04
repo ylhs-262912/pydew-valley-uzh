@@ -31,7 +31,7 @@ description = "A game based on Pydeew Valley by ClearCode, used by the Universit
 # Use Ruff to replace Black, isort, and Flake8
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
