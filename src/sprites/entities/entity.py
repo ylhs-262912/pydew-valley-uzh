@@ -8,7 +8,7 @@ from src.gui.interface import indicators
 from src.settings import SCALED_TILE_SIZE
 from src.sprites.base import CollideableSprite, Sprite
 from src.sprites.setup import EntityAsset
-from src.support import screen_to_tile, get_entity_facing_direction
+from src.support import get_entity_facing_direction, screen_to_tile
 
 
 class Entity(CollideableSprite, ABC):
@@ -24,13 +24,13 @@ class Entity(CollideableSprite, ABC):
     collision_sprites: pygame.sprite.Group
 
     def __init__(
-            self,
-            pos: settings.Coordinate,
-            assets: EntityAsset,
-            groups: tuple[pygame.sprite.Group, ...],
-            collision_sprites: pygame.sprite.Group,
-            z=Layer.MAIN):
-
+        self,
+        pos: settings.Coordinate,
+        assets: EntityAsset,
+        groups: tuple[pygame.sprite.Group, ...],
+        collision_sprites: pygame.sprite.Group,
+        z=Layer.MAIN,
+    ):
         self.assets = assets
 
         self._current_ani = None
@@ -51,7 +51,7 @@ class Entity(CollideableSprite, ABC):
             pos,
             self.assets[self.state][self.facing_direction].get_frame(0),
             groups,
-            z=z
+            z=z,
         )
 
         # movement
@@ -143,8 +143,7 @@ class Entity(CollideableSprite, ABC):
     def focus(self):
         self.focused = True
         self.focused_indicator = Sprite(
-            (0, 0), indicators.ENTITY_FOCUSED, (self.groups()[0],),
-            Layer.EMOTES
+            (0, 0), indicators.ENTITY_FOCUSED, (self.groups()[0],), Layer.EMOTES
         )
 
     def unfocus(self):
@@ -166,7 +165,6 @@ class Entity(CollideableSprite, ABC):
 
         for sprite in self.collision_sprites:
             if sprite is not self:
-
                 if sprite.hitbox_rect.colliderect(self.hitbox_rect):
                     colliding_rect = sprite.hitbox_rect
                     distances_rect = colliding_rect
@@ -183,7 +181,7 @@ class Entity(CollideableSprite, ABC):
                         abs(self.last_hitbox_rect.right - distances_rect.left),
                         abs(self.last_hitbox_rect.left - distances_rect.right),
                         abs(self.last_hitbox_rect.bottom - distances_rect.top),
-                        abs(self.last_hitbox_rect.top - distances_rect.bottom)
+                        abs(self.last_hitbox_rect.top - distances_rect.bottom),
                     )
 
                     shortest_distance = min(distances)
@@ -217,9 +215,11 @@ class Entity(CollideableSprite, ABC):
 
         if self.focused_indicator:
             self.focused_indicator.rect.update(
-             (self.rect.centerx - self.focused_indicator.rect.width / 2,
-              self.rect.centery - 56 - self.focused_indicator.rect.height / 2),
-             self.focused_indicator.rect.size
+                (
+                    self.rect.centerx - self.focused_indicator.rect.width / 2,
+                    self.rect.centery - 56 - self.focused_indicator.rect.height / 2,
+                ),
+                self.focused_indicator.rect.size,
             )
         self.move(dt)
         self.animate(dt)

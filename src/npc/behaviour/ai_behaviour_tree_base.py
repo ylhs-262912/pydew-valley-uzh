@@ -3,11 +3,11 @@ from __future__ import annotations
 import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TypeVar, Callable
+from typing import Callable, TypeVar
 
 
 @dataclass
-class Context(ABC):
+class Context:
     pass
 
 
@@ -18,6 +18,7 @@ class Node(ABC):
     """
     Base class for all nodes on the behaviour tree.
     """
+
     @abstractmethod
     def run(self, context: ContextType | None):
         pass
@@ -46,6 +47,7 @@ class Sequence(Composite):
     """
     Returns false on first child failure, true if all children succeed.
     """
+
     def run(self, context: ContextType | None):
         for child in self.children:
             if not child.run(context):
@@ -57,6 +59,7 @@ class Selector(Composite):
     """
     Returns true on first child success, false if all children fail.
     """
+
     def run(self, context: ContextType | None):
         for child in self.children:
             if child.run(context):
@@ -70,8 +73,7 @@ def weighted_shuffle(children: list[tuple[int, Node]]) -> list[Node]:
     https://utopia.duth.gr/%7Epefraimi/research/data/2007EncOfAlg.pdf
     """
     order = sorted(
-        range(len(children)),
-        key=lambda i: random.random() ** (1.0 / children[i][0])
+        range(len(children)), key=lambda i: random.random() ** (1.0 / children[i][0])
     )
     return [children[i][1] for i in order]
 
@@ -92,6 +94,7 @@ class RandomSelector(RandomComposite):
     Returns true on first child success, false if all children fail.
     Children are shuffled prior to execution based on their weights.
     """
+
     def run(self, context: ContextType | None):
         for child in weighted_shuffle(self.children):
             if child.run(context):
@@ -114,6 +117,7 @@ class Inverter(Decorator):
     """
     Inverts its child return value.
     """
+
     def run(self, context: ContextType | None):
         return not self.child.run(context)
 
@@ -122,6 +126,7 @@ class Leaf(Node, ABC):
     """
     Base class for all leaf nodes.
     """
+
     pass
 
 

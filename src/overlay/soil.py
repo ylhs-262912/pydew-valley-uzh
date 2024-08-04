@@ -3,13 +3,14 @@ from collections.abc import Callable
 import pygame
 from random import choice
 
-from pytmx import TiledMap
+import pygame
+from pytmx import TiledTileLayer
 
-from src.enums import SeedType, InventoryResource, FarmingTool, Layer
-from src.support import tile_to_screen
+from src.enums import Layer, SeedType, InventoryResource, FarmingTool
+from src.settings import SCALE_FACTOR, TILE_SIZE, SoundDict, SCALED_TILE_SIZE
 from src.sprites.base import Sprite
 from src.sprites.objects.plant import Plant
-from src.settings import TILE_SIZE, SCALE_FACTOR, SoundDict, SCALED_TILE_SIZE
+from src.support import tile_to_screen
 
 
 class Tile(Sprite):
@@ -139,7 +140,8 @@ class SoilLayer:
 
     def __init__(
             self, all_sprites: pygame.sprite.Group,
-            tmx_map: TiledMap, frames: dict
+             frames: dict
+
     ):
         self.all_sprites = all_sprites
         self.level_frames = frames
@@ -158,11 +160,15 @@ class SoilLayer:
             i: 0 for i in SeedType
         }
 
-        self.create_soil_tiles(tmx_map)
-
         self.neighbor_directions = [
-            (0, -1), (1, -1), (1, 0), (1, 1),
-            (0, 1), (-1, 1), (-1, 0), (-1, -1)
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
         ]
 
         self.raining = False
@@ -244,12 +250,14 @@ class SoilLayer:
                 if tile.planted:
                     self._unwatered_tiles.add(tile.pos)
 
-    def create_soil_tiles(self, tmx_map):
-        try:
-            farmable_layer = tmx_map.get_layer_by_name("Farmable")
-        except ValueError:
-            return
-        for x, y, _ in farmable_layer.tiles():
+    def reset(self):
+        self.tiles = {}
+        self.soil_sprites.empty()
+        self.water_sprites.empty()
+        self.plant_sprites.empty()
+
+    def create_soil_tiles(self, layer: TiledTileLayer):
+        for x, y, _ in layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
 
             self._setup_tile(tile)

@@ -8,7 +8,6 @@ from src.enums import FarmingTool, InventoryResource, Layer
 from src.gui.interface.emotes import NPCEmoteManager
 from src.npc.bases.npc_base import NPCBase
 from src.npc.behaviour.npc_behaviour_tree import NPCIndividualContext
-from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate
 from src.sprites.character import Character
@@ -17,20 +16,16 @@ from src.sprites.setup import EntityAsset
 
 class NPC(NPCBase):
     def __init__(
-            self,
-            pos: Coordinate,
-            assets: EntityAsset,
-            groups: tuple[pygame.sprite.Group, ...],
-            collision_sprites: pygame.sprite.Group,
-            apply_tool: Callable[
-                [FarmingTool, tuple[int, int], Character], None
-            ],
-            plant_collision: Callable[
-                [Character], None
-            ],
-            soil_layer: SoilLayer,
-            emote_manager: NPCEmoteManager,
-            tree_sprites: pygame.sprite.Group,
+        self,
+        pos: Coordinate,
+        assets: EntityAsset,
+        groups: tuple[pygame.sprite.Group, ...],
+        collision_sprites: pygame.sprite.Group,
+        apply_tool: Callable[[FarmingTool, tuple[float, float], Character], None],
+        plant_collision: Callable[[Character], None],
+        soil_layer: SoilLayer,
+        emote_manager: NPCEmoteManager,
+        tree_sprites: pygame.sprite.Group,
     ):
         self.soil_layer = soil_layer
 
@@ -43,17 +38,10 @@ class NPC(NPCBase):
             assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
-
             apply_tool=apply_tool,
             plant_collision=plant_collision,
-
-            pf_matrix=AIData.Matrix,
-            pf_grid=AIData.Grid,
-            pf_finder=AIData.NPCPathFinder,
-
             behaviour_tree_context=NPCIndividualContext(self),
-
-            z=Layer.MAIN
+            z=Layer.MAIN,
         )
 
         # TODO: Ensure that the NPC always has all needed seeds it needs

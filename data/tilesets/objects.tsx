@@ -150,6 +150,9 @@
  </tile>
  <tile id="32">
   <image source="../../images/objects/cow.png" width="27" height="17"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="1" y="11" width="12" height="6"/>
+  </objectgroup>
  </tile>
  <tile id="33">
   <image source="../../images/objects/boat.png" width="37" height="17"/>
@@ -240,12 +243,21 @@
  </tile>
  <tile id="62">
   <image source="../../images/objects/Piknik basket.png" width="16" height="16"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="6" width="16" height="8"/>
+  </objectgroup>
  </tile>
  <tile id="63">
   <image source="../../images/objects/Piknik blanket.png" width="48" height="48"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="0" y="0"/>
+  </objectgroup>
  </tile>
  <tile id="64">
   <image source="../../images/objects/mailbox.png" width="8" height="17"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="2" y="11" width="4" height="5"/>
+  </objectgroup>
  </tile>
  <tile id="65">
   <image source="../../images/objects/seaweed_1.png" width="14" height="16"/>

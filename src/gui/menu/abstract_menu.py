@@ -1,13 +1,12 @@
-import sys
-import pygame
-from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
-from src.support import resource_path
-from src.gui.menu.components import Button
-from src.enums import GameState
-from pygame.mouse import get_pressed as mouse_buttons
-from pygame.math import Vector2 as vector
 from abc import ABC, abstractmethod
+
+import pygame
+from pygame.math import Vector2 as vector
+from pygame.mouse import get_pressed as mouse_buttons
+
 from src.events import post_event
+from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH
+from src.support import resource_path
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
@@ -23,7 +22,7 @@ class AbstractMenu(ABC):
         self.size = size
         self.center = center
         self.buttons_surface = pygame.Surface(size, flags=pygame.SRCALPHA)
-        self.font = pygame.font.Font(resource_path('font/LycheeSoda.ttf'), 30)
+        self.font = pygame.font.Font(resource_path("font/LycheeSoda.ttf"), 30)
         self.display_surface = pygame.display.get_surface()
 
         self.buttons = []
@@ -55,6 +54,7 @@ class AbstractMenu(ABC):
     def button_setup(self, *args, **kwargs):
         pass
 
+    @abstractmethod
     def handle_event(self, event: pygame.event.Event):
         pass
 
@@ -98,14 +98,14 @@ class AbstractMenu(ABC):
 
     # draw
     def draw_title(self):
-        text_surf = self.font.render(self.title, False, 'Black')
+        text_surf = self.font.render(self.title, False, "Black")
         midtop = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 20)
         text_rect = text_surf.get_frect(midtop=midtop)
 
         bg_rect = pygame.Rect((0, 0), (200, 50))
         bg_rect.center = text_rect.center
 
-        pygame.draw.rect(self.display_surface, 'White', bg_rect, 0, 4)
+        pygame.draw.rect(self.display_surface, "White", bg_rect, 0, 4)
         self.display_surface.blit(text_surf, text_rect)
 
     def draw_buttons(self):
@@ -122,4 +122,3 @@ class AbstractMenu(ABC):
         self.event_loop()
         self.update_buttons(dt)
         self.draw()
-

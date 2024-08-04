@@ -1,35 +1,76 @@
 # PyDew Valley
 
-PyDew Valley is a project created by ClearCode in Python using pygame-ce to be used by the University of Zurich in an experimental study in psychology. In the experimental study, we investigate social influence on the adoption of health behaviors. For more details on the game levels, please [click here](https://docs.google.com/spreadsheets/d/1NAssjrPN4mv3kBC3e5YmJcYkJZLU7450cFR9EhCbfgE/edit?gid=374591304#gid=374591304). This project is due for completion on September 1st, 2024.
+PyDew Valley is a project originally created by ClearCode in Python using pygame-ce.
+
+This expanded version will be used by the [University of Zurich's Department of Psychology](https://www.psychologie.uzh.ch/en.html) in an experimental study in psychology. For more details on the game levels, please [click here](https://docs.google.com/spreadsheets/d/1NAssjrPN4mv3kBC3e5YmJcYkJZLU7450cFR9EhCbfgE/edit?gid=374591304#gid=374591304). This project is due for completion on September 1st, 2024.
 
 For more information, please contact s.kittelberger[at]psychologie.uzh.ch.
 
-## Build Instructions
+## Setup Instructions
 
-To see how this project works, please check [CONTRIBUTING.md](./CONTRIBUTING.md)
+This project requires Python 3.12 or above.
 
-1. Clone this repository
+1. **Clone this repository:**
+    ```
+    git clone https://github.com/sloukit/pydew-valley-uzh.git
+    ```
 
-```
-git clone https://github.com/sloukit/pydew-valley-uzh.git
-```
+2. **Create and activate a virtual environment:**
 
-2. Install dependencies
+    **Linux/MacOS**
+    ```
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+    **For Windows**
+    ```
+    python -m venv venv
+    venv\Scripts\activate
+    ```
 
-```
-pip install pygame-ce
-```
+3. **Install dependencies**
+    ```
+    pip install -r requirements.txt # For running the game (runtime dependencies)
+    pip install -r requirements-dev.txt # For local development
+    pip install -r requirements-test.txt # For running tests
+    ```
 
-3. Run this project
-```
-python3 main.py
-```
+4. Run this project
+    ```
+    python main.py
+    ```
+
+## Local Development
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more information on how contributions can be made.
+
+### Linting and Formatting
+
+We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip install -r requirements-dev.txt` to install it and other relevant dependencies.
+
+> [!IMPORTANT]
+> **Before opening a PR, please run the following command to ensure that your code is formatted and doesn't upset the Ruff linter:**
+> 
+> ```sh
+> python formatlint.py
+> ```
+> 
+> Or alternatively, run the following commands individually:
+> 
+> ```sh
+> ruff format . && ruff check --include I --fix . #  format code and sort imports
+> ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule is ignored
+> ```
+
+## Contributing
+
+Please check [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
 
 ## Team
 
 This section is continuously updated.
 
--  [Sophie Kittelberger](https://github.com/sloukit), Project Director
+- [Sophie Kittelberger](https://github.com/sloukit), Project Director
 - [larsbutler](https://github.com/larsbutler), Project Director, Game Developer, & Quality Analyst
 - [bromeon](https://github.com/bromeon), Project Director, Game Developer, & Quality Analyst
 - [novial](https://github.com/novialriptide), Game Developer & Quality Analyst

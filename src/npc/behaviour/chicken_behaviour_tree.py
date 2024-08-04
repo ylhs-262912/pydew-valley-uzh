@@ -8,7 +8,7 @@ import pygame
 
 from src.npc.bases.chicken_base import ChickenBase
 from src.npc.behaviour.ai_behaviour_tree_base import (
-    Context, NodeWrapper, Selector, Action
+    Action, Context, NodeWrapper, Selector
 )
 from src.settings import SCALED_TILE_SIZE
 
@@ -24,25 +24,26 @@ def wander(context: ChickenIndividualContext) -> bool:
     :return: True if path has successfully been created, otherwise False
     """
     # current position on the tilemap
-    tile_coord = pygame.Vector2(
+    tile_coord = (pygame.Vector2(
         context.chicken.rect.centerx,
-        context.chicken.rect.centery
-    ) / SCALED_TILE_SIZE
+        context.chicken.rect.centery)
+     / SCALED_TILE_SIZE
+        )
 
     # To limit the required computing power, Chickens currently only try
     # to navigate to 11 random points in their immediate vicinity
     # (5 tile radius)
     avail_x_coords = list(range(
         max(0, int(tile_coord.x) - 5),
-        min(int(tile_coord.x) + 5, context.chicken.pf_grid.width - 1) + 1
+        min(int(tile_coord.x) + 5, context.chicken.pf_grid.width - 1) + 1,
     ))
 
     avail_y_coords = list(range(
         max(0, int(tile_coord.y) - 5),
-        min(int(tile_coord.y) + 5, context.chicken.pf_grid.height - 1) + 1
+        min(int(tile_coord.y) + 5, context.chicken.pf_grid.height - 1) + 1,
     ))
 
-    for i in range(min(len(avail_x_coords), len(avail_y_coords))):
+    for _ in range(min(len(avail_x_coords), len(avail_y_coords))):
         pos = (
             random.choice(avail_x_coords),
             random.choice(avail_y_coords)

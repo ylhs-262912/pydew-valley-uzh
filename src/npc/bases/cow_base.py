@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
 import pygame
 from pathfinding.core.grid import Grid
@@ -15,6 +16,10 @@ from src.sprites.setup import EntityAsset
 
 
 class CowBase(Animal, AIBehaviour, ABC):
+    pf_matrix: ClassVar[list[list[int]] | None] = None
+    pf_grid: ClassVar[Grid | None] = None
+    pf_finder: ClassVar[AStarFinder | None] = None
+
     fleeing: bool
 
     player: Character
@@ -25,14 +30,8 @@ class CowBase(Animal, AIBehaviour, ABC):
             assets: EntityAsset,
             groups: tuple[pygame.sprite.Group, ...],
             collision_sprites: pygame.sprite.Group,
-
-            pf_matrix: list[list[int]],
-            pf_grid: Grid,
-            pf_finder: AStarFinder,
-
             behaviour_tree_context: ContextType,
-
-            z: int
+            z: int,
     ):
         Animal.__init__(
             self,
@@ -40,15 +39,10 @@ class CowBase(Animal, AIBehaviour, ABC):
             assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
-
-            z=z
+            z=z,
         )
         AIBehaviour.__init__(
             self,
-            pf_matrix=pf_matrix,
-            pf_grid=pf_grid,
-            pf_finder=pf_finder,
-
             behaviour_tree_context=behaviour_tree_context
         )
 

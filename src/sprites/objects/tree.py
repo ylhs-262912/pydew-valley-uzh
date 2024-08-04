@@ -6,22 +6,22 @@ from src import timer
 from src.enums import InventoryResource, Layer
 from src.map_objects import MapObjectType
 from src.settings import APPLE_POS
-from src.sprites.base import Sprite, CollideableMapObject
+from src.sprites.base import CollideableMapObject, Sprite
 from src.sprites.drops import DropsManager
 from src.support import generate_particle_surf
 
 
 class Tree(CollideableMapObject):
     def __init__(
-            self,
-            pos: tuple[int, int],
-            object_type: MapObjectType,
-            groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
-            name: str,
-            fruit_surf: pygame.Surface | None,
-            fruit_type: InventoryResource | None,
-            stump_surf: pygame.Surface,
-            drops_manager: DropsManager
+        self,
+        pos: tuple[int, int],
+        object_type: MapObjectType,
+        groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
+        name: str,
+        fruit_surf: pygame.Surface | None,
+        fruit_type: InventoryResource | None,
+        stump_surf: pygame.Surface,
+        drops_manager: DropsManager,
     ):
         super().__init__(
             pos,
@@ -63,12 +63,11 @@ class Tree(CollideableMapObject):
 
     def create_fruit(self):
         if self.fruit_type:
-            for pos in APPLE_POS['default']:
+            for pos in APPLE_POS["default"]:
                 if random.randint(0, 10) < 6:
                     x = pos[0] + self.rect.left
                     y = pos[1] + self.rect.top
-                    Sprite((x, y), self.fruit_surf, (self.fruit_sprites,),
-                        Layer.FRUIT)
+                    Sprite((x, y), self.fruit_surf, (self.fruit_sprites,), Layer.FRUIT)
 
     def update(self, dt):
         self.timer.update()
@@ -79,16 +78,18 @@ class Tree(CollideableMapObject):
         self.was_hit = True
         self.health -= 1
         # remove an fruit
-        #if len(self.fruit_sprites.sprites()) > 0:
-            #random_fruit = random.choice(self.fruit_sprites.sprites())
-            #random_fruit.kill()
-            #entity.add_resource(self.fruit_type)
+        # if len(self.fruit_sprites.sprites()) > 0:
+        # random_fruit = random.choice(self.fruit_sprites.sprites())
+        # random_fruit.kill()
+        # entity.add_resource(self.fruit_type)
         if self.health < 0 and self.alive:
-            #entity.add_resource(InventoryResource.WOOD, 5)
+            # entity.add_resource(InventoryResource.WOOD, 5)
             pos = self.rect.center
             self.drops_manager.drop(pos, InventoryResource.WOOD, amount=5)
             if self.fruit_type:
-                self.drops_manager.drop(pos, self.fruit_type, amount=len(self.fruit_sprites))
+                self.drops_manager.drop(
+                    pos, self.fruit_type, amount=len(self.fruit_sprites)
+                )
 
         self.image = generate_particle_surf(self.image)
         for fruit in self.fruit_sprites:

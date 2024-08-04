@@ -1,12 +1,16 @@
-from types import FunctionType as Function
+from collections.abc import Callable
+
 import pygame
+
 from src import settings
 from src.support import oscilating_lerp
 from src.timer import Timer
 
 
 class Transition:
-    def __init__(self, reset: Function, finish_reset: Function, dur: int):
+    def __init__(
+        self, reset: Callable[[], None], finish_reset: Callable[[], None], dur: int
+    ):
         # setup
         self.display_surface = pygame.display.get_surface()
         self.reset = reset
@@ -15,10 +19,12 @@ class Transition:
         self.finish_reset = finish_reset
 
         # overlay image
-        self.image = pygame.Surface((
-            settings.SCREEN_WIDTH,
-            settings.SCREEN_HEIGHT,
-        ))
+        self.image = pygame.Surface(
+            (
+                settings.SCREEN_WIDTH,
+                settings.SCREEN_HEIGHT,
+            )
+        )
 
         # color
         self.start_color = pygame.Color(255, 255, 255)
@@ -48,4 +54,5 @@ class Transition:
         if self.timer:
             self.image.fill(self.curr_color)
             self.display_surface.blit(
-                self.image, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+                self.image, (0, 0), special_flags=pygame.BLEND_RGBA_MULT
+            )

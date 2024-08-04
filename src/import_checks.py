@@ -1,7 +1,7 @@
 import sys
-import pygame
 import warnings
 
+import pygame
 
 if not getattr(pygame, "IS_CE", False):
     raise ImportError(

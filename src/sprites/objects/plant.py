@@ -1,18 +1,16 @@
 from collections.abc import Callable
 
+from pygame.math import Vector2 as vector
+
 from src.enums import Layer
 from src.settings import GROW_SPEED, SCALE_FACTOR
 from src.sprites.base import Sprite
-from pygame.math import Vector2 as vector
 
 
 class Plant(Sprite):
     def __init__(self, seed_type, groups, tile, frames):
-        super().__init__(
-            tile.rect.center, frames[0], groups, Layer.PLANT
-        )
-        self.rect.center = tile.rect.center + \
-            vector(0.5, -3) * SCALE_FACTOR
+        super().__init__(tile.rect.center, frames[0], groups, Layer.PLANT)
+        self.rect.center = tile.rect.center + vector(0.5, -3) * SCALE_FACTOR
         self.tile = tile
         self.frames = frames
         self.hitbox = None
@@ -53,6 +51,5 @@ class Plant(Sprite):
 
             self.image = self.frames[int(self.age)]
             self.rect = self.image.get_frect(
-                midbottom=self.tile.rect.midbottom + vector(0, 2))
-    
-
+                midbottom=self.tile.rect.midbottom + vector(0, 2)
+            )

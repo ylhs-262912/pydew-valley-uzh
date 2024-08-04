@@ -8,10 +8,15 @@ from typing import Callable
 import pygame
 
 from src.enums import FarmingTool, ItemToUse, SeedType, Direction
-from src.npc.behaviour.ai_behaviour_tree_base import (
-    Context, NodeWrapper, Selector, Sequence, Condition, Action
-)
 from src.npc.bases.npc_base import NPCBase
+from src.npc.behaviour.ai_behaviour_tree_base import (
+    Action,
+    Condition,
+    Context,
+    NodeWrapper,
+    Selector,
+    Sequence,
+)
 from src.settings import SCALED_TILE_SIZE
 from src.sprites.objects.tree import Tree
 from src.support import near_tiles, distance
@@ -75,6 +80,7 @@ def walk_to_pos(context: NPCIndividualContext,
 
 def wander(context: NPCIndividualContext) -> bool:
     """
+
     Makes the NPC wander to a random location in a 5 tile radius.
     :return: True if path has successfully been created, otherwise False
     """
@@ -391,7 +397,7 @@ def direction_to_vector(
             dir_ = -1, 0
         case Direction.RIGHT:
             dir_ = 1, 0
-    
+
     return dir_ if not invert else (-dir_[0], -dir_[1])
 
 

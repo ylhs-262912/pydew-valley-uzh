@@ -14,30 +14,20 @@ from src.support import get_flight_matrix, near_tiles
 
 class Cow(CowBase):
     def __init__(
-            self,
-            pos: Coordinate,
-            assets: EntityAsset,
-            groups: tuple[pygame.sprite.Group, ...],
-            collision_sprites: pygame.sprite.Group,
-
-            player: Character
+        self,
+        pos: Coordinate,
+        assets: EntityAsset,
+        groups: tuple[pygame.sprite.Group, ...],
+        collision_sprites: pygame.sprite.Group,
     ):
         super().__init__(
             pos=pos,
             assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
-
-            pf_matrix=AIData.Matrix,
-            pf_grid=AIData.Grid,
-            pf_finder=AIData.CowPathFinder,
-
             behaviour_tree_context=CowIndividualContext(self),
-
-            z=Layer.MAIN
+            z=Layer.MAIN,
         )
-
-        self.player = player
 
         self.fleeing = False
 
@@ -67,12 +57,11 @@ class Cow(CowBase):
             flight_matrix = get_flight_matrix(
                 pos=(tile_coord[0] - pos[0], tile_coord[1] - pos[1]),
                 radius=5,
-
                 # Further decreasing the angle value might make the cow's
                 #  behaviour more predictable, but puts it at a higher risk of
                 #  not finding any walkable area in the given angle, and thus
                 #  leading to the cow fleeing in a random direction instead
-                angle=math.pi / 4
+                angle=math.pi / 4,
             )
 
             for x, y in near_tiles(
