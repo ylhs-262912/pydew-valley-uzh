@@ -20,12 +20,17 @@ class SceneAnimation:
     def get_current_position(self):
         return self.current_pos
 
+    def clear(self):
+        self.targets.clear()
+
     def set_target_points(self, targets: Iterable[CameraTarget]):
         self.targets.clear()
         self.targets.extend(targets)
         self.reset()
 
     def start(self):
+        if not self.targets:
+            return
         self.active = True
 
     def reset(self):

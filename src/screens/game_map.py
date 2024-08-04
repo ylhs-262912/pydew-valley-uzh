@@ -563,6 +563,12 @@ class GameMap:
         Iterates over all map layers, updates the GameMap state and creates
         all Sprites for the map.
         """
+
+        # We clear the target data first so that the cutscene from the previous
+        # room doesn't play again if the current one
+        # doesn't have any camera targets
+        scene_ani.clear()
+
         for tilemap_layer in self._tilemap.layers:
             if isinstance(tilemap_layer, TiledTileLayer):
                 # create soil layer
