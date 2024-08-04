@@ -12,8 +12,10 @@ from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.map_objects import MapObjects
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
-from src.npc.behaviour.cow_behaviour_tree import CowConditionalBehaviourTree, \
-    CowContinuousBehaviourTree
+from src.npc.behaviour.cow_behaviour_tree import (
+    CowConditionalBehaviourTree,
+    CowContinuousBehaviourTree,
+)
 from src.npc.behaviour.npc_behaviour_tree import NPCBehaviourTree
 from src.npc.chicken import Chicken
 from src.npc.cow import Cow

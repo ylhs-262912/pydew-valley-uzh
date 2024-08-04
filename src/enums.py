@@ -126,7 +126,7 @@ class FarmingTool(_SerialisableEnum):
     _AS_IRS = nonmember(
         {
             CORN_SEED: InventoryResource.CORN_SEED,
-            TOMATO_SEED: InventoryResource.TOMATO_SEED
+            TOMATO_SEED: InventoryResource.TOMATO_SEED,
         }
     )
 

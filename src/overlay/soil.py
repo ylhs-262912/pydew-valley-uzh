@@ -1,13 +1,11 @@
 from collections.abc import Callable
-
-import pygame
 from random import choice
 
 import pygame
 from pytmx import TiledTileLayer
 
-from src.enums import Layer, SeedType, InventoryResource, FarmingTool
-from src.settings import SCALE_FACTOR, TILE_SIZE, SoundDict, SCALED_TILE_SIZE
+from src.enums import FarmingTool, InventoryResource, Layer, SeedType
+from src.settings import SCALED_TILE_SIZE
 from src.sprites.base import Sprite
 from src.sprites.objects.plant import Plant
 from src.support import tile_to_screen
@@ -24,14 +22,10 @@ class Tile(Sprite):
 
     pf_weight: float
 
-    def __init__(
-            self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]
-    ):
+    def __init__(self, pos: tuple[int, int], group: tuple[pygame.sprite.Group, ...]):
         self._callback = None
 
-        surf = pygame.Surface(
-            (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
-        )
+        surf = pygame.Surface((SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA)
 
         super().__init__(tile_to_screen(pos), surf, group, Layer.SOIL)
 
@@ -99,6 +93,7 @@ class Tile(Sprite):
         self._plant = value
 
         if self.plant:
+
             @self.plant.on_harvestable
             def on_harvestable(inner_value: bool):
                 for inner_func in self._on_plant_harvestable_funcs:
@@ -138,11 +133,7 @@ class SoilLayer:
 
     raining: bool
 
-    def __init__(
-            self, all_sprites: pygame.sprite.Group,
-             frames: dict
-
-    ):
+    def __init__(self, all_sprites: pygame.sprite.Group, frames: dict):
         self.all_sprites = all_sprites
         self.level_frames = frames
 
@@ -156,9 +147,7 @@ class SoilLayer:
         self._unplanted_tiles = set()
         self._unwatered_tiles = set()
         self._harvestable_tiles = set()
-        self.planted_types = {
-            i: 0 for i in SeedType
-        }
+        self.planted_types = {i: 0 for i in SeedType}
 
         self.neighbor_directions = [
             (0, -1),
@@ -319,8 +308,7 @@ class SoilLayer:
                 self.update_tile_image(tile, pos)
 
     def plant(
-            self, pos, seed,
-            remove_resource: Callable[[InventoryResource, int], bool]
+        self, pos, seed, remove_resource: Callable[[InventoryResource, int], bool]
     ):
         """:return: Whether the tile was successfully planted or not"""
         tile = self.tiles.get(pos)
@@ -340,8 +328,10 @@ class SoilLayer:
         return False
 
     def harvest(
-            self, pos, add_resource: Callable[[InventoryResource, int], None],
-            create_particle: Callable[[pygame.sprite.Sprite], None]
+        self,
+        pos,
+        add_resource: Callable[[InventoryResource, int], None],
+        create_particle: Callable[[pygame.sprite.Sprite], None],
     ) -> bool:
         """:return: Whether the tile was successfully harvested or not"""
 

@@ -25,13 +25,13 @@ class CowBase(Animal, AIBehaviour, ABC):
     player: Character
 
     def __init__(
-            self,
-            pos: Coordinate,
-            assets: EntityAsset,
-            groups: tuple[pygame.sprite.Group, ...],
-            collision_sprites: pygame.sprite.Group,
-            behaviour_tree_context: ContextType,
-            z: int,
+        self,
+        pos: Coordinate,
+        assets: EntityAsset,
+        groups: tuple[pygame.sprite.Group, ...],
+        collision_sprites: pygame.sprite.Group,
+        behaviour_tree_context: ContextType,
+        z: int,
     ):
         Animal.__init__(
             self,
@@ -41,10 +41,7 @@ class CowBase(Animal, AIBehaviour, ABC):
             collision_sprites=collision_sprites,
             z=z,
         )
-        AIBehaviour.__init__(
-            self,
-            behaviour_tree_context=behaviour_tree_context
-        )
+        AIBehaviour.__init__(self, behaviour_tree_context=behaviour_tree_context)
 
         self.speed = 150
 

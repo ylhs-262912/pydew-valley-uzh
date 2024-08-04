@@ -7,7 +7,7 @@ from typing import Callable
 
 import pygame
 
-from src.enums import FarmingTool, ItemToUse, SeedType, Direction
+from src.enums import Direction, FarmingTool, ItemToUse, SeedType
 from src.npc.bases.npc_base import NPCBase
 from src.npc.behaviour.ai_behaviour_tree_base import (
     Action,
@@ -19,7 +19,7 @@ from src.npc.behaviour.ai_behaviour_tree_base import (
 )
 from src.settings import SCALED_TILE_SIZE
 from src.sprites.objects.tree import Tree
-from src.support import near_tiles, distance
+from src.support import distance, near_tiles
 
 
 class NPCSharedContext:
@@ -31,9 +31,11 @@ class NPCIndividualContext(Context):
     npc: NPCBase
 
 
-def walk_to_pos(context: NPCIndividualContext,
-                target_position: tuple[int, int],
-                on_path_completion: Callable[[], None] = None):
+def walk_to_pos(
+    context: NPCIndividualContext,
+    target_position: tuple[int, int],
+    on_path_completion: Callable[[], None] = None,
+):
     """
     :return: True if path has successfully been created, otherwise False
     """
@@ -45,24 +47,22 @@ def walk_to_pos(context: NPCIndividualContext,
         if len(context.npc.pf_path) > 1:
             facing = (
                 context.npc.pf_path[-1][0] - context.npc.pf_path[-2][0],
-                context.npc.pf_path[-1][1] - context.npc.pf_path[-2][1]
+                context.npc.pf_path[-1][1] - context.npc.pf_path[-2][1],
             )
         else:
             facing = (
                 context.npc.pf_path[-1][0]
                 - context.npc.rect.centerx / SCALED_TILE_SIZE,
                 context.npc.pf_path[-1][1]
-                - context.npc.rect.centery / SCALED_TILE_SIZE
+                - context.npc.rect.centery / SCALED_TILE_SIZE,
             )
 
-        facing = (facing[0], 0) \
-            if abs(facing[0]) > abs(facing[1]) \
-            else (0, facing[1])
+        facing = (facing[0], 0) if abs(facing[0]) > abs(facing[1]) else (0, facing[1])
 
         NPCSharedContext.targets.add(target_position)
 
         @context.npc.on_path_completion
-        def inner():
+        def on_path_completion():
             context.npc.direction.update(facing)
             context.npc.get_facing_direction()
             context.npc.direction.update((0, 0))
@@ -71,7 +71,7 @@ def walk_to_pos(context: NPCIndividualContext,
                 on_path_completion()
 
         @context.npc.on_stop_moving
-        def inner():
+        def on_stop_moving():
             NPCSharedContext.targets.discard(target_position)
 
         return True
@@ -105,8 +105,7 @@ def will_farm(context: NPCIndividualContext) -> bool:
 
 
 def will_harvest_plant(context: NPCIndividualContext) -> bool:
-    return (len(context.npc.soil_layer.harvestable_tiles)
-            and random.randint(0, 2) == 2)
+    return len(context.npc.soil_layer.harvestable_tiles) and random.randint(0, 2) == 2
 
 
 def harvest_plant(context: NPCIndividualContext) -> bool:
@@ -126,9 +125,7 @@ def harvest_plant(context: NPCIndividualContext) -> bool:
 
     for pos in near_tiles(tile_coord, radius, shuffle=True):
         if pos in soil_layer.harvestable_tiles:
-            path_created = walk_to_pos(
-                context, pos
-            )
+            path_created = walk_to_pos(context, pos)
             if path_created:
                 return True
 
@@ -149,8 +146,7 @@ def will_create_new_farmland(context: NPCIndividualContext) -> bool:
     unwatered_farmland_available = len(soil_layer.unwatered_tiles)
 
     return (
-            unplanted_farmland_available == 0
-            and unwatered_farmland_available == 0
+        unplanted_farmland_available == 0 and unwatered_farmland_available == 0
     ) or random.randint(0, 2) == 0
 
 
@@ -189,8 +185,7 @@ def create_new_farmland(context: NPCIndividualContext) -> bool:
         w_coords.append((7 * len(coords), pos))
 
     order = sorted(
-        range(len(w_coords)),
-        key=lambda i: random.random() ** (1.0 / w_coords[i][0])
+        range(len(w_coords)), key=lambda i: random.random() ** (1.0 / w_coords[i][0])
     )
 
     def on_path_completion():
@@ -201,18 +196,16 @@ def create_new_farmland(context: NPCIndividualContext) -> bool:
 
     for pos in order:
         path_created = walk_to_pos(
-            context, w_coords[pos][1],
-            on_path_completion=on_path_completion
+            context, w_coords[pos][1], on_path_completion=on_path_completion
         )
         if path_created:
             return True
 
-    for pos in sorted(context.npc.soil_layer.untilled_tiles,
-                      key=lambda tile: distance(tile, tile_coord)):
-        path_created = walk_to_pos(
-            context, pos,
-            on_path_completion=on_path_completion
-        )
+    for pos in sorted(
+        context.npc.soil_layer.untilled_tiles,
+        key=lambda tile: distance(tile, tile_coord),
+    ):
+        path_created = walk_to_pos(context, pos, on_path_completion=on_path_completion)
         if path_created:
             return True
 
@@ -234,9 +227,7 @@ def will_plant_tilled_farmland(context: NPCIndividualContext) -> bool:
     return unwatered_farmland_available == 0 or random.randint(0, 3) <= 2
 
 
-def plant_adjacent_or_random_seed(
-        context: NPCIndividualContext
-) -> bool:
+def plant_adjacent_or_random_seed(context: NPCIndividualContext) -> bool:
     """
     Finds a random unplanted but tilled tile, makes the NPC walk to and plant
     a seed on it. Prefers tiles within a 5 tile radius around the NPC.
@@ -267,10 +258,8 @@ def plant_adjacent_or_random_seed(
 
         threshold = total_planted / (seed_types_count * 1.5)
 
-        will_plant_adjacent_seed = (
-                not total_planted or
-                all([seed_type > threshold
-                     for seed_type in soil_layer.planted_types.values()])
+        will_plant_adjacent_seed = not total_planted or all(
+            seed_type > threshold for seed_type in soil_layer.planted_types.values()
         )
 
         if will_plant_adjacent_seed:
@@ -281,17 +270,16 @@ def plant_adjacent_or_random_seed(
                 if neighbor and neighbor.plant:
                     neighbor_seed_type = neighbor.plant.seed_type
                     adjacent_seed_types.add(
-                        (soil_layer.planted_types[neighbor_seed_type],
-                         neighbor_seed_type.as_farming_tool())
+                        (
+                            soil_layer.planted_types[neighbor_seed_type],
+                            neighbor_seed_type.as_farming_tool(),
+                        )
                     )
 
             # If multiple adjacent seed types are found, the one that has
             # been planted the least is used
             if adjacent_seed_types:
-                seed_type = min(
-                    adjacent_seed_types,
-                    key=lambda i: i[0]
-                )[1]
+                seed_type = min(adjacent_seed_types, key=lambda i: i[0])[1]
 
         # If no adjacent seed type has been found, the type with that has
         # been planted the least is used
@@ -301,25 +289,23 @@ def plant_adjacent_or_random_seed(
             ).as_farming_tool()
 
         context.npc.current_seed = seed_type
-        context.npc.seed_index = (context.npc.current_seed.value
-                                  - FarmingTool.get_first_seed_id().value)
+        context.npc.seed_index = (
+            context.npc.current_seed.value - FarmingTool.get_first_seed_id().value
+        )
         context.npc.use_tool(ItemToUse.SEED)
 
     for pos in near_tiles(tile_coord, radius, shuffle=True):
         if pos in soil_layer.unplanted_tiles:
             path_created = walk_to_pos(
-                context, pos,
-                on_path_completion=on_path_completion
+                context, pos, on_path_completion=on_path_completion
             )
             if path_created:
                 return True
 
-    for pos in sorted(soil_layer.unplanted_tiles,
-                      key=lambda tile: distance(tile, tile_coord)):
-        path_created = walk_to_pos(
-            context, pos,
-            on_path_completion=on_path_completion
-        )
+    for pos in sorted(
+        soil_layer.unplanted_tiles, key=lambda tile: distance(tile, tile_coord)
+    ):
+        path_created = walk_to_pos(context, pos, on_path_completion=on_path_completion)
         if path_created:
             return True
 
@@ -350,22 +336,21 @@ def water_farmland(context: NPCIndividualContext) -> bool:
     for pos in near_tiles(tile_coord, radius):
         if pos in soil_layer.unwatered_tiles:
             path_created = walk_to_pos(
-                context, pos,
-                on_path_completion=on_path_completion
+                context, pos, on_path_completion=on_path_completion
             )
             if path_created:
                 return True
 
-    for pos in sorted(soil_layer.unwatered_tiles,
-                      key=lambda tile: distance(tile, tile_coord)):
-        path_created = walk_to_pos(
-            context, pos,
-            on_path_completion=on_path_completion
-        )
+    for pos in sorted(
+        soil_layer.unwatered_tiles, key=lambda tile: distance(tile, tile_coord)
+    ):
+        path_created = walk_to_pos(context, pos, on_path_completion=on_path_completion)
         if path_created:
             return True
 
     return False
+
+
 # endregion
 
 
@@ -378,9 +363,7 @@ def will_cut_wood(context: NPCIndividualContext) -> bool:
     return random.randint(0, 4) == 0
 
 
-def direction_to_vector(
-        direction: Direction, invert: bool = False
-) -> tuple[int, int]:
+def direction_to_vector(direction: Direction, invert: bool = False) -> tuple[int, int]:
     """
     Translate a Direction enum member to a movement vector
     :param direction: Direction to use
@@ -402,8 +385,7 @@ def direction_to_vector(
 
 
 def offset_edge_midpoint(
-        direction: Direction, rect: pygame.FRect,
-        hitbox_size: tuple[float, float]
+    direction: Direction, rect: pygame.FRect, hitbox_size: tuple[float, float]
 ) -> tuple[float, float]:
     """
     Calculate the coordinate of the midpoint of an object's edge in the given
@@ -454,11 +436,10 @@ def chop_tree(context: NPCIndividualContext) -> bool:
                 context.npc.tool_index = context.npc.current_tool.value - 1
                 context.npc.frame_index = 0
 
-            context.npc.direction.update(
-                direction_to_vector(direction_, invert=True)
-            )
+            context.npc.direction.update(direction_to_vector(direction_, invert=True))
             context.npc.get_facing_direction()
             context.npc.direction.update((0, 0))
+
         return inner
 
     first_iteration = True
@@ -466,61 +447,75 @@ def chop_tree(context: NPCIndividualContext) -> bool:
     for _ in range(2):
         for tree in trees:
             if first_iteration:
-                if distance(
-                        tree.hitbox_rect.center, context.npc.hitbox_rect.center
-                ) > radius * SCALED_TILE_SIZE:
+                if (
+                    distance(tree.hitbox_rect.center, context.npc.hitbox_rect.center)
+                    > radius * SCALED_TILE_SIZE
+                ):
                     continue
             for direction in directions:
-                tree_pos = (int(tree.hitbox_rect.center[0] / SCALED_TILE_SIZE),
-                            int(tree.hitbox_rect.center[1] / SCALED_TILE_SIZE))
+                tree_pos = (
+                    int(tree.hitbox_rect.center[0] / SCALED_TILE_SIZE),
+                    int(tree.hitbox_rect.center[1] / SCALED_TILE_SIZE),
+                )
                 tup = direction_to_vector(direction)
                 path_created = walk_to_pos(
                     context,
                     (tree_pos[0] + tup[0], tree_pos[1] + tup[1]),
-                    on_path_completion=on_path_completion(tree, direction)
+                    on_path_completion=on_path_completion(tree, direction),
                 )
                 if path_created:
-                    test = offset_edge_midpoint(direction, tree.hitbox_rect,
-                                                context.npc.hitbox_rect.size)
+                    test = offset_edge_midpoint(
+                        direction, tree.hitbox_rect, context.npc.hitbox_rect.size
+                    )
                     context.npc.create_step_to_coord(test)
                     return True
 
         first_iteration = False
     return False
+
+
 # endregion
 
 
 # region behaviour trees
 class NPCBehaviourTree(NodeWrapper, Enum):
-    Farming = Selector([
-        Sequence([
-            Condition(will_farm),
-            Selector([
-                Sequence([
-                    Condition(will_harvest_plant),
-                    Action(harvest_plant)
-                ]),
-                Sequence([
-                    Condition(will_create_new_farmland),
-                    Action(create_new_farmland)
-                ]),
-                Sequence([
-                    Condition(will_plant_tilled_farmland),
-                    Action(plant_adjacent_or_random_seed)
-                ]),
-                Action(water_farmland)
-            ])
-        ]),
-        Action(wander)
-    ])
+    Farming = Selector(
+        [
+            Sequence(
+                [
+                    Condition(will_farm),
+                    Selector(
+                        [
+                            Sequence(
+                                [Condition(will_harvest_plant), Action(harvest_plant)]
+                            ),
+                            Sequence(
+                                [
+                                    Condition(will_create_new_farmland),
+                                    Action(create_new_farmland),
+                                ]
+                            ),
+                            Sequence(
+                                [
+                                    Condition(will_plant_tilled_farmland),
+                                    Action(plant_adjacent_or_random_seed),
+                                ]
+                            ),
+                            Action(water_farmland),
+                        ]
+                    ),
+                ]
+            ),
+            Action(wander),
+        ]
+    )
 
-    Woodcutting = Selector([
-        Sequence([
-            Condition(will_cut_wood),
-            Selector([
-                Action(chop_tree)
-            ])
-        ]),
-        Action(wander)
-    ])
+    Woodcutting = Selector(
+        [
+            Sequence([Condition(will_cut_wood), Selector([Action(chop_tree)])]),
+            Action(wander),
+        ]
+    )
+
+
 # endregion

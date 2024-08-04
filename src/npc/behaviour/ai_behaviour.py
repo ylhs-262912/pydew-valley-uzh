@@ -38,9 +38,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
         return self._conditional_behaviour_tree
 
     @conditional_behaviour_tree.setter
-    def conditional_behaviour_tree(
-            self, value: NodeWrapper | None
-    ):
+    def conditional_behaviour_tree(self, value: NodeWrapper | None):
         self._conditional_behaviour_tree = value
 
     @property
@@ -48,9 +46,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
         return self._continuous_behaviour_tree
 
     @continuous_behaviour_tree.setter
-    def continuous_behaviour_tree(
-            self, value: NodeWrapper | None
-    ):
+    def continuous_behaviour_tree(self, value: NodeWrapper | None):
         self._continuous_behaviour_tree = value
 
     def on_path_abortion(self, func: Callable[[], None]):
@@ -146,8 +142,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
         return True
 
     def create_step_to_coord(self, coord: tuple[float, float]) -> bool:
-        self.pf_path.append((coord[0] / SCALED_TILE_SIZE,
-                             coord[1] / SCALED_TILE_SIZE))
+        self.pf_path.append((coord[0] / SCALED_TILE_SIZE, coord[1] / SCALED_TILE_SIZE))
         return True
 
     def move(self, dt: float):
@@ -238,10 +233,13 @@ class AIBehaviour(AIBehaviourBase, ABC):
                 #  favors vertical movement
                 self.direction.update((round(dx / distance), round(dy / distance)))
 
-        self.hitbox_rect.update((
-            current_point[0] * SCALED_TILE_SIZE - self.hitbox_rect.width / 2,
-            current_point[1] * SCALED_TILE_SIZE - self.hitbox_rect.height / 2
-        ), self.hitbox_rect.size)
+        self.hitbox_rect.update(
+            (
+                current_point[0] * SCALED_TILE_SIZE - self.hitbox_rect.width / 2,
+                current_point[1] * SCALED_TILE_SIZE - self.hitbox_rect.height / 2,
+            ),
+            self.hitbox_rect.size,
+        )
 
         self.check_collision()
 

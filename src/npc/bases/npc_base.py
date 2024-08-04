@@ -46,9 +46,6 @@ class NPCBase(Character, AIBehaviour, ABC):
             plant_collision=plant_collision,
             z=z,
         )
-        AIBehaviour.__init__(
-            self,
-            behaviour_tree_context=behaviour_tree_context
-        )
+        AIBehaviour.__init__(self, behaviour_tree_context=behaviour_tree_context)
 
         self.speed = 250

@@ -16,8 +16,14 @@ from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.screens.game_map import GameMap
-from src.settings import GAME_MAP, SCREEN_HEIGHT, SCREEN_WIDTH, MapDict, \
-    SoundDict, SCALED_TILE_SIZE
+from src.settings import (
+    GAME_MAP,
+    SCALED_TILE_SIZE,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+    MapDict,
+    SoundDict,
+)
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
@@ -219,13 +225,10 @@ class Level:
     def plant_collision(self, character: Character):
         if self.soil_layer.plant_sprites:
             for plant in self.soil_layer.plant_sprites:
-                if plant.rect.colliderect(
-                        character.hitbox_rect
-                ):
+                if plant.rect.colliderect(character.hitbox_rect):
                     x, y = map_coords_to_tile(plant.rect.center)
                     self.soil_layer.harvest(
-                        (x, y),
-                        character.add_resource, self.create_particle
+                        (x, y), character.add_resource, self.create_particle
                     )
 
     def switch_to_map(self, map_name: Map):
@@ -367,19 +370,23 @@ class Level:
                 for x in range(len(AIData.Matrix[y])):
                     if not AIData.Matrix[y][x]:
                         surf = pygame.Surface(
-                            (SCALED_TILE_SIZE, SCALED_TILE_SIZE),
-                            pygame.SRCALPHA
+                            (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
                         )
                         surf.fill((255, 128, 128))
                         pygame.draw.rect(
-                            surf, (0, 0, 0),
-                            (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE), 2
+                            surf,
+                            (0, 0, 0),
+                            (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE),
+                            2,
                         )
                         surf.set_alpha(92)
 
                         self.display_surface.blit(
-                            surf, (x * SCALED_TILE_SIZE + offset.x,
-                                   y * SCALED_TILE_SIZE + offset.y)
+                            surf,
+                            (
+                                x * SCALED_TILE_SIZE + offset.x,
+                                y * SCALED_TILE_SIZE + offset.y,
+                            ),
                         )
 
             for sprite in self.collision_sprites:
@@ -394,7 +401,7 @@ class Level:
                 if isinstance(sprite, Character):
                     hitbox = sprite.axe_hitbox.copy()
                     hitbox.topleft += offset
-                    pygame.draw.rect(self.display_surface, 'green', hitbox, 2)
+                    pygame.draw.rect(self.display_surface, "green", hitbox, 2)
             for drop in self.drop_sprites:
                 pygame.draw.rect(
                     self.display_surface, "red", drop.rect.move(*offset), 2

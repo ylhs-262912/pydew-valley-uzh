@@ -125,8 +125,7 @@ def load_data(file_name):
 
 
 def map_coords_to_tile(pos):
-    return (pos[0] // SCALED_TILE_SIZE,
-            pos[1] // SCALED_TILE_SIZE)
+    return (pos[0] // SCALED_TILE_SIZE, pos[1] // SCALED_TILE_SIZE)
 
 
 def generate_particle_surf(img: pygame.Surface) -> pygame.Surface:
@@ -297,7 +296,7 @@ def oscilating_lerp(a: float | int, b: float | int, t: float) -> float:
 
 
 def near_tiles(
-        pos: tuple[int, int], radius: int, shuffle: bool = False
+    pos: tuple[int, int], radius: int, shuffle: bool = False
 ) -> Generator[tuple[int, int], None, None]:
     """
     :param pos: The centre of the generated positions

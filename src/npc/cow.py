@@ -5,9 +5,7 @@ import pygame
 from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.cow_behaviour_tree import CowIndividualContext
-from src.npc.setup import AIData
 from src.settings import Coordinate
-from src.sprites.character import Character
 from src.sprites.setup import EntityAsset
 from src.support import get_flight_matrix, near_tiles
 
@@ -65,8 +63,7 @@ class Cow(CowBase):
             )
 
             for x, y in near_tiles(
-                    (flight_radius, flight_radius), flight_radius,
-                    shuffle=True
+                (flight_radius, flight_radius), flight_radius, shuffle=True
             ):
                 x_pos = x - flight_radius
                 y_pos = y - flight_radius
@@ -79,8 +76,7 @@ class Cow(CowBase):
                         return True
 
             for x, y in near_tiles(
-                    (tile_coord[0], tile_coord[1]), flight_radius,
-                    shuffle=True
+                (tile_coord[0], tile_coord[1]), flight_radius, shuffle=True
             ):
                 if self.pf_grid.walkable(x, y):
                     if self.create_path_to_tile((x, y)):

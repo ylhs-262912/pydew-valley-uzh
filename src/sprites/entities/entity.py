@@ -137,8 +137,10 @@ class Entity(CollideableSprite, ABC):
         return screen_to_tile(self.hitbox_rect.center)
 
     def get_tile_pos(self) -> tuple[int, int]:
-        return (int(self.rect.centerx / SCALED_TILE_SIZE),
-                int(self.rect.centery / SCALED_TILE_SIZE))
+        return (
+            int(self.rect.centerx / SCALED_TILE_SIZE),
+            int(self.rect.centery / SCALED_TILE_SIZE),
+        )
 
     def focus(self):
         self.focused = True

@@ -36,9 +36,6 @@ class ChickenBase(Animal, AIBehaviour, ABC):
             collision_sprites=collision_sprites,
             z=z,
         )
-        AIBehaviour.__init__(
-            self,
-            behaviour_tree_context=behaviour_tree_context
-        )
+        AIBehaviour.__init__(self, behaviour_tree_context=behaviour_tree_context)
 
         self.speed = 250
