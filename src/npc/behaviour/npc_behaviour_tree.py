@@ -105,6 +105,9 @@ def will_farm(context: NPCIndividualContext) -> bool:
 
 
 def will_harvest_plant(context: NPCIndividualContext) -> bool:
+    """
+    :return: True: harvestable plants available AND 1/3, otherwise False
+    """
     return len(context.npc.soil_layer.harvestable_tiles) and random.randint(0, 2) == 2
 
 
@@ -272,7 +275,7 @@ def plant_adjacent_or_random_seed(context: NPCIndividualContext) -> bool:
                     adjacent_seed_types.add(
                         (
                             soil_layer.planted_types[neighbor_seed_type],
-                            neighbor_seed_type.as_farming_tool(),
+                            neighbor_seed_type.as_fts(),
                         )
                     )
 
@@ -286,7 +289,7 @@ def plant_adjacent_or_random_seed(context: NPCIndividualContext) -> bool:
         if not seed_type:
             seed_type = min(
                 SeedType, key=lambda x: soil_layer.planted_types[x]
-            ).as_farming_tool()
+            ).as_fts()
 
         context.npc.current_seed = seed_type
         context.npc.seed_index = (
@@ -464,10 +467,10 @@ def chop_tree(context: NPCIndividualContext) -> bool:
                     on_path_completion=on_path_completion(tree, direction),
                 )
                 if path_created:
-                    test = offset_edge_midpoint(
+                    tree_edge_coord = offset_edge_midpoint(
                         direction, tree.hitbox_rect, context.npc.hitbox_rect.size
                     )
-                    context.npc.create_step_to_coord(test)
+                    context.npc.create_step_to_coord(tree_edge_coord)
                     return True
 
         first_iteration = False
@@ -480,41 +483,27 @@ def chop_tree(context: NPCIndividualContext) -> bool:
 # region behaviour trees
 class NPCBehaviourTree(NodeWrapper, Enum):
     Farming = Selector(
-        [
-            Sequence(
-                [
-                    Condition(will_farm),
-                    Selector(
-                        [
-                            Sequence(
-                                [Condition(will_harvest_plant), Action(harvest_plant)]
-                            ),
-                            Sequence(
-                                [
-                                    Condition(will_create_new_farmland),
-                                    Action(create_new_farmland),
-                                ]
-                            ),
-                            Sequence(
-                                [
-                                    Condition(will_plant_tilled_farmland),
-                                    Action(plant_adjacent_or_random_seed),
-                                ]
-                            ),
-                            Action(water_farmland),
-                        ]
-                    ),
-                ]
+        Sequence(
+            Condition(will_farm),
+            Selector(
+                Sequence(Condition(will_harvest_plant), Action(harvest_plant)),
+                Sequence(
+                    Condition(will_create_new_farmland),
+                    Action(create_new_farmland),
+                ),
+                Sequence(
+                    Condition(will_plant_tilled_farmland),
+                    Action(plant_adjacent_or_random_seed),
+                ),
+                Action(water_farmland),
             ),
-            Action(wander),
-        ]
+        ),
+        Action(wander),
     )
 
     Woodcutting = Selector(
-        [
-            Sequence([Condition(will_cut_wood), Selector([Action(chop_tree)])]),
-            Action(wander),
-        ]
+        Sequence(Condition(will_cut_wood), Selector(Action(chop_tree))),
+        Action(wander),
     )
 
 

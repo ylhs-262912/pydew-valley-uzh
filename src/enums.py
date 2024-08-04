@@ -167,7 +167,7 @@ class FarmingTool(_SerialisableEnum):
         return self._AS_IRS.get(self, self)
 
     def as_nonseed_inventory_resource(self):
-        """Converts self to InventoryResource type if possible.
+        """Converts self to non-seed InventoryResource type if possible.
         (Conversion is possible if self is considered a seed.)"""
         return self._AS_NS_IRS.get(self, self)
 
@@ -198,9 +198,6 @@ class SeedType(IntEnum):
 
     def as_nonseed_ir(self):
         return self._AS_NS_IRS[self]
-
-    def as_farming_tool(self):
-        return self._AS_FTS[self]
 
     def as_plant_name(self):
         return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")

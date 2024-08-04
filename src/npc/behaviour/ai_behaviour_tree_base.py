@@ -33,14 +33,14 @@ class NodeWrapper:
 
 
 class Composite(Node, ABC):
-    children: list[Node]
+    children: tuple[Node, ...]
 
-    def __init__(self, children: list[Node] = None):
+    def __init__(self, *children: Node):
         """
         Base class for all composite nodes.
         :param children: List of nodes to compose
         """
-        self.children = children or []
+        self.children = children
 
 
 class Sequence(Composite):

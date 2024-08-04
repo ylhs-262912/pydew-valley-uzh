@@ -481,8 +481,8 @@ class GameMap:
             emote_manager=self.npc_emote_manager,
             tree_sprites=self.tree_sprites,
         )
-        conditional_behaviour = obj.properties.get("conditional_behaviour")
-        if conditional_behaviour == "Woodcutting":
+        behaviour = obj.properties.get("behaviour")
+        if behaviour == "Woodcutting":
             npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
         else:
             npc.conditional_behaviour_tree = NPCBehaviourTree.Farming
@@ -553,7 +553,7 @@ class GameMap:
                         lambda pos, image: self._setup_collideable_tile(
                             pos,
                             image,
-                            layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
+                            Layer.BORDER,
                             (
                                 self.all_sprites,
                                 self.collision_sprites,

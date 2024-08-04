@@ -96,8 +96,8 @@ class Tile(Sprite):
 
             @self.plant.on_harvestable
             def on_harvestable(inner_value: bool):
-                for inner_func in self._on_plant_harvestable_funcs:
-                    inner_func(inner_value)
+                for func_ in self._on_plant_harvestable_funcs:
+                    func_(inner_value)
 
     def on_plant(self, func):
         self._on_plant_funcs.append(func)
