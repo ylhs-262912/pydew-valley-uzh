@@ -17,18 +17,22 @@ class MapObjectType:
 class MapObjects:
     _objects: dict[int, MapObjectType]
 
+    _tilemap: TiledMap
+
     def __init__(self, tilemap: TiledMap):
+        self._tilemap = tilemap
+
         self._objects = {}
-        for gid, hitbox_list in tilemap.get_tile_colliders():
+        for gid, hitbox_list in self._tilemap.get_tile_colliders():
             map_object = MapObjectType(gid=gid)
 
-            map_object.image = tilemap.get_tile_image_by_gid(gid)
+            map_object.image = self._tilemap.get_tile_image_by_gid(gid)
             if len(hitbox_list) > 0:
                 hitbox = hitbox_list[0]
                 map_object.hitbox = pygame.FRect(
-                    hitbox.x * SCALE_FACTOR,
+                    hitbox.x * SCALE_FACTOR,  # noqa
                     hitbox.y * SCALE_FACTOR,  # noqa
-                    hitbox.width * SCALE_FACTOR,
+                    hitbox.width * SCALE_FACTOR,  # noqa
                     hitbox.height * SCALE_FACTOR,  # noqa
                 )
             else:
@@ -39,8 +43,16 @@ class MapObjects:
         try:
             return self._objects[gid]
         except KeyError as e:
-            raise SyntaxError(
+            raise KeyError(
                 f"No object with gid {gid}.\nCheck if you "
                 f"defined a valid hitbox on the object you "
                 f"tried to access."
             ) from e
+
+    def get(self, gid):
+        try:
+            return self._objects[gid]
+        except KeyError:
+            return MapObjectType(
+                gid=gid, image=self._tilemap.get_tile_image_by_gid(gid)
+            )
