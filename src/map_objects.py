@@ -50,9 +50,10 @@ class MapObjects:
             ) from e
 
     def get(self, gid):
-        try:
-            return self._objects[gid]
-        except KeyError:
-            return MapObjectType(
-                gid=gid, image=self._tilemap.get_tile_image_by_gid(gid)
+        return self._objects.get(
+            gid,
+            MapObjectType(
+                gid=gid,
+                image=self._tilemap.get_tile_image_by_gid(gid)
             )
+        )
