@@ -51,9 +51,5 @@ class MapObjects:
 
     def get(self, gid):
         return self._objects.get(
-            gid,
-            MapObjectType(
-                gid=gid,
-                image=self._tilemap.get_tile_image_by_gid(gid)
-            )
+            gid, MapObjectType(gid=gid, image=self._tilemap.get_tile_image_by_gid(gid))
         )
