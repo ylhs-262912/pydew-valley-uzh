@@ -11,7 +11,7 @@ from src.enums import FarmingTool, InventoryResource, Layer, SpecialObjectLayer
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.gui.scene_animation import SceneAnimation
-from src.map_objects import MapObjects
+from src.map_objects import MapObjects, MapObjectType
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
 from src.npc.behaviour.cow_behaviour_tree import (
@@ -205,6 +205,9 @@ class GameMap:
     ):
         self._tilemap = tilemap
 
+        if "Player" not in self._tilemap.layernames:
+            raise InvalidMapError("No Player layer could be found")
+
         self.player_exit_warps = player_exit_warps
 
         self.all_sprites = all_sprites
@@ -379,86 +382,75 @@ class GameMap:
         if SETUP_PATHFINDING:
             self._add_pf_matrix_collision((obj.x, obj.y), (obj.width, obj.height))
 
-    def _setup_collideable_object(
+    def _setup_tree(
+        self, pos: tuple[int, int], obj: TiledObject, object_type: MapObjectType
+    ):
+        props = obj.properties
+        if props.get("size") == "medium" and props.get("breakable"):
+            fruit = props.get("fruit_type")
+            if fruit == "no_fruit":
+                fruit_type, fruit_frames = None, None
+            else:
+                fruit_type = InventoryResource.from_serialised_string(fruit)
+                fruit_frames = self.frames["level"]["objects"][fruit]
+            stump_frames = self.frames["level"]["objects"]["stump"]
+
+            tree = Tree(
+                pos,
+                object_type,
+                (self.all_sprites, self.collision_sprites, self.tree_sprites),
+                obj.name,
+                fruit_frames,
+                fruit_type,
+                stump_frames,
+                self.drops_manager,
+            )
+            # we need a tree surf without fruits
+            tree.image = self.frames["level"]["objects"]["tree"]
+            tree.surf = tree.image
+
+    def _setup_map_object(
         self,
         pos: tuple[int, int],
         obj: TiledObject,
         layer: Layer,
-        groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
     ):
         """
         Create a new collideable Sprite from the given TiledObject.
-        If this map's MapObjects instance doesn't contain this object's GID,
-        this method will raise an exception
-        """
-        object_type = self._map_objects[obj.gid]
-
-        CollideableMapObject(pos, object_type, z=layer).add(groups)
-
-        if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision(
-                (
-                    obj.x + object_type.hitbox.x / SCALE_FACTOR,
-                    obj.y + object_type.hitbox.y / SCALE_FACTOR,
-                ),
-                (
-                    object_type.hitbox.width / SCALE_FACTOR,
-                    object_type.hitbox.height / SCALE_FACTOR,
-                ),
-            )
-
-    def _setup_tree_object(
-        self,
-        pos: tuple[int, int],
-        obj: TiledObject,
-        groups: tuple[pygame.sprite.Group, ...] | pygame.sprite.Group,
-    ):
-        """
-        Create a new collideable Sprite from the given TiledObject.
-        This Sprite will be created from the Tree class and will take the apple
-        and stump assets from self.frames
+        If the value of the object's "type" property equals "tree", this Sprite will be
+        created from the Tree class and will take its assets from self.frames
         :param pos: Position of Sprite (x, y)
-        :param obj: TiledObject to create the Tree from
-                    (the obj.image will be used as Tree image)
-        :param groups: Groups the Sprite should be added to
+        :param obj: TiledObject to create the Sprite from
+        :param layer: z-Layer on which the Sprite should be displayed
+                      (Trees will always be rendered on Layer.MAIN)
         """
-        object_type = self._map_objects[obj.gid]
+        object_type = self._map_objects.get(obj.gid)
         props = obj.properties
-        if props.get("type") == "tree":
-            if props.get("size") == "medium" and props.get("breakable"):
-                fruit = props.get("fruit_type")
-                if fruit == "no_fruit":
-                    fruit_type, fruit_frames = None, None
-                else:
-                    fruit_type = InventoryResource.from_serialised_string(fruit)
-                    fruit_frames = self.frames["level"]["objects"][fruit]
-                stump_frames = self.frames["level"]["objects"]["stump"]
 
-                tree = Tree(
-                    pos,
-                    object_type,
-                    (self.all_sprites, self.collision_sprites, self.tree_sprites),
-                    obj.name,
-                    fruit_frames,
-                    fruit_type,
-                    stump_frames,
-                    self.drops_manager,
-                )
-                # we need a tree surf without fruits
-                tree.image = self.frames["level"]["objects"]["tree"]
-                tree.surf = tree.image
-
-                if SETUP_PATHFINDING:
-                    self._add_pf_matrix_collision(
-                        (
-                            obj.x + object_type.hitbox.x / SCALE_FACTOR,
-                            obj.y + object_type.hitbox.y / SCALE_FACTOR,
-                        ),
-                        (
-                            object_type.hitbox.width / SCALE_FACTOR,
-                            object_type.hitbox.height / SCALE_FACTOR,
-                        ),
+        if object_type.hitbox is not None:
+            if props.get("type") == "tree":
+                self._setup_tree(pos, obj, object_type)
+            else:
+                if object_type.hitbox is not None:
+                    CollideableMapObject(pos, object_type, z=layer).add(
+                        self.all_sprites,
+                        self.collision_sprites,
                     )
+
+            if SETUP_PATHFINDING:
+                self._add_pf_matrix_collision(
+                    (
+                        obj.x + object_type.hitbox.x / SCALE_FACTOR,
+                        obj.y + object_type.hitbox.y / SCALE_FACTOR,
+                    ),
+                    (
+                        object_type.hitbox.width / SCALE_FACTOR,
+                        object_type.hitbox.height / SCALE_FACTOR,
+                    ),
+                )
+        else:
+            surf = pygame.transform.scale_by(object_type.image, SCALE_FACTOR)
+            Sprite(pos, surf, z=layer).add(self.all_sprites)
 
     def _setup_player_warp(self, pos: tuple[int, int], obj: TiledObject):
         """
@@ -654,19 +646,6 @@ class GameMap:
                                 pos, obj, Layer.MAIN, self.collision_sprites
                             ),
                         )
-                    case SpecialObjectLayer.TREES:
-                        _setup_object_layer(
-                            tilemap_layer,
-                            lambda pos, obj: self._setup_tree_object(
-                                pos,
-                                obj,
-                                (
-                                    self.all_sprites,
-                                    self.collision_sprites,
-                                    self.tree_sprites,
-                                ),
-                            ),
-                        )
                     case SpecialObjectLayer.PLAYER:
                         _setup_object_layer(
                             tilemap_layer,
@@ -701,16 +680,13 @@ class GameMap:
                         # decorative objects will be created as collideable object
                         _setup_object_layer(
                             tilemap_layer,
-                            lambda pos, obj: self._setup_collideable_object(
+                            lambda pos, obj, obj_layer=layer: self._setup_map_object(
                                 pos,
                                 obj,
-                                layer,  # noqa: B023 # TODO: Fix B023 to avoid potential UnboundLocalError
-                                (
-                                    self.all_sprites,
-                                    self.collision_sprites,
-                                ),
+                                obj_layer,
                             ),
                         )
+
             else:
                 # This should be the case when an Image or Group layer is found
                 warnings.warn(

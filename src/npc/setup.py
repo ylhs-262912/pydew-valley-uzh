@@ -14,11 +14,11 @@ class AIData:
 
     player: Player = None
 
-    _setup: bool = False
+    setup: bool = False
 
     @classmethod
     def update(cls, pathfinding_matrix: list[list[int]], player: Player) -> None:
-        if not cls._setup:
+        if not cls.setup:
             NPCBase.pf_finder = AStarFinder()
             ChickenBase.pf_finder = AStarFinder(
                 diagonal_movement=DiagonalMovement.only_when_no_obstacle
@@ -27,7 +27,7 @@ class AIData:
                 diagonal_movement=DiagonalMovement.only_when_no_obstacle
             )
 
-            cls._setup = True
+            cls.setup = True
 
         cls.Matrix = pathfinding_matrix
         cls.Grid = Grid(matrix=cls.Matrix)
