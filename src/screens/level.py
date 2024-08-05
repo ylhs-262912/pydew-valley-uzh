@@ -365,31 +365,32 @@ class Level:
     def draw_hitboxes(self):
         if self.show_hitbox_active:
             offset = pygame.Vector2(0, 0)
-            offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
-            offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
+            offset.x = -(self.get_camera_center()[0] - SCREEN_WIDTH / 2)
+            offset.y = -(self.get_camera_center()[1] - SCREEN_HEIGHT / 2)
 
-            for y in range(len(AIData.Matrix)):
-                for x in range(len(AIData.Matrix[y])):
-                    if not AIData.Matrix[y][x]:
-                        surf = pygame.Surface(
-                            (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
-                        )
-                        surf.fill((255, 128, 128))
-                        pygame.draw.rect(
-                            surf,
-                            (0, 0, 0),
-                            (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE),
-                            2,
-                        )
-                        surf.set_alpha(92)
+            if AIData.setup:
+                for y in range(len(AIData.Matrix)):
+                    for x in range(len(AIData.Matrix[y])):
+                        if not AIData.Matrix[y][x]:
+                            surf = pygame.Surface(
+                                (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
+                            )
+                            surf.fill((255, 128, 128))
+                            pygame.draw.rect(
+                                surf,
+                                (0, 0, 0),
+                                (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE),
+                                2,
+                            )
+                            surf.set_alpha(92)
 
-                        self.display_surface.blit(
-                            surf,
-                            (
-                                x * SCALED_TILE_SIZE + offset.x,
-                                y * SCALED_TILE_SIZE + offset.y,
-                            ),
-                        )
+                            self.display_surface.blit(
+                                surf,
+                                (
+                                    x * SCALED_TILE_SIZE + offset.x,
+                                    y * SCALED_TILE_SIZE + offset.y,
+                                ),
+                            )
 
             for sprite in self.collision_sprites:
                 rect = sprite.rect.copy()
