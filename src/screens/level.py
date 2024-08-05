@@ -6,9 +6,10 @@ from random import randint
 import pygame
 
 from src.camera import Camera
-from src.camera_target import CameraTarget
+from src.camera.camera_target import CameraTarget
 from src.enums import FarmingTool, GameState, Map
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
+from src.exceptions import GameMapWarning
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.gui.scene_animation import SceneAnimation
@@ -200,7 +201,8 @@ class Level:
             if not player_spawn:
                 warnings.warn(
                     f'No valid entry warp found for "{game_map}" '
-                    f'from: "{self.current_map}"'
+                    f'from: "{self.current_map}"',
+                    GameMapWarning,
                 )
 
         # use default spawnpoint if no origin map is specified,
@@ -209,7 +211,9 @@ class Level:
             if self.game_map.player_spawnpoint:
                 player_spawn = self.game_map.player_spawnpoint
             else:
-                warnings.warn(f"No default spawnpoint found on {game_map}")
+                warnings.warn(
+                    f"No default spawnpoint found on {game_map}", GameMapWarning
+                )
                 # fallback to the first player entry warp
                 player_spawn = next(iter(self.game_map.player_entry_warps.values()))
 

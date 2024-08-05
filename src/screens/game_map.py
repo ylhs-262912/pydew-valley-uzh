@@ -6,8 +6,9 @@ from typing import Any
 import pygame
 from pytmx import TiledElement, TiledMap, TiledObject, TiledObjectGroup, TiledTileLayer
 
-from src.camera_target import CameraTarget
+from src.camera.camera_target import CameraTarget
 from src.enums import FarmingTool, InventoryResource, Layer, SpecialObjectLayer
+from src.exceptions import GameMapWarning, InvalidMapError, PathfindingWarning
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.gui.scene_animation import SceneAnimation
@@ -126,15 +127,12 @@ def _get_element_property(
         except Exception as e:
             warnings.warn(
                 f"Property {property_name} with value {prop} is invalid for "
-                f"map element {element}. Full error: {e}\n"
+                f"map element {element}. Full error: {e}\n",
+                GameMapWarning,
             )
 
     if prop is None:
         return default
-
-
-class InvalidMapError(Exception):
-    pass
 
 
 class GameMap:
@@ -284,7 +282,8 @@ class GameMap:
                 except IndexError as e:
                     warnings.warn(
                         f"Failed adding non-walkable Tile to pathfinding "
-                        f"matrix: {e}"
+                        f"matrix: {e}",
+                        PathfindingWarning,
                     )
 
     # region tile layer setup methods
@@ -473,7 +472,8 @@ class GameMap:
         if name == "spawnpoint":
             if self.player_spawnpoint:
                 warnings.warn(
-                    f"Multiple spawnpoints found " f"({self.player_spawnpoint}, {pos})"
+                    f"Multiple spawnpoints found " f"({self.player_spawnpoint}, {pos})",
+                    GameMapWarning,
                 )
             self.player_spawnpoint = pos
         else:
@@ -493,9 +493,9 @@ class GameMap:
                         name=warp_map,
                     ).add(self.player_exit_warps)
                 else:
-                    warnings.warn(f'Invalid player warp "{name}"')
+                    warnings.warn(f'Invalid player warp "{name}"', GameMapWarning)
             else:
-                warnings.warn(f'Invalid player warp "{name}"')
+                warnings.warn(f'Invalid player warp "{name}"', GameMapWarning)
 
     def _setup_npc(self, pos: tuple[int, int], obj: TiledObject):
         """
@@ -546,7 +546,9 @@ class GameMap:
             animal.continuous_behaviour_tree = CowContinuousBehaviourTree.Flee
             return animal
         else:
-            warnings.warn(f'Malformed animal object name "{obj.name}" in tilemap')
+            warnings.warn(
+                f'Malformed animal object name "{obj.name}" in tilemap', GameMapWarning
+            )
 
     # endregion
 
@@ -690,8 +692,9 @@ class GameMap:
             else:
                 # This should be the case when an Image or Group layer is found
                 warnings.warn(
-                    f"Support for {type(tilemap_layer)} layers is not (yet) "
-                    f"implemented! Layer {tilemap_layer.name} will be skipped"
+                    f"Support for {tilemap_layer.__class__.__name__} layers is not (yet) "
+                    f"implemented! Layer {tilemap_layer.name} will be skipped",
+                    GameMapWarning,
                 )
 
     def _setup_emote_interactions(self):

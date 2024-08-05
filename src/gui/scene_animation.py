@@ -3,7 +3,7 @@ from typing import Iterable
 
 import pygame
 
-from src.camera_target import CameraTarget
+from src.camera.camera_target import CameraTarget
 
 
 class SceneAnimation:
