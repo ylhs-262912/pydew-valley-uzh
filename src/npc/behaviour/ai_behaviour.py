@@ -6,11 +6,12 @@ from collections.abc import Callable
 import pygame
 
 from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
+from src.npc.behaviour.ai_behaviour_tree_base import ContextType, NodeWrapper
 from src.settings import SCALED_TILE_SIZE
 
 
 class AIBehaviour(AIBehaviourBase, ABC):
-    def __init__(self):  # noqa
+    def __init__(self, behaviour_tree_context: ContextType):  # noqa
         """
         !IMPORTANT! AIBehaviour doesn't call Entity.__init__ while still
         relying on it. Be aware that when inheriting from AIBehaviour you
@@ -23,8 +24,30 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         self.pf_path = []
 
+        self.behaviour_tree_context = behaviour_tree_context
+        self.conditional_behaviour_tree = None
+        self.continuous_behaviour_tree = None
+
         self.__on_path_abortion_funcs = []
         self.__on_path_completion_funcs = []
+
+        self.__on_stop_moving_funcs = []
+
+    @property
+    def conditional_behaviour_tree(self):
+        return self._conditional_behaviour_tree
+
+    @conditional_behaviour_tree.setter
+    def conditional_behaviour_tree(self, value: NodeWrapper | None):
+        self._conditional_behaviour_tree = value
+
+    @property
+    def continuous_behaviour_tree(self):
+        return self._continuous_behaviour_tree
+
+    @continuous_behaviour_tree.setter
+    def continuous_behaviour_tree(self, value: NodeWrapper | None):
+        self._continuous_behaviour_tree = value
 
     def on_path_abortion(self, func: Callable[[], None]):
         self.__on_path_abortion_funcs.append(func)
@@ -38,10 +61,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
         for func in self.__on_path_abortion_funcs:
             func()
 
-        self.__on_path_abortion_funcs.clear()
-        self.__on_path_completion_funcs.clear()
-
-        self.exit_moving()
+        self.stop_moving()
         return
 
     def on_path_completion(self, func: Callable[[], None]):
@@ -56,17 +76,25 @@ class AIBehaviour(AIBehaviourBase, ABC):
         for func in self.__on_path_completion_funcs:
             func()
 
-        self.__on_path_abortion_funcs.clear()
-        self.__on_path_completion_funcs.clear()
-
-        self.exit_moving()
+        self.stop_moving()
         return
 
     def exit_idle(self):
-        pass
+        if self.conditional_behaviour_tree is not None:
+            self.conditional_behaviour_tree.run(self.behaviour_tree_context)
 
-    def exit_moving(self):
-        pass
+    def on_stop_moving(self, func: Callable[[], None]):
+        self.__on_stop_moving_funcs.append(func)
+        return
+
+    def stop_moving(self):
+        for func in self.__on_stop_moving_funcs:
+            func()
+
+        self.__on_path_abortion_funcs.clear()
+        self.__on_path_completion_funcs.clear()
+        self.__on_stop_moving_funcs.clear()
+        return
 
     def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
         """
@@ -113,6 +141,10 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         return True
 
+    def create_step_to_coord(self, coord: tuple[float, float]) -> bool:
+        self.pf_path.append((coord[0] / SCALED_TILE_SIZE, coord[1] / SCALED_TILE_SIZE))
+        return True
+
     def move(self, dt: float):
         self.hitbox_rect.update(
             (
@@ -154,8 +186,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
         next_point = self.pf_path[0]
         # current exact NPC position on the tilemap
         current_point = (
-            self.rect.centerx / SCALED_TILE_SIZE,
-            self.rect.centery / SCALED_TILE_SIZE,
+            self.hitbox_rect.centerx / SCALED_TILE_SIZE,
+            self.hitbox_rect.centery / SCALED_TILE_SIZE,
         )
 
         # remaining distance the NPC moves in the current frame
@@ -203,12 +235,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         self.hitbox_rect.update(
             (
-                current_point[0] * SCALED_TILE_SIZE
-                - self.rect.width / 2
-                + self._current_hitbox.x,
-                current_point[1] * SCALED_TILE_SIZE
-                - self.rect.height / 2
-                + self._current_hitbox.y,
+                current_point[0] * SCALED_TILE_SIZE - self.hitbox_rect.width / 2,
+                current_point[1] * SCALED_TILE_SIZE - self.hitbox_rect.height / 2,
             ),
             self.hitbox_rect.size,
         )
@@ -217,3 +245,9 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         if self.is_colliding:
             self.abort_path()
+
+    def update(self, dt: float):
+        if self.continuous_behaviour_tree is not None:
+            self.continuous_behaviour_tree.run(self.behaviour_tree_context)
+
+        super().update(dt)

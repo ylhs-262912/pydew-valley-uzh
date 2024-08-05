@@ -10,6 +10,7 @@ from pathfinding.finder.a_star import AStarFinder
 
 from src.enums import FarmingTool
 from src.npc.behaviour.ai_behaviour import AIBehaviour
+from src.npc.behaviour.ai_behaviour_tree_base import ContextType
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate
 from src.sprites.character import Character
@@ -22,6 +23,7 @@ class NPCBase(Character, AIBehaviour, ABC):
     pf_finder: ClassVar[AStarFinder | None] = None
 
     soil_layer: SoilLayer
+    tree_sprites: pygame.sprite.Group
 
     def __init__(
         self,
@@ -30,6 +32,8 @@ class NPCBase(Character, AIBehaviour, ABC):
         groups: tuple[pygame.sprite.Group, ...],
         collision_sprites: pygame.sprite.Group,
         apply_tool: Callable[[FarmingTool, tuple[float, float], Character], None],
+        plant_collision: Callable[[Character], None],
+        behaviour_tree_context: ContextType,
         z: int,
     ):
         Character.__init__(
@@ -39,8 +43,9 @@ class NPCBase(Character, AIBehaviour, ABC):
             groups=groups,
             collision_sprites=collision_sprites,
             apply_tool=apply_tool,
+            plant_collision=plant_collision,
             z=z,
         )
-        AIBehaviour.__init__(self)
+        AIBehaviour.__init__(self, behaviour_tree_context=behaviour_tree_context)
 
         self.speed = 250

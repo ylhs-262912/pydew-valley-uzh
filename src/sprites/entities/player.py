@@ -39,6 +39,7 @@ class Player(Character):
         groups: tuple[pygame.sprite.Group, ...],
         collision_sprites: pygame.sprite.Group,
         apply_tool: Callable[[FarmingTool, tuple[float, float], Character], None],
+        plant_collision: Callable[[Character], None],
         interact: Callable[[], None],
         emote_manager: PlayerEmoteManager,
         sounds: SoundDict,
@@ -51,6 +52,7 @@ class Player(Character):
             groups=groups,
             collision_sprites=collision_sprites,
             apply_tool=apply_tool,
+            plant_collision=plant_collision,
         )
 
         # movement

@@ -2,10 +2,7 @@ import pygame
 
 from src.enums import Layer
 from src.npc.bases.chicken_base import ChickenBase
-from src.npc.behaviour.chicken_behaviour_tree import (
-    ChickenBehaviourTree,
-    ChickenBehaviourTreeContext,
-)
+from src.npc.behaviour.chicken_behaviour_tree import ChickenIndividualContext
 from src.settings import Coordinate
 from src.sprites.setup import EntityAsset
 
@@ -23,8 +20,6 @@ class Chicken(ChickenBase):
             assets=assets,
             groups=groups,
             collision_sprites=collision_sprites,
+            behaviour_tree_context=ChickenIndividualContext(self),
             z=Layer.MAIN,
         )
-
-    def exit_idle(self):
-        ChickenBehaviourTree.tree.run(ChickenBehaviourTreeContext(self))

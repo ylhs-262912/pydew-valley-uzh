@@ -123,7 +123,14 @@ class FarmingTool(_SerialisableEnum):
     CORN_SEED = 4
     TOMATO_SEED = 5
 
-    _AS_IR = nonmember(
+    _AS_IRS = nonmember(
+        {
+            CORN_SEED: InventoryResource.CORN_SEED,
+            TOMATO_SEED: InventoryResource.TOMATO_SEED,
+        }
+    )
+
+    _AS_NS_IRS = nonmember(
         {CORN_SEED: InventoryResource.CORN, TOMATO_SEED: InventoryResource.TOMATO}
     )
 
@@ -157,7 +164,12 @@ class FarmingTool(_SerialisableEnum):
     def as_inventory_resource(self):
         """Converts self to InventoryResource type if possible.
         (Conversion is possible if self is considered a seed.)"""
-        return self._AS_IR.get(self, self)
+        return self._AS_IRS.get(self, self)
+
+    def as_nonseed_inventory_resource(self):
+        """Converts self to non-seed InventoryResource type if possible.
+        (Conversion is possible if self is considered a seed.)"""
+        return self._AS_NS_IRS.get(self, self)
 
 
 class SeedType(IntEnum):

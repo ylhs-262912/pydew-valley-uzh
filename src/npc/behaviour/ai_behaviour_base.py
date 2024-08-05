@@ -8,6 +8,7 @@ from typing import ClassVar
 from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
+from src.npc.behaviour.ai_behaviour_tree_base import NodeWrapper
 from src.sprites.entities.entity import Entity
 
 
@@ -35,8 +36,30 @@ class AIBehaviourBase(Entity, ABC):
        coordinate tuple, while the first one in the list always being the NPCs
        current target position."""
 
-    __on_path_abortion_funcs: [Callable[[], None]]
+    __on_path_abortion_funcs: list[Callable[[], None]]
     __on_path_completion_funcs: list[Callable[[], None]]
+
+    __on_stop_moving_funcs: list[Callable[[], None]]
+
+    @property
+    @abstractmethod
+    def conditional_behaviour_tree(self):
+        pass
+
+    @conditional_behaviour_tree.setter
+    @abstractmethod
+    def conditional_behaviour_tree(self, value: NodeWrapper | None):
+        pass
+
+    @property
+    @abstractmethod
+    def continuous_behaviour_tree(self):
+        pass
+
+    @continuous_behaviour_tree.setter
+    @abstractmethod
+    def continuous_behaviour_tree(self, value: NodeWrapper | None):
+        pass
 
     @abstractmethod
     def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
@@ -63,7 +86,7 @@ class AIBehaviourBase(Entity, ABC):
         pass
 
     @abstractmethod
-    def exit_moving(self):
+    def stop_moving(self):
         pass
 
     @abstractmethod
