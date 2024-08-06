@@ -7,6 +7,7 @@ import pygame
 
 from src.camera import Camera
 from src.camera.camera_target import CameraTarget
+from src.camera.zoom_manager import ZoomManager
 from src.enums import FarmingTool, GameState, Map
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
 from src.exceptions import GameMapWarning
@@ -96,6 +97,8 @@ class Level:
         # pauses = [0, 1, 0.5, 2]  # Pauses at each point in seconds
         self.cutscene_animation = SceneAnimation([CameraTarget.get_null_target()])
 
+        self.zoom_manager = ZoomManager()
+
         # assets
         self.font = pygame.font.Font(resource_path("font/LycheeSoda.ttf"), 30)
         self.frames = frames
@@ -176,6 +179,7 @@ class Level:
         self.game_map = GameMap(
             tilemap=self.tmx_maps[game_map],
             scene_ani=self.cutscene_animation,
+            zoom_man=self.zoom_manager,
             all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,
             interaction_sprites=self.interaction_sprites,
@@ -432,6 +436,7 @@ class Level:
     def draw(self, dt):
         self.display_surface.fill((130, 168, 132))
         self.all_sprites.draw(self.camera)
+        self.zoom_manager.apply_zoom()
         self.sky.display(dt)
         self.draw_overlay()
         self.day_transition.draw()
@@ -457,6 +462,10 @@ class Level:
         self.update_cutscene(dt)
         self.camera.update(
             self.cutscene_animation if self.cutscene_animation.active else self.player
+        )
+        self.zoom_manager.update(
+            self.cutscene_animation if self.cutscene_animation.active else self.player,
+            dt,
         )
 
         # draw

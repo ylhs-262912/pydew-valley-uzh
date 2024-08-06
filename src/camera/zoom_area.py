@@ -12,6 +12,7 @@ class ZoomArea:
     _id: int
     _area: pygame.FRect
     _zoom_factor: float = field(default=1)
+    _zoom_speed: float = field(default=1)
     _registered_ids: ClassVar[set[int]] = set()
 
     def __new__(cls, *args, **kwargs):
@@ -31,7 +32,13 @@ class ZoomArea:
                 CameraWarning,
             )
             raise ValueError("zoom factor must be strictly positive")
-        if any(filter((1).__gt__, self._area)) or not self._area:
+        if self._zoom_factor <= 0:
+            warnings.warn(
+                f"given zoom speed for zoom area {self._id} was {self._zoom_speed}, check "
+                f"the value you set in Tiled",
+                CameraWarning,
+            )
+        if any(1 > dim for dim in self._area) or not self._area:
             warnings.warn(
                 f"rect given for the zoom area of ID {self._id} was {self._area}, "
                 f"check the dimensions you set in Tiled",
@@ -50,3 +57,7 @@ class ZoomArea:
     @property
     def zoom_factor(self):
         return self._zoom_factor
+
+    @property
+    def zoom_speed(self):
+        return self._zoom_speed

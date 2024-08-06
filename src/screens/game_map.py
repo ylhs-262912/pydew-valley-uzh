@@ -7,6 +7,8 @@ import pygame
 from pytmx import TiledElement, TiledMap, TiledObject, TiledObjectGroup, TiledTileLayer
 
 from src.camera.camera_target import CameraTarget
+from src.camera.zoom_area import ZoomArea
+from src.camera.zoom_manager import ZoomManager
 from src.enums import FarmingTool, InventoryResource, Layer, SpecialObjectLayer
 from src.exceptions import GameMapWarning, InvalidMapError, PathfindingWarning
 from src.groups import AllSprites, PersistentSpriteGroup
@@ -74,7 +76,7 @@ def _setup_object_layer(
     return objects
 
 
-def _setup_camera_layer(layer):
+def _setup_camera_layer(layer: TiledObjectGroup):
     # BEWARE! THIS FUNCTION IS A GENERATOR!
     # DO NOT TRY TO USE THIS AS A LIST!
     """Sets up all camera targets for a cutscene using the layer objects."""
@@ -104,6 +106,37 @@ def _setup_camera_layer(layer):
             target_props["targ_id"],
             **speed_and_pause,
         )
+
+
+def _setup_zoom_layer(layer: TiledObjectGroup):
+    """Setup the zoom areas from an object group."""
+    for area_id, obj in enumerate(layer):
+        covered_surface = pygame.FRect(
+            obj.x * SCALE_FACTOR,
+            obj.y * SCALE_FACTOR,
+            obj.width * SCALE_FACTOR,
+            obj.height * SCALE_FACTOR
+        )
+
+        speed_and_factor = {}
+        obj_props = obj.properties
+        speed = obj_props.get("speed")
+        factor = obj_props.get("factor")
+
+        # Fields are private inside ZoomArea,
+        # the only public access to them is through properties.
+        # As ZoomArea is a dataclass, the parameters' names
+        # in its generated __init__ match the field names
+        # (i.e. there HAS to be an underscore when defining these keys
+        # inside this additional keyword argument dictionary
+        # or else when generating the ZoomArea object
+        # Python will raise TypeErrors for unexpected arguments)
+        if speed is not None:
+            speed_and_factor["_zoom_speed"] = speed
+        if factor is not None:
+            speed_and_factor["_zoom_factor"] = factor
+
+        yield ZoomArea(area_id, covered_surface, **speed_and_factor)
 
 
 def _get_element_property(
@@ -182,6 +215,7 @@ class GameMap:
         self,
         tilemap: TiledMap,
         scene_ani: SceneAnimation,
+        zoom_man: ZoomManager,
         # Sprite groups
         all_sprites: AllSprites,
         collision_sprites: PersistentSpriteGroup,
@@ -247,7 +281,7 @@ class GameMap:
         self.npcs = []
         self.animals = []
 
-        self._setup_layers(scene_ani)
+        self._setup_layers(scene_ani, zoom_man)
 
         if SETUP_PATHFINDING:
             AIData.update(self._pf_matrix, self.player)
@@ -557,7 +591,7 @@ class GameMap:
 
     # endregion
 
-    def _setup_layers(self, scene_ani: SceneAnimation):
+    def _setup_layers(self, scene_ani: SceneAnimation, zoom_man: ZoomManager):
         """
         Iterates over all map layers, updates the GameMap state and creates
         all Sprites for the map.
@@ -567,6 +601,9 @@ class GameMap:
         # room doesn't play again if the current one
         # doesn't have any camera targets
         scene_ani.clear()
+
+        # Clearing the zoom manager in advance, in case no zoom areas exist for the current map
+        zoom_man.clear()
 
         for tilemap_layer in self._tilemap.layers:
             if isinstance(tilemap_layer, TiledTileLayer):
@@ -678,6 +715,8 @@ class GameMap:
                         )
                     case SpecialObjectLayer.CAMERA_TARGETS:
                         scene_ani.set_target_points(_setup_camera_layer(tilemap_layer))
+                    case SpecialObjectLayer.ZOOM_AREAS:
+                        zoom_man.set_zoom_areas(_setup_zoom_layer(tilemap_layer))
                     case _:
                         # set layer if defined in the TileLayer properties
                         layer = _get_element_property(

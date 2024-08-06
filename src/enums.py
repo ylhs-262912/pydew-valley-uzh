@@ -1,6 +1,13 @@
 from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
 
 
+class ZoomState(IntEnum):
+    NOT_ZOOMING = 0
+    ZOOMING_IN = auto()
+    ZOOMING_OUT = auto()
+    ZOOM = auto()
+
+
 class PlayerState(IntEnum):
     IDLE = 0
     WALK = 1
@@ -270,6 +277,7 @@ class SpecialObjectLayer(StrEnum):
     NPCS = "NPCs"
     ANIMALS = "Animals"
     CAMERA_TARGETS = "Camera Targets"
+    ZOOM_AREAS = "Zoom Areas"
 
 
 class Map(StrEnum):
