@@ -96,6 +96,7 @@ class Controls(Control, Enum):
     EMOTE_WHEEL = (pygame.K_e, "Toggle Emote Wheel")
     SHOW_HITBOXES = (pygame.K_h, "Show Hitboxes")
     SHOW_DIALOG = (pygame.K_t, "Show Dialog")
+    SHOW_PF_OVERLAY = (pygame.K_p, "Show Pathfinding")
     ADVANCE_DIALOG = (pygame.K_SPACE, "Advance Dialog")
 
     @classmethod

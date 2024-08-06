@@ -155,6 +155,7 @@ class Level:
         # overlays
         self.overlay = Overlay(self.player, frames["overlay"])
         self.show_hitbox_active = False
+        self.show_pf_overlay = False
 
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map
@@ -288,6 +289,7 @@ class Level:
     def handle_event(self, event: pygame.event.Event) -> bool:
         hitbox_key = self.player.controls.SHOW_HITBOXES.control_value
         dialog_key = self.player.controls.SHOW_DIALOG.control_value
+        pf_overlay_key = self.player.controls.SHOW_PF_OVERLAY.control_value
         advance_dialog_key = self.player.controls.ADVANCE_DIALOG.control_value
 
         if event.type == pygame.KEYDOWN:
@@ -302,6 +304,9 @@ class Level:
                 return True
             if event.key == advance_dialog_key:
                 post_event(DIALOG_ADVANCE)
+                return True
+            if event.key == pf_overlay_key:
+                self.show_pf_overlay = not self.show_pf_overlay
                 return True
 
         return False
@@ -368,6 +373,33 @@ class Level:
             offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
             offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
 
+            for sprite in self.collision_sprites:
+                rect = sprite.rect.copy()
+                rect.topleft += offset
+                pygame.draw.rect(self.display_surface, "red", rect, 2)
+
+                hitbox = sprite.hitbox_rect.copy()
+                hitbox.topleft += offset
+                pygame.draw.rect(self.display_surface, "blue", hitbox, 2)
+
+                if isinstance(sprite, Character):
+                    hitbox = sprite.axe_hitbox.copy()
+                    hitbox.topleft += offset
+                    pygame.draw.rect(self.display_surface, "green", hitbox, 2)
+            for drop in self.drop_sprites:
+                pygame.draw.rect(
+                    self.display_surface, "red", drop.rect.move(*offset), 2
+                )
+                pygame.draw.rect(
+                    self.display_surface, "blue", drop.hitbox_rect.move(*offset), 2
+                )
+
+    def draw_pf_overlay(self):
+        if self.show_pf_overlay:
+            offset = pygame.Vector2(0, 0)
+            offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
+            offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
+
             for y in range(len(AIData.Matrix)):
                 for x in range(len(AIData.Matrix[y])):
                     if not AIData.Matrix[y][x]:
@@ -391,26 +423,53 @@ class Level:
                             ),
                         )
 
-            for sprite in self.collision_sprites:
-                rect = sprite.rect.copy()
-                rect.topleft += offset
-                pygame.draw.rect(self.display_surface, "red", rect, 2)
+            for npe in self.game_map.animals + self.game_map.npcs:
+                # assert isinstance(animal, Cow)
+                if npe.pf_path:
+                    offset = pygame.Vector2(0, 0)
+                    offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
+                    offset.y = -(self.player.rect.centery - SCREEN_HEIGHT / 2)
+                    for i in range(len(npe.pf_path)):
+                        start_pos = (
+                            (npe.pf_path[i][0]) * SCALED_TILE_SIZE + offset.x,
+                            (npe.pf_path[i][1]) * SCALED_TILE_SIZE + offset.y,
+                        )
+                        if i == 0:
+                            end_pos = (
+                                npe.hitbox_rect.centerx + offset.x,
+                                npe.hitbox_rect.centery + offset.y,
+                            )
+                        else:
+                            end_pos = (
+                                (npe.pf_path[i - 1][0]) * SCALED_TILE_SIZE + offset.x,
+                                (npe.pf_path[i - 1][1]) * SCALED_TILE_SIZE + offset.y,
+                            )
+                        pygame.draw.aaline(
+                            self.display_surface, (0, 0, 0), start_pos, end_pos
+                        )
+                        """surf = pygame.Surface(
+                            (SCALED_TILE_SIZE / 2, SCALED_TILE_SIZE / 2), pygame.SRCALPHA
+                        )
+                        surf.fill((255, 128, 128))
+                        pygame.draw.rect(
+                            surf,
+                            (0, 0, 0),
+                            (0, 0, SCALED_TILE_SIZE / 2, SCALED_TILE_SIZE / 2),
+                            2,
+                        )
+                        surf.set_alpha(92)
 
-                hitbox = sprite.hitbox_rect.copy()
-                hitbox.topleft += offset
-                pygame.draw.rect(self.display_surface, "blue", hitbox, 2)
-
-                if isinstance(sprite, Character):
-                    hitbox = sprite.axe_hitbox.copy()
-                    hitbox.topleft += offset
-                    pygame.draw.rect(self.display_surface, "green", hitbox, 2)
-            for drop in self.drop_sprites:
-                pygame.draw.rect(
-                    self.display_surface, "red", drop.rect.move(*offset), 2
-                )
-                pygame.draw.rect(
-                    self.display_surface, "blue", drop.hitbox_rect.move(*offset), 2
-                )
+                        self.display_surface.blit(
+                            surf,
+                            (
+                                (animal.pf_path[i][0] - 0.5) * SCALED_TILE_SIZE
+                                + offset.x
+                                + SCALED_TILE_SIZE / 4,
+                                (animal.pf_path[i][1] - 0.5) * SCALED_TILE_SIZE
+                                + offset.y
+                                + SCALED_TILE_SIZE / 4,
+                            ),
+                        )"""
 
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -449,3 +508,4 @@ class Level:
         # draw
         self.draw(dt)
         self.draw_hitboxes()
+        self.draw_pf_overlay()
