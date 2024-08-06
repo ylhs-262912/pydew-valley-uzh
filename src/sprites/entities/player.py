@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Callable, Type
 
 import pygame  # noqa
+import time
 
 from src import savefile, support
 from src.controls import Controls
@@ -60,6 +61,7 @@ class Player(Character):
 
         self.controls = Controls
         self.load_controls()
+        self.originalSpeed = 250
         self.speed = 250
         self.blocked = False
         self.paused = False
@@ -93,11 +95,12 @@ class Player(Character):
         self.sounds = sounds
 
         self.hp = hp
+        self.createTime = time.time()
+        self.createWait = 0.25
+
 
     def draw(self, display_surface, offset):
         super().draw(display_surface, offset)
-
-        print(self.hp)
 
         blit_list = []
 
@@ -277,6 +280,7 @@ class Player(Character):
                     )
                     self.emote_manager.toggle_emote_wheel()
 
+    
     def move(self, dt: float):
         self.hitbox_rect.update(
             (
@@ -297,6 +301,10 @@ class Player(Character):
             ),
             self.rect.size,
         )
+    def speedHealth(self):
+        currentTime = time.time()
+        if currentTime - self.createTime >= self.createWait:
+            self.speed = self.originalSpeed * (self.hp/100)
 
     def teleport(self, pos: tuple[float, float]):
         """
@@ -322,6 +330,7 @@ class Player(Character):
             self.sounds[sound].play()
 
     def update(self, dt):
+        self.speedHealth()
         self.handle_controls()
         super().update(dt)
 
