@@ -133,6 +133,7 @@ class Player(Character):
             horn_ani = self.assets[horn_state][self.facing_direction]
             horn_frame = horn_ani.get_frame(self.frame_index)
             blit_list.append((horn_frame, self.rect.topleft + offset))
+        
 
         display_surface.fblits(blit_list)
 
@@ -304,8 +305,12 @@ class Player(Character):
     def speedHealth(self):
         currentTime = time.time()
         if currentTime - self.createTime >= self.createWait:
-            self.speed = self.originalSpeed * (self.hp/100)
+            self.speed = self.originalSpeed * (self.hp/100)       
 
+    def transparencyHealth(self):
+        alphaValue = 255 * (self.hp/100)
+        self.image.set_alpha(alphaValue)
+        
     def teleport(self, pos: tuple[float, float]):
         """
         Moves the Player rect directly to the specified point without checking
@@ -331,6 +336,7 @@ class Player(Character):
 
     def update(self, dt):
         self.speedHealth()
+        self.transparencyHealth()
         self.handle_controls()
         super().update(dt)
 
