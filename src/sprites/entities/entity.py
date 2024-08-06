@@ -138,8 +138,8 @@ class Entity(CollideableSprite, ABC):
 
     def get_tile_pos(self) -> tuple[int, int]:
         return (
-            int(self.rect.centerx / SCALED_TILE_SIZE),
-            int(self.rect.centery / SCALED_TILE_SIZE),
+            int(self.hitbox_rect.centerx / SCALED_TILE_SIZE),
+            int(self.hitbox_rect.centery / SCALED_TILE_SIZE),
         )
 
     def focus(self):

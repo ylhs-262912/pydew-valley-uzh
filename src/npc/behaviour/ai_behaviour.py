@@ -108,7 +108,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         # current NPC position on the tilemap
         tile_coord = (
-            pygame.Vector2(self.rect.centerx, self.rect.centery) / SCALED_TILE_SIZE
+            pygame.Vector2(self.hitbox_rect.centerx, self.hitbox_rect.centery)
+            / SCALED_TILE_SIZE
         )
 
         self.pf_state = AIState.MOVING
@@ -136,7 +137,6 @@ class AIBehaviour(AIBehaviourBase, ABC):
         self.pf_path = [(i.x + 0.5, i.y + 0.5) for i in path_raw[0][1:]]
 
         if not self.pf_path:
-            self.abort_path()
             return False
 
         return True

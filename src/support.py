@@ -4,6 +4,7 @@ import os
 import random
 import sys
 from collections.abc import Generator
+from dataclasses import dataclass
 
 import pygame
 import pygame.gfxdraw
@@ -153,9 +154,20 @@ def screen_to_tile(pos):
     return pos[0] // tile_size, pos[1] // tile_size
 
 
+@dataclass
+class WeightedCoordinate:
+    x: int
+    y: int
+
+    weight: float = 0
+
+    def __repr__(self):
+        return f"({self.x}x, {self.y}y, {self.weight:.2f}w)"
+
+
 def get_flight_matrix(
-    pos: tuple[int, int], radius: int, angle: float = math.pi / 2
-) -> list[list[int]]:
+    pos: tuple[int, int], radius: int
+) -> list[list[WeightedCoordinate]]:
     """
     Returns a matrix with the width and height of radius * 2 + 1, with a value
     of 1 if the matrix position can be fled to and 0 if not.
@@ -164,15 +176,9 @@ def get_flight_matrix(
     relative to the start position, but does not have to be within the
     matrix coordinates.
 
-    TODO: Could be optimised so that instead of a matrix with integer / boolean
-     values a matrix with the weight of each possible position is returned, of
-     which the walkable position with the greatest weight is then fled to.
-
     :param pos: Position of the object that should be fled from
     :param radius: Radius / distance of the flight vector.
                    The returned matrix has a width and height of radius * 2 + 1
-    :param angle: Angle of the flight vector (measured in radians)
-                  Default: PI / 2 (90°)
     :return: Matrix with positions that can be fled to
     """
 
@@ -181,11 +187,9 @@ def get_flight_matrix(
     p1 = (radius, radius)
     p2 = (pos[0] + radius, pos[1] + radius)
 
-    matrix = [[0 for _ in range(diameter)] for _ in range(diameter)]
-
-    # For further calculations the angle gets inverted and divided by two
-    # Can probably be optimised
-    angle = math.pi - angle / 2
+    matrix = [
+        [WeightedCoordinate(x, y) for x in range(diameter)] for y in range(diameter)
+    ]
 
     # The exact angle of the position that should be fled from, measured from
     # the centre of the matrix
@@ -205,12 +209,26 @@ def get_flight_matrix(
             elif distance_ < -math.pi:
                 distance_ = distance_ + (math.pi * 2)
 
-            if -angle < distance_ < angle:
-                matrix[y][x] = 0
-            else:
-                matrix[y][x] = 1
+            matrix[y][x].weight = ((p2[0] - x) ** 2 + (p2[1] - y) ** 2) ** 0.5
+            matrix[y][x].weight *= abs(distance_ / math.pi)
+
+    matrix[radius][radius].weight = float("inf")
 
     return matrix
+
+
+def get_sorted_flight_vectors(
+    pos: tuple[int, int], radius: int
+) -> list[WeightedCoordinate]:
+    flight_matrix = get_flight_matrix(pos, radius)
+
+    x = []
+    for row in flight_matrix:
+        for col in row:
+            x.append(col)
+
+    for coord in sorted(x, key=lambda i: i.weight):
+        yield coord
 
 
 def draw_aa_line(
