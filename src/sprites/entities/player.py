@@ -43,6 +43,7 @@ class Player(Character):
         interact: Callable[[], None],
         emote_manager: PlayerEmoteManager,
         sounds: SoundDict,
+        hp: int,
     ):
         save_data = savefile.load_savefile()
 
@@ -56,6 +57,7 @@ class Player(Character):
         )
 
         # movement
+
         self.controls = Controls
         self.load_controls()
         self.speed = 250
@@ -64,7 +66,6 @@ class Player(Character):
         self.interact = interact
         self.has_goggles: GogglesStatus = save_data.get("goggles_status")
         self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
-
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
 
@@ -91,8 +92,12 @@ class Player(Character):
         # sounds
         self.sounds = sounds
 
+        self.hp = hp
+
     def draw(self, display_surface, offset):
         super().draw(display_surface, offset)
+
+        print(self.hp)
 
         blit_list = []
 

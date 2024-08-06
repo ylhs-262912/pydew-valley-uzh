@@ -124,6 +124,7 @@ class Level:
             interact=self.interact,
             emote_manager=self.player_emote_manager,
             sounds=self.sounds,
+            hp=0
         )
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
@@ -422,6 +423,7 @@ class Level:
         self.overlay.display(current_time)
 
     def draw(self, dt):
+        self.player.hp = self.overlay.health_bar.hp
         self.display_surface.fill((130, 168, 132))
         camera_center = self.get_camera_center()
         self.all_sprites.draw(camera_center)
