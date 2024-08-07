@@ -369,6 +369,11 @@ class GameMap:
             # we need a tree surf without fruits
             tree.image = self.frames["level"]["objects"]["tree"]
             tree.surf = tree.image
+        else:
+            CollideableMapObject(pos, object_type, z=Layer.MAIN).add(
+                self.all_sprites,
+                self.collision_sprites,
+            )
 
     def _setup_map_object(
         self,
