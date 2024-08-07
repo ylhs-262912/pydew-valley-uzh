@@ -24,6 +24,10 @@ class ZoomArea:
         cls._registered_ids.add(area_id)
         return super().__new__(cls)
 
+    def __del__(self):
+        cls = type(self)
+        cls._registered_ids.remove(self._id)
+
     def __post_init__(self):
         if self._zoom_factor <= 0:
             warnings.warn(

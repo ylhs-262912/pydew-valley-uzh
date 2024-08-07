@@ -600,6 +600,7 @@ class GameMap:
         # We clear the target data first so that the cutscene from the previous
         # room doesn't play again if the current one
         # doesn't have any camera targets
+        scene_ani.reset()
         scene_ani.clear()
 
         # Clearing the zoom manager in advance, in case no zoom areas exist for the current map

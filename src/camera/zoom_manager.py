@@ -42,6 +42,8 @@ class ZoomManager:
     def clear(self):
         self.current_zoom_area = None
         self.zoom_state = ZoomState.NOT_ZOOMING
+        self.zoom_factor = 0
+        self.zoom_speed = 1
         self._zoom_areas.clear()
 
     def set_zoom_areas(self, zoom_areas: Iterable[ZoomArea]):

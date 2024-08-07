@@ -451,23 +451,30 @@ class Level:
         if self.cutscene_animation.active:
             self.cutscene_animation.update(dt)
 
-    def update(self, dt: float):
+    def update(self, dt: float, move_things: bool = True):
         # update
         self.check_map_exit()
         self.update_rain()
         self.day_transition.update()
         self.map_transition.update()
-        self.all_sprites.update(dt)
-        self.drops_manager.update()
-        self.update_cutscene(dt)
-        self.camera.update(
-            self.cutscene_animation if self.cutscene_animation.active else self.player
-        )
-        self.zoom_manager.update(
-            self.cutscene_animation if self.cutscene_animation.active else self.player,
-            dt,
-        )
-
+        if move_things:
+            if self.cutscene_animation.active:
+                self.all_sprites.update_blocked(dt)
+            else:
+                self.all_sprites.update(dt)
+            self.drops_manager.update()
+            self.update_cutscene(dt)
+            self.camera.update(
+                self.cutscene_animation
+                if self.cutscene_animation.active
+                else self.player
+            )
+            self.zoom_manager.update(
+                self.cutscene_animation
+                if self.cutscene_animation.active
+                else self.player,
+                dt,
+            )
         # draw
         self.draw(dt)
         self.draw_hitboxes()

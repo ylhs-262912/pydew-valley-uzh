@@ -35,8 +35,9 @@ class SceneAnimation:
 
     def reset(self):
         self.current_index = 0
-        self.rect.center = self.targets[0].pos
-        self.current_pos = pygame.Vector2(self.targets[0].pos)
+        if self.targets:
+            self.rect.center = self.targets[0].pos
+            self.current_pos = pygame.Vector2(self.targets[0].pos)
         self.active = False
         self.pause_start_time = None
 

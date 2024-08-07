@@ -215,6 +215,10 @@ class Direction(IntEnum):
     RIGHT = auto()
     DOWN = auto()
     LEFT = auto()
+    UPLEFT = auto()
+    UPRIGHT = auto()
+    DOWNRIGHT = auto()
+    DOWNLEFT = auto()
 
 
 class EntityState(StrEnum):

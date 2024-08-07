@@ -47,6 +47,10 @@ class AllSprites(PersistentSpriteGroup):
         self.offset = pygame.Vector2()
         self.cam_surf = pygame.Surface(self.display_surface.get_size())
 
+    def update_blocked(self, dt: float):
+        for sprite in self:
+            getattr(sprite, "update_blocked", sprite.update)(dt)
+
     def draw(self, camera: Camera):
         sorted_sprites = sorted(self.sprites(), key=lambda spr: spr.hitbox_rect.bottom)
 
