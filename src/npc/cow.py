@@ -3,7 +3,6 @@ import pygame
 from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.cow_behaviour_tree import CowIndividualContext
-from src.npc.setup import pf_exclude_player_position
 from src.settings import Coordinate
 from src.sprites.setup import EntityAsset
 from src.support import get_sorted_flight_vectors
@@ -38,6 +37,8 @@ class Cow(CowBase):
         """
         Aborts the current path of the cow and makes it flee into the opposite
         direction of the given position.
+        FIXME: When a Cow is locked in a position they can't flee from, they'll still
+         check every path if it is possible, decreasing the frame rate by quite a bit
         :param pos: Position on the Tilemap that should be fled from
         """
         if not self.fleeing:
@@ -49,18 +50,17 @@ class Cow(CowBase):
             # current NPC position on the tilemap
             tile_coord = self.get_tile_pos()
 
-            with pf_exclude_player_position():
-                flight_vectors = get_sorted_flight_vectors(
-                    pos=(tile_coord[0] - pos[0], tile_coord[1] - pos[1]),
-                    radius=5,
-                )
+            flight_vectors = get_sorted_flight_vectors(
+                pos=(tile_coord[0] - pos[0], tile_coord[1] - pos[1]),
+                radius=5,
+            )
 
-                for coordinate in flight_vectors:
-                    x_coord = tile_coord[0] + coordinate.x - 5
-                    y_coord = tile_coord[1] + coordinate.y - 5
-                    if self.pf_grid.walkable(x_coord, y_coord):
-                        if self.create_path_to_tile((x_coord, y_coord)):
-                            if len(self.pf_path) > 5:
-                                self.pf_path = self.pf_path[:5]
-                            return True
+            for coordinate in flight_vectors:
+                x_coord = tile_coord[0] + coordinate.x - 5
+                y_coord = tile_coord[1] + coordinate.y - 5
+                if self.pf_grid.walkable(x_coord, y_coord):
+                    if self.create_path_to_tile((x_coord, y_coord)):
+                        if len(self.pf_path) > 5:
+                            self.pf_path = self.pf_path[:5]
+                        return True
         return False

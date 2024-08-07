@@ -217,7 +217,7 @@ class GameMap:
         self._setup_layers()
 
         if SETUP_PATHFINDING:
-            AIData.update(self._pf_matrix, self.player)
+            AIData.update(self._pf_matrix, self.player, [*self.npcs, *self.animals])
 
             if ENABLE_NPCS:
                 self._setup_emote_interactions()
@@ -473,6 +473,7 @@ class GameMap:
             emote_manager=self.npc_emote_manager,
             tree_sprites=self.tree_sprites,
         )
+        npc.teleport(pos)
         behaviour = obj.properties.get("behaviour")
         if behaviour == "Woodcutting":
             npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
@@ -487,6 +488,7 @@ class GameMap:
         "Chicken" will create Chickens, objects that are named "Cow" will
         create Cows.
         """
+        animal = None
         if obj.name == "Chicken":
             animal = Chicken(
                 pos=pos,
@@ -495,7 +497,6 @@ class GameMap:
                 collision_sprites=self.collision_sprites,
             )
             animal.conditional_behaviour_tree = ChickenBehaviourTree.Wander
-            return animal
         elif obj.name == "Cow":
             animal = Cow(
                 pos=pos,
@@ -505,6 +506,9 @@ class GameMap:
             )
             animal.conditional_behaviour_tree = CowConditionalBehaviourTree.Wander
             animal.continuous_behaviour_tree = CowContinuousBehaviourTree.Flee
+
+        if animal is not None:
+            animal.teleport(pos)
             return animal
         else:
             warnings.warn(f'Malformed animal object name "{obj.name}" in tilemap')

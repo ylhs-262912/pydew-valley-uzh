@@ -156,6 +156,7 @@ class Level:
         self.overlay = Overlay(self.player, frames["overlay"])
         self.show_hitbox_active = False
         self.show_pf_overlay = False
+        self.setup_pf_overlay()
 
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map
@@ -367,6 +368,7 @@ class Level:
                     return
 
     # draw
+    # region debug-overlays
     def draw_hitboxes(self):
         if self.show_hitbox_active:
             offset = pygame.Vector2(0, 0)
@@ -394,6 +396,19 @@ class Level:
                     self.display_surface, "blue", drop.hitbox_rect.move(*offset), 2
                 )
 
+    def setup_pf_overlay(self):
+        self.pf_overlay_non_walkable = pygame.Surface(
+            (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
+        )
+        self.pf_overlay_non_walkable.fill((255, 128, 128))
+        pygame.draw.rect(
+            self.pf_overlay_non_walkable,
+            (0, 0, 0),
+            (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE),
+            2,
+        )
+        self.pf_overlay_non_walkable.set_alpha(92)
+
     def draw_pf_overlay(self):
         if self.show_pf_overlay:
             offset = pygame.Vector2(0, 0)
@@ -404,20 +419,8 @@ class Level:
                 for y in range(len(AIData.Matrix)):
                     for x in range(len(AIData.Matrix[y])):
                         if not AIData.Matrix[y][x]:
-                            surf = pygame.Surface(
-                                (SCALED_TILE_SIZE, SCALED_TILE_SIZE), pygame.SRCALPHA
-                            )
-                            surf.fill((255, 128, 128))
-                            pygame.draw.rect(
-                                surf,
-                                (0, 0, 0),
-                                (0, 0, SCALED_TILE_SIZE, SCALED_TILE_SIZE),
-                                2,
-                            )
-                            surf.set_alpha(92)
-
                             self.display_surface.blit(
-                                surf,
+                                self.pf_overlay_non_walkable,
                                 (
                                     x * SCALED_TILE_SIZE + offset.x,
                                     y * SCALED_TILE_SIZE + offset.y,
@@ -425,7 +428,6 @@ class Level:
                             )
 
             for npe in self.game_map.animals + self.game_map.npcs:
-                # assert isinstance(animal, Cow)
                 if npe.pf_path:
                     offset = pygame.Vector2(0, 0)
                     offset.x = -(self.player.rect.centerx - SCREEN_WIDTH / 2)
@@ -448,29 +450,8 @@ class Level:
                         pygame.draw.aaline(
                             self.display_surface, (0, 0, 0), start_pos, end_pos
                         )
-                        """surf = pygame.Surface(
-                            (SCALED_TILE_SIZE / 2, SCALED_TILE_SIZE / 2), pygame.SRCALPHA
-                        )
-                        surf.fill((255, 128, 128))
-                        pygame.draw.rect(
-                            surf,
-                            (0, 0, 0),
-                            (0, 0, SCALED_TILE_SIZE / 2, SCALED_TILE_SIZE / 2),
-                            2,
-                        )
-                        surf.set_alpha(92)
 
-                        self.display_surface.blit(
-                            surf,
-                            (
-                                (animal.pf_path[i][0] - 0.5) * SCALED_TILE_SIZE
-                                + offset.x
-                                + SCALED_TILE_SIZE / 4,
-                                (animal.pf_path[i][1] - 0.5) * SCALED_TILE_SIZE
-                                + offset.y
-                                + SCALED_TILE_SIZE / 4,
-                            ),
-                        )"""
+    # endregion
 
     def draw_overlay(self):
         current_time = self.sky.get_time()
@@ -481,7 +462,13 @@ class Level:
         camera_center = self.get_camera_center()
         self.all_sprites.draw(camera_center)
         self.sky.display(dt)
+
+        # overlays
+        self.draw_pf_overlay()
+        self.draw_hitboxes()
         self.draw_overlay()
+
+        # transitions
         self.day_transition.draw()
         self.map_transition.draw()
 
@@ -506,7 +493,4 @@ class Level:
         self.drops_manager.update()
         self.update_cut_scene(dt)
 
-        # draw
         self.draw(dt)
-        self.draw_hitboxes()
-        self.draw_pf_overlay()
