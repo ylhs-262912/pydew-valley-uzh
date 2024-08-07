@@ -115,7 +115,7 @@ def _setup_zoom_layer(layer: TiledObjectGroup):
             obj.x * SCALE_FACTOR,
             obj.y * SCALE_FACTOR,
             obj.width * SCALE_FACTOR,
-            obj.height * SCALE_FACTOR
+            obj.height * SCALE_FACTOR,
         )
 
         speed_and_factor = {}

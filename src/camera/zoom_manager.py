@@ -57,9 +57,7 @@ class ZoomManager:
         self.zoom_state = ZoomState.ZOOMING_OUT
 
     def _zoom_progress(self, dt: float, reverse: bool = False):
-        self.zoom_factor += (
-            self.current_zoom_area.zoom_speed * dt * (1 - 2 * reverse)
-        )
+        self.zoom_factor += self.current_zoom_area.zoom_speed * dt * (1 - 2 * reverse)
         if reverse and self.zoom_factor <= 0:
             self.zoom_factor = 0
             self.zoom_state = ZoomState.NOT_ZOOMING
