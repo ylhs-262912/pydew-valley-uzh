@@ -34,8 +34,8 @@ from src.sprites.base import AnimatedSprite, CollideableMapObject, Sprite
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
-from src.sprites.objects.tree import Tree
 from src.sprites.objects.berry_bush import BerryBush
+from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS
 
 
