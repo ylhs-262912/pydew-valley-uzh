@@ -1,4 +1,3 @@
-import math
 import warnings
 from collections.abc import Callable
 from typing import Any
@@ -28,7 +27,6 @@ from src.settings import (
     SCALED_TILE_SIZE,
     SETUP_PATHFINDING,
     TEST_ANIMALS,
-    TILE_SIZE,
 )
 from src.sprites.base import AnimatedSprite, CollideableMapObject, Sprite
 from src.sprites.character import Character
@@ -36,6 +34,7 @@ from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
 from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS
+from src.support import add_pf_matrix_collision
 
 
 def _setup_tile_layer(
@@ -134,6 +133,8 @@ class GameMap:
 
     _map_objects: MapObjects
 
+    minigame_layer: TiledObjectGroup | None
+
     # pathfinding
     _pf_matrix: list[list[int]]
 
@@ -208,6 +209,8 @@ class GameMap:
 
         self._map_objects = MapObjects(self._tilemap)
 
+        self.minigame_layer = None
+
         self.player_spawnpoint = None
         self.player_entry_warps = {}
 
@@ -221,32 +224,6 @@ class GameMap:
 
             if ENABLE_NPCS:
                 self._setup_emote_interactions()
-
-    def _add_pf_matrix_collision(
-        self, pos: tuple[float, float], size: tuple[float, float]
-    ):
-        """
-        Add a collision rect to the pathfinding matrix at the given position.
-        The given position will be the topleft corner of the rectangle.
-        The values given to this method should equal to the values as defined
-        in Tiled (scaled up by TILE_SIZE, not scaled up by SCALE_FACTOR)
-        :param pos: position of collision rect (x, y) (rounded-down)
-        :param size: size of collision rect (width, height) (rounded-up)
-        """
-        tile_x = int(pos[0] / TILE_SIZE)
-        tile_y = int(pos[1] / TILE_SIZE)
-        tile_w = math.ceil((pos[0] + size[0]) / TILE_SIZE) - tile_x
-        tile_h = math.ceil((pos[1] + size[1]) / TILE_SIZE) - tile_y
-
-        for w in range(tile_w):
-            for h in range(tile_h):
-                try:
-                    self._pf_matrix[tile_y + h][tile_x + w] = 0
-                except IndexError as e:
-                    warnings.warn(
-                        f"Failed adding non-walkable Tile to pathfinding "
-                        f"matrix: {e}"
-                    )
 
     # region tile layer setup methods
     def _setup_base_tile(
@@ -281,8 +258,10 @@ class GameMap:
         self._setup_base_tile(pos, surf, layer, groups)
 
         if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision(
-                (pos[0] / SCALE_FACTOR, pos[1] / SCALE_FACTOR), surf.size
+            add_pf_matrix_collision(
+                self._pf_matrix,
+                (pos[0] / SCALE_FACTOR, pos[1] / SCALE_FACTOR),
+                surf.size,
             )
 
     def _setup_water_tile(
@@ -341,7 +320,9 @@ class GameMap:
         Sprite(pos, image, z=layer, name=name).add(groups)
 
         if SETUP_PATHFINDING:
-            self._add_pf_matrix_collision((obj.x, obj.y), (obj.width, obj.height))
+            add_pf_matrix_collision(
+                self._pf_matrix, (obj.x, obj.y), (obj.width, obj.height)
+            )
 
     def _setup_tree(
         self, pos: tuple[int, int], obj: TiledObject, object_type: MapObjectType
@@ -404,7 +385,8 @@ class GameMap:
                     )
 
             if SETUP_PATHFINDING:
-                self._add_pf_matrix_collision(
+                add_pf_matrix_collision(
+                    self._pf_matrix,
                     (
                         obj.x + object_type.hitbox.x / SCALE_FACTOR,
                         obj.y + object_type.hitbox.y / SCALE_FACTOR,
@@ -592,7 +574,7 @@ class GameMap:
 
             elif isinstance(tilemap_layer, TiledObjectGroup):
                 if tilemap_layer.name == "Minigame":
-                    pass
+                    self.minigame_layer = tilemap_layer
                 elif tilemap_layer.name == "Interactions":
                     _setup_object_layer(
                         tilemap_layer,

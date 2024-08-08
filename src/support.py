@@ -3,6 +3,7 @@ import math
 import os
 import random
 import sys
+import warnings
 from collections.abc import Generator
 from dataclasses import dataclass
 
@@ -370,3 +371,29 @@ def get_outline(
         outline.blit(mask_surf, (0, -1))
         outline.blit(surface, (0, 0))
     return outline
+
+
+def add_pf_matrix_collision(
+    pf_matrix: list[list[int]], pos: tuple[float, float], size: tuple[float, float]
+):
+    """
+    Add a collision rect to the pathfinding matrix at the given position.
+    The given position will be the topleft corner of the rectangle.
+    The values given to this method should equal to the values as defined
+    in Tiled (scaled up by TILE_SIZE, not scaled up by SCALE_FACTOR)
+    :param pos: position of collision rect (x, y) (rounded-down)
+    :param size: size of collision rect (width, height) (rounded-up)
+    """
+    tile_x = int(pos[0] / TILE_SIZE)
+    tile_y = int(pos[1] / TILE_SIZE)
+    tile_w = math.ceil((pos[0] + size[0]) / TILE_SIZE) - tile_x
+    tile_h = math.ceil((pos[1] + size[1]) / TILE_SIZE) - tile_y
+
+    for w in range(tile_w):
+        for h in range(tile_h):
+            try:
+                pf_matrix[tile_y + h][tile_x + w] = 0
+            except IndexError as e:
+                warnings.warn(
+                    f"Failed adding non-walkable Tile to pathfinding matrix: {e}"
+                )

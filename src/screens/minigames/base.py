@@ -3,6 +3,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TypeVar
 
+import pygame
+
 
 @dataclass
 class MinigameState:
@@ -51,6 +53,10 @@ class Minigame(ABC):
 
         for func in self.__on_finish_funcs:
             func()
+
+    @abstractmethod
+    def handle_event(self, event: pygame.Event):
+        pass
 
     @abstractmethod
     def update(self, dt: float):

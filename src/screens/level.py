@@ -225,6 +225,8 @@ class Level:
         if game_map == Map.MINIGAME:
             self.minigame = CowHerding(
                 CowHerdingState(
+                    all_sprites=self.all_sprites,
+                    collision_sprites=self.collision_sprites,
                     player=self.player,
                     game_map=self.game_map,
                     overlay=self.overlay,
@@ -236,6 +238,8 @@ class Level:
             @self.minigame.on_finish
             def on_finish():
                 self.minigame = None
+                self.map_transition.reset = partial(self.switch_to_map, Map.TOWN)
+                self.start_map_transition()
 
             self.minigame.start()
 
@@ -317,6 +321,10 @@ class Level:
         dialog_key = self.player.controls.SHOW_DIALOG.control_value
         pf_overlay_key = self.player.controls.SHOW_PF_OVERLAY.control_value
         advance_dialog_key = self.player.controls.ADVANCE_DIALOG.control_value
+
+        if self.minigame and self.minigame.running:
+            if self.minigame.handle_event(event):
+                return True
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
