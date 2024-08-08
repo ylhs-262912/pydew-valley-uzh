@@ -63,6 +63,9 @@ class InventoryResource(_SerialisableEnum):
         (
             "wood",
             "apple",
+            "blackberry",
+            "blueberry",
+            "raspberry",
             "orange",
             "peach",
             "pear",
@@ -79,6 +82,9 @@ class InventoryResource(_SerialisableEnum):
         (
             8,  # WOOD
             4,  # APPLE
+            5,  # BLACKBERRY
+            5,  # BLUEBERRY
+            5,  # RASPBERRY
             20,  # ORANGE
             15,  # PEACH
             10,  # PEAR
@@ -91,13 +97,16 @@ class InventoryResource(_SerialisableEnum):
 
     WOOD = 0
     APPLE = 1
-    ORANGE = 2
-    PEACH = 3
-    PEAR = 4
-    CORN = 5
-    TOMATO = 6
-    CORN_SEED = 7
-    TOMATO_SEED = 8
+    BLACKBERRY = 2
+    BLUEBERRY = 3
+    RASPBERRY = 4
+    ORANGE = 5
+    PEACH = 6
+    PEAR = 7
+    CORN = 8
+    TOMATO = 9
+    CORN_SEED = 10
+    TOMATO_SEED = 11
 
     def get_worth(self):
         return self._ITEM_WORTHS[self]  # noqa
