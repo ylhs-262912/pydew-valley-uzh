@@ -7,6 +7,7 @@ import pygame
 
 from src.camera import Camera
 from src.camera.camera_target import CameraTarget
+from src.camera.quaker import Quaker
 from src.camera.zoom_manager import ZoomManager
 from src.enums import FarmingTool, GameState, Map
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
@@ -115,6 +116,7 @@ class Level:
         self.player_exit_warps = pygame.sprite.Group()
 
         self.camera = Camera(0, 0)
+        self.quaker = Quaker(self.camera)
 
         self.soil_layer = SoilLayer(self.all_sprites, self.frames["level"])
 
@@ -175,6 +177,7 @@ class Level:
 
         # clear existing soil_layer
         self.soil_layer.reset()
+        self.quaker.reset()
 
         self.game_map = GameMap(
             tilemap=self.tmx_maps[game_map],
@@ -433,11 +436,12 @@ class Level:
         current_time = self.sky.get_time()
         self.overlay.display(current_time)
 
-    def draw(self, dt):
+    def draw(self, dt: float, move_things: bool):
         self.display_surface.fill((130, 168, 132))
         self.all_sprites.draw(self.camera)
         self.zoom_manager.apply_zoom()
-        self.sky.display(dt)
+        if move_things:
+            self.sky.display(dt)
         self.draw_overlay()
         self.day_transition.draw()
         self.map_transition.draw()
@@ -476,5 +480,5 @@ class Level:
                 dt,
             )
         # draw
-        self.draw(dt)
+        self.draw(dt, move_things)
         self.draw_hitboxes()

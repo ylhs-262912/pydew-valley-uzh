@@ -1,4 +1,5 @@
 from enum import Enum, IntEnum, StrEnum, nonmember, auto  # noqa
+from random import randint
 
 
 class ZoomState(IntEnum):
@@ -171,12 +172,12 @@ class FarmingTool(_SerialisableEnum):
     def as_inventory_resource(self):
         """Converts self to InventoryResource type if possible.
         (Conversion is possible if self is considered a seed.)"""
-        return self._AS_IRS.get(self, self)
+        return self._AS_IRS.get(self, self)  # noqa
 
     def as_nonseed_inventory_resource(self):
         """Converts self to non-seed InventoryResource type if possible.
         (Conversion is possible if self is considered a seed.)"""
-        return self._AS_NS_IRS.get(self, self)
+        return self._AS_NS_IRS.get(self, self)  # noqa
 
 
 class SeedType(IntEnum):
@@ -191,23 +192,23 @@ class SeedType(IntEnum):
 
     @classmethod
     def from_farming_tool(cls, val: FarmingTool):
-        return cls(cls._AS_FTS.index(val))
+        return cls(cls._AS_FTS.index(val))  # noqa
 
     @classmethod
     def from_inventory_resource(cls, val: InventoryResource):
-        return cls(cls._AS_IRS.index(val))
+        return cls(cls._AS_IRS.index(val))  # noqa
 
     def as_fts(self):
-        return self._AS_FTS[self]
+        return self._AS_FTS[self]  # noqa
 
     def as_ir(self):
-        return self._AS_IRS[self]
+        return self._AS_IRS[self]  # noqa
 
     def as_nonseed_ir(self):
-        return self._AS_NS_IRS[self]
+        return self._AS_NS_IRS[self]  # noqa
 
     def as_plant_name(self):
-        return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
+        return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")  # noqa
 
 
 class Direction(IntEnum):
@@ -219,6 +220,25 @@ class Direction(IntEnum):
     UPRIGHT = auto()
     DOWNRIGHT = auto()
     DOWNLEFT = auto()
+
+    @classmethod
+    def random(cls):
+        return Direction(randint(0, Direction.DOWNLEFT.value))
+
+    def get_opposite(self):
+        return _OPPOSITES[self]  # noqa
+
+
+_OPPOSITES = (
+    Direction.DOWN,
+    Direction.LEFT,
+    Direction.UP,
+    Direction.RIGHT,
+    Direction.DOWNRIGHT,
+    Direction.DOWNLEFT,
+    Direction.UPLEFT,
+    Direction.UPRIGHT,
+)
 
 
 class EntityState(StrEnum):

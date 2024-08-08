@@ -32,6 +32,7 @@ class Camera:
             )
             raise ValueError("the camera's height must be strictly positive")
         self._width, self._height = width, height
+        self._quake_vec: pygame.Vector2 | None = None
         self.state = pygame.Rect(0, 0, width, height)
 
     def change_size(self, width: int, height: int):
@@ -53,8 +54,14 @@ class Camera:
     def update(self, target: Sprite | SceneAnimation):
         self.state.update(self._complex_camera(target.rect))
 
+    def set_quake_vec(self, vec: pygame.Vector2 | None):
+        self._quake_vec = vec
+
     def apply(self, target: Sprite):
-        return target.rect.move(self.state.topleft)
+        ret = target.rect.move(self.state.topleft)
+        if self._quake_vec is not None:
+            ret.move_ip(self._quake_vec)
+        return ret
 
     @property
     def size(self):
