@@ -287,10 +287,10 @@ def get_entity_facing_direction(
     """
     # prioritizes vertical animations, flip if statements to get horizontal
     # ones
-    if direction[0]:
-        return Direction.RIGHT if direction[0] > 0 else Direction.LEFT
     if direction[1]:
         return Direction.DOWN if direction[1] > 0 else Direction.UP
+    if direction[0]:
+        return Direction.RIGHT if direction[0] > 0 else Direction.LEFT
     return default_value
 
 
@@ -340,3 +340,33 @@ def near_tiles(
 
 def distance(pos1, pos2):
     return ((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2) ** 0.5
+
+
+def get_outline(
+    surface: pygame.Surface,
+    outline_color: tuple[int, int, int] = (0, 0, 0),
+    resize: bool = False,
+) -> pygame.Surface:
+    mask = pygame.mask.from_surface(surface)
+    colorkey = (255, 255, 255)
+    colorkey = colorkey if outline_color != colorkey else (0, 0, 0)
+    mask_surf = mask.to_surface(setcolor=outline_color, unsetcolor=colorkey)
+    mask_surf.set_colorkey(colorkey)
+
+    if resize:
+        outline = pygame.Surface(
+            (surface.get_width() + 2, surface.get_height() + 2), pygame.SRCALPHA
+        )
+        outline.blit(mask_surf, (2, 1))
+        outline.blit(mask_surf, (0, 1))
+        outline.blit(mask_surf, (1, 2))
+        outline.blit(mask_surf, (1, 0))
+        outline.blit(surface, (1, 1))
+    else:
+        outline = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        outline.blit(mask_surf, (1, 0))
+        outline.blit(mask_surf, (-1, 0))
+        outline.blit(mask_surf, (0, 1))
+        outline.blit(mask_surf, (0, -1))
+        outline.blit(surface, (0, 0))
+    return outline

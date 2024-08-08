@@ -591,7 +591,9 @@ class GameMap:
                     )
 
             elif isinstance(tilemap_layer, TiledObjectGroup):
-                if tilemap_layer.name == "Interactions":
+                if tilemap_layer.name == "Minigame":
+                    pass
+                elif tilemap_layer.name == "Interactions":
                     _setup_object_layer(
                         tilemap_layer,
                         lambda pos, obj: self._setup_base_object(

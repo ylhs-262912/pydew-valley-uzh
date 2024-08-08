@@ -39,6 +39,7 @@ class Control:
     # savestate and cannot be set on initialisation
     click: bool = field(init=False, default=False, metadata={"exclude": True})
     hold: bool = field(init=False, default=False, metadata={"exclude": True})
+    disabled: bool = field(init=False, default=False, metadata={"exclude": True})
 
     def __post_init__(self):
         self._default_value = self.control_value

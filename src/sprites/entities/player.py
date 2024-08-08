@@ -175,6 +175,9 @@ class Player(Character):
         mouse_pressed = pygame.mouse.get_pressed()
 
         for control in self.controls.all_controls():
+            if control.disabled:
+                continue
+
             is_mouse_event = control.control_value in (1, 2, 3)
 
             if is_mouse_event:

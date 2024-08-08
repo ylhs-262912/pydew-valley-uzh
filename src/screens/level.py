@@ -16,6 +16,8 @@ from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
 from src.screens.game_map import GameMap
+from src.screens.minigames.base import Minigame
+from src.screens.minigames.cow_herding import CowHerding, CowHerdingState
 from src.settings import (
     GAME_MAP,
     SCALED_TILE_SIZE,
@@ -43,6 +45,8 @@ class Level:
     tmx_maps: MapDict
     current_map: Map | None
     game_map: GameMap | None
+
+    minigame: Minigame | None
 
     # sprite groups
     all_sprites: AllSprites
@@ -139,13 +143,6 @@ class Level:
         self.rain = Rain(self.all_sprites, self.frames["level"])
         self.raining = False
 
-        self.load_map(GAME_MAP)
-        self.map_transition = Transition(
-            lambda: self.switch_to_map(self.current_map),
-            self.finish_transition,
-            dur=2400,
-        )
-
         self.activate_music()
 
         # day night cycle
@@ -157,6 +154,17 @@ class Level:
         self.show_hitbox_active = False
         self.show_pf_overlay = False
         self.setup_pf_overlay()
+
+        # minigame
+        self.minigame = None
+
+        # map
+        self.load_map(GAME_MAP)
+        self.map_transition = Transition(
+            lambda: self.switch_to_map(self.current_map),
+            self.finish_transition,
+            dur=2400,
+        )
 
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map
@@ -190,7 +198,7 @@ class Level:
         player_spawn = None
 
         # search for player entry warp depending on which map they came from
-        if from_map:
+        if from_map and not game_map == Map.MINIGAME:
             player_spawn = self.game_map.player_entry_warps.get(from_map)
             if not player_spawn:
                 warnings.warn(
@@ -213,6 +221,23 @@ class Level:
         self.rain.set_floor_size(self.game_map.get_size())
 
         self.current_map = game_map
+
+        if game_map == Map.MINIGAME:
+            self.minigame = CowHerding(
+                CowHerdingState(
+                    player=self.player,
+                    game_map=self.game_map,
+                    overlay=self.overlay,
+                    get_camera_center=self.get_camera_center,
+                    sounds=self.sounds,
+                )
+            )
+
+            @self.minigame.on_finish
+            def on_finish():
+                self.minigame = None
+
+            self.minigame.start()
 
     def activate_music(self):
         volume = 0.1
@@ -468,6 +493,9 @@ class Level:
         self.draw_hitboxes()
         self.draw_overlay()
 
+        if self.minigame and self.minigame.running:
+            self.minigame.draw()
+
         # transitions
         self.day_transition.draw()
         self.map_transition.draw()
@@ -486,6 +514,10 @@ class Level:
     def update(self, dt: float):
         # update
         self.check_map_exit()
+
+        if self.minigame and self.minigame.running:
+            self.minigame.update(dt)
+
         self.update_rain()
         self.day_transition.update()
         self.map_transition.update()
