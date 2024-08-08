@@ -34,8 +34,8 @@ from src.sprites.base import AnimatedSprite, CollideableMapObject, Sprite
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
-from src.sprites.objects.tree import Tree
 from src.sprites.objects.berry_bush import BerryBush
+from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS
 
 
@@ -567,22 +567,22 @@ class GameMap:
                 if tilemap_layer.name == "Farmable":
                     self.soil_layer.create_soil_tiles(tilemap_layer)
                     continue
-                elif tilemap_layer.name == "Fence":
-                    # TODO: Convert the Fence layer to an object layer, or add
-                    #  tiles of the Fencer layer to MapObjects to allow for
-                    #  smaller hitboxes
-                    _setup_tile_layer(
-                        tilemap_layer,
-                        lambda pos, image: self._setup_collideable_tile(
-                            pos,
-                            image,
-                            Layer.MAIN,
-                            (
-                                self.all_sprites,
-                                self.collision_sprites,
-                            ),
-                        ),
-                    )
+                    # elif tilemap_layer.name == "Fence":
+                    #     # TODO: Convert the Fence layer to an object layer, or add
+                    #     #  tiles of the Fencer layer to MapObjects to allow for
+                    #     #  smaller hitboxes
+                    #     _setup_tile_layer(
+                    #         tilemap_layer,
+                    #         lambda pos, image: self._setup_collideable_tile(
+                    #             pos,
+                    #             image,
+                    #             Layer.MAIN,
+                    #             (
+                    #                 self.all_sprites,
+                    #                 self.collision_sprites,
+                    #             ),
+                    #         ),
+                    #     )
                     continue
                 elif tilemap_layer.name == "Border":
                     _setup_tile_layer(
