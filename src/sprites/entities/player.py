@@ -7,7 +7,7 @@ import pygame  # noqa
 from src import savefile, support
 from src.controls import Controls
 from src.enums import EntityState, FarmingTool, InventoryResource, ItemToUse, StudyGroup
-from src.events import OPEN_INVENTORY, post_event
+from src.events import OPEN_INVENTORY, START_QUAKE, post_event
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
 from src.settings import Coordinate, GogglesStatus, SoundDict
@@ -252,6 +252,9 @@ class Player(Character):
 
             if self.controls.INVENTORY.click:
                 post_event(OPEN_INVENTORY)
+
+            if self.controls.DEBUG_QUAKE.click:
+                post_event(START_QUAKE, duration=2.0)
 
         # emotes
         if not self.blocked:

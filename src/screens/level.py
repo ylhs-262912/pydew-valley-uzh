@@ -10,7 +10,7 @@ from src.camera.camera_target import CameraTarget
 from src.camera.quaker import Quaker
 from src.camera.zoom_manager import ZoomManager
 from src.enums import FarmingTool, GameState, Map
-from src.events import DIALOG_ADVANCE, DIALOG_SHOW, post_event
+from src.events import DIALOG_ADVANCE, DIALOG_SHOW, START_QUAKE, post_event
 from src.exceptions import GameMapWarning
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
@@ -305,7 +305,7 @@ class Level:
                 self.switch_screen(GameState.SHOP)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
-        hitbox_key = self.player.controls.SHOW_HITBOXES.control_value
+        hitbox_key = self.player.controls.DEBUG_SHOW_HITBOXES.control_value
         dialog_key = self.player.controls.SHOW_DIALOG.control_value
         advance_dialog_key = self.player.controls.ADVANCE_DIALOG.control_value
 
@@ -322,6 +322,8 @@ class Level:
             if event.key == advance_dialog_key:
                 post_event(DIALOG_ADVANCE)
                 return True
+        if event.type == START_QUAKE:
+            self.quaker.start(event.duration)
 
         return False
 
@@ -468,6 +470,7 @@ class Level:
                 self.all_sprites.update(dt)
             self.drops_manager.update()
             self.update_cutscene(dt)
+            self.quaker.update_quake(dt)
             self.camera.update(
                 self.cutscene_animation
                 if self.cutscene_animation.active
