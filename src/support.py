@@ -8,6 +8,7 @@ from collections.abc import Generator
 from dataclasses import dataclass
 
 import pygame
+import pygame.freetype
 import pygame.gfxdraw
 import pytmx
 
@@ -29,6 +30,10 @@ def resource_path(relative_path: str):
 # Might be changed later on if we use pygame.freetype instead
 def import_font(size: int, font_path: str) -> pygame.font.Font:
     return pygame.font.Font(resource_path(font_path), size)
+
+
+def import_freetype_font(size: int, font_path: str) -> pygame.font.Font:
+    return pygame.freetype.Font(resource_path(font_path), size)
 
 
 def import_image(img_path: str, alpha: bool = True) -> pygame.Surface:
