@@ -36,6 +36,8 @@ from src.sprites.particle import ParticleSprite
 from src.sprites.setup import ENTITY_ASSETS
 from src.support import load_data, map_coords_to_tile, resource_path
 
+_TO_PLAYER_SPEED_INCREASE_THRESHOLD = 200
+
 
 class Level:
     display_surface: pygame.Surface
@@ -225,6 +227,20 @@ class Level:
                 player_spawn = next(iter(self.game_map.player_entry_warps.values()))
 
         self.player.teleport(player_spawn)
+
+        if self.cutscene_animation.targets:
+            last_target = self.cutscene_animation.targets[-1]
+            last_targ_pos = pygame.Vector2(last_target.pos)
+            center = pygame.Vector2(self.player.rect.center)
+            movement = center - last_targ_pos
+            speed = max(
+                round(movement.length()) // _TO_PLAYER_SPEED_INCREASE_THRESHOLD, 2
+            ) * 100
+            self.cutscene_animation.targets.append(
+                CameraTarget(
+                    self.player.rect.center, len(self.cutscene_animation.targets), speed
+                )
+            )
 
         self.rain.set_floor_size(self.game_map.get_size())
 
