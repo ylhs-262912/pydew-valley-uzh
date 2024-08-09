@@ -168,8 +168,8 @@ class Level:
         self.bush_sprites.empty()
         self.player_exit_warps.empty()
 
-        # clear existing soil_layer
-        self.soil_layer.reset()
+        # clear existing soil_layer (not done due to the fact we need to keep hoed tiles in memory)
+        # self.soil_layer.reset()
 
         self.game_map = GameMap(
             tilemap=self.tmx_maps[game_map],
