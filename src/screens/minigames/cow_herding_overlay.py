@@ -4,7 +4,7 @@ from typing import Callable
 import pygame
 import pygame.freetype
 
-from src.colors import SL_ORANGE_BRIGHTEST
+from src.colors import SL_ORANGE_BRIGHT, SL_ORANGE_BRIGHTEST
 from src.gui.menu.abstract_menu import AbstractMenu
 from src.screens.minigames.gui import (
     Linebreak,
@@ -31,54 +31,51 @@ class _CowHerdingScoreboard(AbstractMenu):
         self.font_description = import_freetype_font(24, "font/LycheeSoda.ttf")
         self.font_button = import_freetype_font(32, "font/LycheeSoda.ttf")
 
-    def setup(self, time_needed, cows_herded):
-        box_pos = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    def setup(self, time_needed, cows_herded_in):
+        box_center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         padding = (16, 24)
 
         self._surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
         self._surface.fill((0, 0, 0, 64))
 
         self.button_setup()
-        button_margin = 32
-        button_area_height = self.return_button.rect.height + button_margin
+        button_top_margin = 32
+        button_area_height = self.return_button.rect.height + button_top_margin
 
         text = Text(
-            [
-                TextChunk("Success!", self.font_title),
-                Linebreak(),
-                TextChunk(f"{time_needed:.2f}", self.font_number),
-                TextChunk(" seconds needed", self.font_description),
-                Linebreak(),
-                TextChunk(f"{cows_herded}", self.font_number),
-                TextChunk(" cows herded", self.font_description),
-            ]
+            TextChunk("Success!", self.font_title),
+            Linebreak(),
+            TextChunk(f"{time_needed:.2f}", self.font_number),
+            TextChunk(" seconds needed", self.font_description),
+            Linebreak(),
+            TextChunk(f"{cows_herded_in}", self.font_number),
+            TextChunk(" cows herded in", self.font_description),
         )
 
         box_size = (
             text.surface_rect.width + padding[0] * 2,
-            text.surface_rect.height + button_area_height + padding[1] * 2,
+            text.surface_rect.height + padding[1] * 2 + button_area_height,
         )
 
-        _draw_box(self._surface, box_pos, box_size)
+        _draw_box(self._surface, box_center, box_size)
 
         text_surface = pygame.Surface(text.surface_rect.size, pygame.SRCALPHA)
         text.draw(text_surface)
         self._surface.blit(
             text_surface,
             (
-                box_pos[0] - text.surface_rect.width / 2,
-                box_pos[1] - text.surface_rect.height / 2 - button_area_height / 2,
+                box_center[0] - text.surface_rect.width / 2,
+                box_center[1] - text.surface_rect.height / 2 - button_area_height / 2,
             ),
         )
 
         self.return_button.move(
             (
-                box_pos[0] - self.return_button.rect.width / 2,
-                box_pos[1]
+                box_center[0] - self.return_button.rect.width / 2,
+                box_center[1]
+                - self.return_button.rect.height
                 + box_size[1] / 2
-                - button_area_height
-                - padding[1]
-                + button_margin,
+                - padding[1],
             )
         )
 
@@ -110,13 +107,8 @@ class _CowHerdingScoreboard(AbstractMenu):
 
         return False
 
-    def draw_buttons(self):
-        for button in self.buttons:
-            button.draw(self.display_surface)
-
-    def draw(self):
+    def draw_title(self):
         self.display_surface.blit(self._surface, (0, 0))
-        self.draw_buttons()
 
     def update(self, dt):
         self.mouse_hover()
@@ -134,35 +126,38 @@ class _CowHerdingOverlay:
         self.font_description = import_freetype_font(32, "font/LycheeSoda.ttf")
         self.font_objective = import_freetype_font(24, "font/LycheeSoda.ttf")
 
-        self.timer_rendered_chars = {
+        self.timer_chars = {
             char: self.font_timer.render(char, True, SL_ORANGE_BRIGHTEST)
             for char in "0123456789.:"
         }
-        self.timer_char_width = max(
-            char.width for char in self.timer_rendered_chars.values()
-        )
-        self.timer_char_height = max(
-            char.height for char in self.timer_rendered_chars.values()
-        )
+        # ensures that the timer numbers maintain their position by using equal spacing
+        self.timer_char_width = max(char.width for char in self.timer_chars.values())
+        self.timer_char_height = max(char.height for char in self.timer_chars.values())
 
-    def render_countdown(self, current_time: float):
+    def _render_countdown_text(self, text: str):
+        rendered_text = self.font_countdown.render(text, False, SL_ORANGE_BRIGHTEST)
+        rendered_text = get_outline(rendered_text, SL_ORANGE_BRIGHT, resize=True)
+        return rendered_text
+
+    def draw_countdown(self, current_time: float):
         """
         Displays ceil(abs(current_time)) if current_time < 0, else "GO!"
         """
         current_time_int = math.floor(current_time)
-        current_fraction = abs(current_time) - abs(int(current_time))
+        current_fraction = current_time - current_time_int
 
         if current_time_int < 0:
-            text = f"{abs(current_time_int)}"
-            rendered_text = self.font_countdown.render(text, False, (231, 231, 231))
+            rendered_text = self._render_countdown_text(f"{abs(current_time_int)}")
 
-            if current_fraction >= 0.75:
+            if current_fraction <= 0.25:
                 rendered_text = pygame.transform.scale_by(
-                    rendered_text, (1 - current_fraction) * 4.5
+                    rendered_text, current_fraction * 4.5
                 )
+                alpha = current_fraction * 4 * 1.5 - 0.5
+                rendered_text.set_alpha(max(0, int(alpha * 255)))
         else:
-            text = "GO!"
-            rendered_text = self.font_countdown.render(text, False, (255, 255, 255))
+            rendered_text = self._render_countdown_text("GO!")
+
             if current_fraction <= 1 / 6:
                 rendered_text = pygame.transform.scale_by(
                     rendered_text,
@@ -171,58 +166,54 @@ class _CowHerdingOverlay:
                 )
 
         self.display_surface.blit(
-            get_outline(rendered_text, (191, 191, 191), resize=True),
+            rendered_text,
             (
                 SCREEN_WIDTH / 2 - rendered_text.width / 2,
                 SCREEN_HEIGHT / 3 - rendered_text.height / 2,
             ),
         )
 
-    def render_description(self):
-        box_pos = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
+    def draw_description(self):
+        box_center = (SCREEN_WIDTH / 2, SCREEN_HEIGHT / 4)
 
         text = Text(
-            [
-                Linebreak((0, 18)),
-                TextChunk("Cow Herding Minigame", self.font_description),
-                Linebreak(),
-                Linebreak((0, 24)),
-                TextChunk("Herd the cows into the barn", self.font_description),
-                Linebreak(),
-                TextChunk("as fast as possible!", self.font_description),
-            ]
+            Linebreak((0, 18)),
+            TextChunk("Cow Herding Minigame", self.font_description),
+            Linebreak(),
+            Linebreak((0, 24)),
+            TextChunk("Herd the cows into the barn", self.font_description),
+            Linebreak(),
+            TextChunk("as fast as possible!", self.font_description),
         )
 
-        _draw_box(self.display_surface, box_pos, text.surface_rect.size)
+        _draw_box(self.display_surface, box_center, text.surface_rect.size)
 
         text_surface = pygame.Surface(text.surface_rect.size, pygame.SRCALPHA)
         text.draw(text_surface)
         self.display_surface.blit(
             text_surface,
             (
-                box_pos[0] - text.surface_rect.width / 2,
-                box_pos[1] - text.surface_rect.height / 2,
+                box_center[0] - text.surface_rect.width / 2,
+                box_center[1] - text.surface_rect.height / 2,
             ),
         )
 
-    def render_objective(self, cows_total: int, cows_herded: int):
+    def draw_objective(self, cows_total: int, cows_herded_in: int):
         box_top_right = (SCREEN_WIDTH, 0)
         padding = 12
 
         text = Text(
-            [
-                TextChunk("Objective:", self.font_description),
-                Linebreak(),
-                TextChunk("Herd the cows into the barn!", self.font_objective),
-                Linebreak(),
-                Linebreak((0, 32)),
-                TextChunk("Progress:", self.font_objective),
-                Linebreak(),
-                TextChunk(
-                    f"({cows_herded}/{cows_total}) Cows in the barn",
-                    self.font_objective,
-                ),
-            ]
+            TextChunk("Objective:", self.font_description),
+            Linebreak(),
+            TextChunk("Herd the cows into the barn!", self.font_objective),
+            Linebreak(),
+            Linebreak((0, 32)),
+            TextChunk("Progress:", self.font_objective),
+            Linebreak(),
+            TextChunk(
+                f"({cows_herded_in}/{cows_total}) Cows in the barn",
+                self.font_objective,
+            ),
         )
 
         _draw_box(
@@ -247,7 +238,7 @@ class _CowHerdingOverlay:
             ),
         )
 
-    def render_timer(self, current_time: float):
+    def draw_timer(self, current_time: float):
         t = max(0.0, current_time)
         timer_string = (
             f"{int(t / 60):02}"
@@ -263,7 +254,7 @@ class _CowHerdingOverlay:
             if timer_string[i].isdigit():
                 total_length += self.timer_char_width
             else:
-                total_length += self.timer_rendered_chars[timer_string[i]].width
+                total_length += self.timer_chars[timer_string[i]].width
 
         _draw_box(
             self.display_surface,
@@ -277,10 +268,10 @@ class _CowHerdingOverlay:
 
         for i in range(len(timer_string)):
             self.display_surface.blit(
-                self.timer_rendered_chars[timer_string[i]],
+                self.timer_chars[timer_string[i]],
                 (SCREEN_WIDTH / 2 - total_length / 2 + current_length, offset_y),
             )
             if timer_string[i].isdigit():
                 current_length += self.timer_char_width
             else:
-                current_length += self.timer_rendered_chars[timer_string[i]].width
+                current_length += self.timer_chars[timer_string[i]].width

@@ -60,7 +60,7 @@ class CowHerding(Minigame):
         self._cows = []
         self._cows_original_positions = []
         self._cows_total = 0
-        self._cows_herded = 0
+        self._cows_herded_in = 0
 
         self._minigame_time = 0
         self._finished = False
@@ -76,7 +76,7 @@ class CowHerding(Minigame):
         if value:
             self._state.player.blocked = True
             self._state.player.direction.update((0, 0))
-            self.scoreboard.setup(self._minigame_time, self._cows_herded)
+            self.scoreboard.setup(self._minigame_time, self._cows_herded_in)
         else:
             self._state.player.blocked = False
 
@@ -99,12 +99,12 @@ class CowHerding(Minigame):
             else:
                 colliders[i.name] = i
 
-        obj = colliders["LEFT_RANGE"]
+        obj = colliders["L_RANGE"]
         add_pf_matrix_collision(
             self.l_barn_matrix, (obj.x, obj.y), (obj.width, obj.height)
         )
 
-        obj = colliders["LEFT_BARN_ENTRANCE"]
+        obj = colliders["L_BARN_ENTRANCE"]
         pos = (obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR)
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
@@ -114,7 +114,7 @@ class CowHerding(Minigame):
         )
         l_barn_entrance_collider.add(self.player_collision_sprites)
 
-        obj = colliders["LEFT_BARN_AREA"]
+        obj = colliders["L_BARN_AREA"]
         pos = (obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR)
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
@@ -155,16 +155,17 @@ class CowHerding(Minigame):
         self._state.player.collision_sprites = self._state.collision_sprites
 
     def check_cows(self):
-        cows_herded = []
+        cows_herded_in = []
         for cow in self._cows:
             if cow.hitbox_rect.colliderect(self.l_barn_collider.rect):
                 cow.continuous_behaviour_tree = None
                 cow.pf_grid = self.l_barn_grid
-                cows_herded.append(cow)
+                cows_herded_in.append(cow)
+                self._state.sounds["success"].play()
 
-        for cow in cows_herded:
+        for cow in cows_herded_in:
             self._cows.remove(cow)
-            self._cows_herded += 1
+            self._cows_herded_in += 1
 
     def handle_event(self, event: pygame.Event):
         if self._finished:
@@ -180,13 +181,16 @@ class CowHerding(Minigame):
 
             if (self._ani_countdown_start + 3) < self._ctime:
                 self.check_cows()
-                if self._cows_total == self._cows_herded:
+                if self._cows_total == self._cows_herded_in:
                     self._finished = True
         else:
             self.scoreboard.update(dt)
 
-        # FIXME: Since map transitions / menus also access player.blocked, this is to
-        #  make sure that the player remains blocked during the entire cutscene
+        # FIXME: Since map transitions / menus also access player.blocked, this is
+        #  needed to make sure that the player remains blocked during the entire
+        #  cutscene.
+        #  This should not be a permanent solution, since currently the Player can still
+        #  move by a tiny bit on the frame they get unblocked from somewhere else.
         if self._ctime < self._ani_countdown_start + 3:
             self._state.player.blocked = True
             self._state.player.direction.update((0, 0))
@@ -213,14 +217,14 @@ class CowHerding(Minigame):
 
     def draw(self):
         if self._ctime <= self._ani_countdown_start:
-            self.overlay.render_description()
+            self.overlay.draw_description()
         else:
-            self.overlay.render_objective(self._cows_total, self._cows_herded)
+            self.overlay.draw_objective(self._cows_total, self._cows_herded_in)
 
         if self._ani_countdown_start < self._ctime < self._ani_countdown_start + 4:
-            self.overlay.render_countdown(self._minigame_time)
+            self.overlay.draw_countdown(self._minigame_time)
 
-        self.overlay.render_timer(self._minigame_time)
+        self.overlay.draw_timer(self._minigame_time)
 
         if self._finished:
             self.scoreboard.draw()

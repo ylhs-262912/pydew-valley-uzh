@@ -288,12 +288,12 @@
 </data>
  </layer>
  <objectgroup id="13" name="Minigame">
-  <object id="13" name="LEFT_RANGE" x="192" y="176" width="128" height="208"/>
-  <object id="14" name="LEFT_BARN_ENTRANCE" x="224" y="160" width="32" height="16"/>
-  <object id="15" name="LEFT_BARN_AREA" x="176" y="96" width="144" height="64"/>
-  <object id="16" name="RIGHT_BARN_AREA" x="336" y="96" width="144" height="64"/>
-  <object id="17" name="RIGHT_BARN_ENTRANCE" x="400" y="160" width="32" height="16"/>
-  <object id="19" name="RIGHT_RANGE" x="336" y="176" width="128" height="208"/>
+  <object id="13" name="L_RANGE" x="192" y="176" width="128" height="208"/>
+  <object id="14" name="L_BARN_ENTRANCE" x="224" y="160" width="32" height="16"/>
+  <object id="15" name="L_BARN_AREA" x="176" y="96" width="144" height="64"/>
+  <object id="16" name="R_BARN_AREA" x="336" y="96" width="144" height="64"/>
+  <object id="17" name="R_BARN_ENTRANCE" x="400" y="160" width="32" height="16"/>
+  <object id="19" name="R_RANGE" x="336" y="176" width="128" height="208"/>
   <object id="2" name="L_COW" gid="128" x="261" y="320" width="27" height="17"/>
   <object id="3" name="L_COW" gid="128" x="208" y="288" width="27" height="17"/>
   <object id="4" name="Cow" gid="2147483776" x="403" y="197" width="27" height="17"/>
