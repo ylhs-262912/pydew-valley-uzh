@@ -1,4 +1,5 @@
 import pygame
+from pathfinding.core.grid import Grid
 
 from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
@@ -33,13 +34,15 @@ class Cow(CowBase):
         self.speed = 150
         self.fleeing = False
 
-    def flee_from_pos(self, pos: tuple[int, int]) -> bool:
+    def flee_from_pos(self, pos: tuple[int, int], pf_grid: Grid = None) -> bool:
         """
         Aborts the current path of the cow and makes it flee into the opposite
         direction of the given position.
         FIXME: When a Cow is locked in a position they can't flee from, they'll still
          check every path if it is possible, decreasing the frame rate by quite a bit
         :param pos: Position on the Tilemap that should be fled from
+        :param pf_grid: (Optional) pathfinding grid to use. Defaults to self.pf_grid
+        :return: Whether the path has successfully been created.
         """
         if not self.fleeing:
             self.abort_path()
@@ -58,9 +61,8 @@ class Cow(CowBase):
             for coordinate in flight_vectors:
                 x_coord = tile_coord[0] + coordinate.x - 5
                 y_coord = tile_coord[1] + coordinate.y - 5
-                if self.pf_grid.walkable(x_coord, y_coord):
-                    if self.create_path_to_tile((x_coord, y_coord)):
-                        if len(self.pf_path) > 5:
-                            self.pf_path = self.pf_path[:5]
-                        return True
+                if self.create_path_to_tile((x_coord, y_coord), pf_grid=pf_grid):
+                    if len(self.pf_path) > 5:
+                        self.pf_path = self.pf_path[:5]
+                    return True
         return False

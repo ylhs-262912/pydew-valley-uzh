@@ -4,6 +4,7 @@ from abc import ABC
 from collections.abc import Callable, Iterator
 
 import pygame
+from pathfinding.core.grid import Grid
 
 from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
 from src.npc.behaviour.ai_behaviour_tree_base import ContextType, NodeWrapper
@@ -98,7 +99,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
         self.__on_stop_moving_funcs.clear()
         return
 
-    def create_path_to_tile(self, coord: tuple[int, int]) -> bool:
+    def create_path_to_tile(self, coord: tuple[int, int], pf_grid: Grid = None) -> bool:
         """
         Initiates the AI-controlled Entity to move to the specified tile.
 
@@ -106,10 +107,14 @@ class AIBehaviour(AIBehaviourBase, ABC):
         calling it too often at once will cause the game to stutter
 
         :param coord: Coordinate of the tile the Entity should move to.
+        :param pf_grid: (Optional) pathfinding grid to use. Defaults to self.pf_grid
         :return: Whether the path has successfully been created.
         """
 
-        if not self.pf_grid.walkable(coord[0], coord[1]):
+        if pf_grid is None:
+            pf_grid = self.pf_grid
+
+        if not pf_grid.walkable(coord[0], coord[1]):
             return False
 
         # current NPC position on the tilemap
@@ -121,19 +126,19 @@ class AIBehaviour(AIBehaviourBase, ABC):
         self.pf_state = AIState.MOVING
         self.pf_state_duration = 0
 
-        self.pf_grid.cleanup()
+        pf_grid.cleanup()
 
         try:
-            start = self.pf_grid.node(int(tile_coord.x), int(tile_coord.y))
+            start = pf_grid.node(int(tile_coord.x), int(tile_coord.y))
         except IndexError as e:
             # FIXME: Occurs when NPCs get stuck inside each other at the edge
             #  of the map and one of them gets pushed out of the walkable area
             warnings.warn(f"NPC is at invalid location {tile_coord}\nFull error: {e}")
             return False
-        end = self.pf_grid.node(*[int(i) for i in coord])
+        end = pf_grid.node(*[int(i) for i in coord])
 
         with self.pathfinding_context():
-            path_raw = self.pf_finder.find_path(start, end, self.pf_grid)
+            path_raw = self.pf_finder.find_path(start, end, pf_grid)
 
         # The first position in the path will always be removed as it is the
         # same coordinate the NPC is already standing on. Otherwise, if the NPC
