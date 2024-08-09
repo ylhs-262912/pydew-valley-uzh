@@ -3,7 +3,6 @@ import math
 import os
 import random
 import sys
-import warnings
 from collections.abc import Generator
 from dataclasses import dataclass
 
@@ -167,18 +166,19 @@ class WeightedCoordinate:
 
     weight: float = 0
 
-    def __repr__(self):
-        return f"({self.x}x, {self.y}y, {self.weight:.2f}w)"
-
 
 def get_flight_matrix(
     pos: tuple[int, int], radius: int
 ) -> list[list[WeightedCoordinate]]:
     """
-    Returns a matrix with the width and height of radius * 2 + 1, with a value
-    of 1 if the matrix position can be fled to and 0 if not.
+    Returns a matrix with the width and height of radius * 2 + 1, with
+    WeightedCoordinate objects of a weight between 0 and 1, where 0 is the most
+    preferred flight position, and 1 the least preferred flight position.
+
     The position from which the flight is to be started is always in the centre
-    of the matrix. The position of the object to be fled from should be
+    of the matrix, and will have an infinite weight.
+
+    The position of the object to be fled from should be
     relative to the start position, but does not have to be within the
     matrix coordinates.
 
@@ -215,7 +215,7 @@ def get_flight_matrix(
             elif distance_ < -math.pi:
                 distance_ = distance_ + (math.pi * 2)
 
-            matrix[y][x].weight = ((p2[0] - x) ** 2 + (p2[1] - y) ** 2) ** 0.5
+            matrix[y][x].weight = distance(p2, (x, y))
             matrix[y][x].weight *= abs(distance_ / math.pi)
 
     matrix[radius][radius].weight = float("inf")
@@ -225,7 +225,7 @@ def get_flight_matrix(
 
 def get_sorted_flight_vectors(
     pos: tuple[int, int], radius: int
-) -> list[WeightedCoordinate]:
+) -> Generator[WeightedCoordinate, None, None]:
     flight_matrix = get_flight_matrix(pos, radius)
 
     x = []
@@ -376,29 +376,3 @@ def get_outline(
         outline.blit(mask_surf, (0, -1))
         outline.blit(surface, (0, 0))
     return outline
-
-
-def add_pf_matrix_collision(
-    pf_matrix: list[list[int]], pos: tuple[float, float], size: tuple[float, float]
-):
-    """
-    Add a collision rect to the pathfinding matrix at the given position.
-    The given position will be the topleft corner of the rectangle.
-    The values given to this method should equal to the values as defined
-    in Tiled (scaled up by TILE_SIZE, not scaled up by SCALE_FACTOR)
-    :param pos: position of collision rect (x, y) (rounded-down)
-    :param size: size of collision rect (width, height) (rounded-up)
-    """
-    tile_x = int(pos[0] / TILE_SIZE)
-    tile_y = int(pos[1] / TILE_SIZE)
-    tile_w = math.ceil((pos[0] + size[0]) / TILE_SIZE) - tile_x
-    tile_h = math.ceil((pos[1] + size[1]) / TILE_SIZE) - tile_y
-
-    for w in range(tile_w):
-        for h in range(tile_h):
-            try:
-                pf_matrix[tile_y + h][tile_x + w] = 0
-            except IndexError as e:
-                warnings.warn(
-                    f"Failed adding non-walkable Tile to pathfinding matrix: {e}"
-                )

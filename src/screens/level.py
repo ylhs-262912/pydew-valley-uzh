@@ -46,7 +46,7 @@ class Level:
     current_map: Map | None
     game_map: GameMap | None
 
-    minigame: Minigame | None
+    current_minigame: Minigame | None
 
     # sprite groups
     all_sprites: AllSprites
@@ -158,7 +158,7 @@ class Level:
         self.setup_pf_overlay()
 
         # minigame
-        self.minigame = None
+        self.current_minigame = None
 
         # map
         self.load_map(GAME_MAP)
@@ -227,25 +227,25 @@ class Level:
         self.current_map = game_map
 
         if game_map == Map.MINIGAME:
-            self.minigame = CowHerding(
+            self.current_minigame = CowHerding(
                 CowHerdingState(
+                    game_map=self.game_map,
+                    player=self.player,
                     all_sprites=self.all_sprites,
                     collision_sprites=self.collision_sprites,
-                    player=self.player,
-                    game_map=self.game_map,
                     overlay=self.overlay,
-                    get_camera_center=self.get_camera_center,
                     sounds=self.sounds,
+                    get_camera_center=self.get_camera_center,
                 )
             )
 
-            @self.minigame.on_finish
+            @self.current_minigame.on_finish
             def on_finish():
-                self.minigame = None
+                self.current_minigame = None
                 self.map_transition.reset = partial(self.switch_to_map, Map.TOWN)
                 self.start_map_transition()
 
-            self.minigame.start()
+            self.current_minigame.start()
 
     def activate_music(self):
         volume = 0.1
@@ -335,8 +335,8 @@ class Level:
         pf_overlay_key = self.player.controls.SHOW_PF_OVERLAY.control_value
         advance_dialog_key = self.player.controls.ADVANCE_DIALOG.control_value
 
-        if self.minigame and self.minigame.running:
-            if self.minigame.handle_event(event):
+        if self.current_minigame and self.current_minigame.running:
+            if self.current_minigame.handle_event(event):
                 return True
 
         if event.type == pygame.KEYDOWN:
@@ -513,13 +513,12 @@ class Level:
         self.all_sprites.draw(camera_center)
         self.sky.display(dt)
 
-        # overlays
         self.draw_pf_overlay()
         self.draw_hitboxes()
         self.draw_overlay()
 
-        if self.minigame and self.minigame.running:
-            self.minigame.draw()
+        if self.current_minigame and self.current_minigame.running:
+            self.current_minigame.draw()
 
         # transitions
         self.day_transition.draw()
@@ -540,8 +539,8 @@ class Level:
         # update
         self.check_map_exit()
 
-        if self.minigame and self.minigame.running:
-            self.minigame.update(dt)
+        if self.current_minigame and self.current_minigame.running:
+            self.current_minigame.update(dt)
 
         self.update_rain()
         self.day_transition.update()

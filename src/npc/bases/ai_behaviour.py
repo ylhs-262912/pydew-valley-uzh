@@ -1,19 +1,18 @@
 import random
 import warnings
 from abc import ABC
-from collections.abc import Callable, Iterator
+from collections.abc import Callable
 
 import pygame
 from pathfinding.core.grid import Grid
 
-from src.npc.behaviour.ai_behaviour_base import AIBehaviourBase, AIState
+from src.npc.bases.ai_behaviour_base import AIBehaviourBase, AIState
 from src.npc.behaviour.ai_behaviour_tree_base import ContextType, NodeWrapper
+from src.profiling import Tracker
 from src.settings import SCALED_TILE_SIZE
 
 
 class AIBehaviour(AIBehaviourBase, ABC):
-    pathfinding_context: Callable[[], Iterator[None]] = None
-
     def __init__(self, behaviour_tree_context: ContextType):  # noqa
         """
         !IMPORTANT! AIBehaviour doesn't call Entity.__init__ while still
@@ -117,6 +116,8 @@ class AIBehaviour(AIBehaviourBase, ABC):
         if not pf_grid.walkable(coord[0], coord[1]):
             return False
 
+        Tracker.pf_pathfinding_calls += 1
+
         # current NPC position on the tilemap
         tile_coord = (
             pygame.Vector2(self.hitbox_rect.centerx, self.hitbox_rect.centery)
@@ -137,8 +138,7 @@ class AIBehaviour(AIBehaviourBase, ABC):
             return False
         end = pf_grid.node(*[int(i) for i in coord])
 
-        with self.pathfinding_context():
-            path_raw = self.pf_finder.find_path(start, end, pf_grid)
+        path_raw = self.pf_finder.find_path(start, end, pf_grid)
 
         # The first position in the path will always be removed as it is the
         # same coordinate the NPC is already standing on. Otherwise, if the NPC

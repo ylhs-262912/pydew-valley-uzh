@@ -10,7 +10,7 @@ from src.npc.behaviour.ai_behaviour_tree_base import (
     NodeWrapper,
     Selector,
 )
-from src.support import near_tiles
+from src.npc.utils import pf_wander
 
 
 @dataclass
@@ -19,20 +19,7 @@ class ChickenIndividualContext(Context):
 
 
 def wander(context: ChickenIndividualContext) -> bool:
-    """
-    Makes the Chicken wander to a random location in a 5 tile radius.
-    :return: True if path has successfully been created, otherwise False
-    """
-    # current position on the tilemap
-    tile_coord = context.chicken.get_tile_pos()
-
-    for pos in near_tiles(tile_coord, 5, shuffle=True):
-        if context.chicken.create_path_to_tile(pos):
-            if len(context.chicken.pf_path) > 5:
-                context.chicken.pf_path = context.chicken.pf_path[:5]
-            return True
-
-    return False
+    return pf_wander(context.chicken)
 
 
 class ChickenBehaviourTree(NodeWrapper, Enum):

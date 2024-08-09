@@ -13,8 +13,8 @@ from src.npc.behaviour.ai_behaviour_tree_base import (
     Sequence,
 )
 from src.npc.setup import AIData
+from src.npc.utils import pf_wander
 from src.settings import SCALED_TILE_SIZE
-from src.support import near_tiles
 
 
 @dataclass
@@ -23,20 +23,7 @@ class CowIndividualContext(Context):
 
 
 def wander(context: CowIndividualContext) -> bool:
-    """
-    Makes the Cow wander to a random location in a 5 tile radius.
-    :return: True if path has successfully been created, otherwise False
-    """
-    # current position on the tilemap
-    tile_coord = context.cow.get_tile_pos()
-
-    for pos in near_tiles(tile_coord, 5, shuffle=True):
-        if context.cow.create_path_to_tile(pos):
-            if len(context.cow.pf_path) > 5:
-                context.cow.pf_path = context.cow.pf_path[:5]
-            return True
-
-    return False
+    return pf_wander(context.cow)
 
 
 # region flee behaviour

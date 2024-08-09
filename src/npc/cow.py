@@ -4,6 +4,7 @@ from pathfinding.core.grid import Grid
 from src.enums import Layer
 from src.npc.bases.cow_base import CowBase
 from src.npc.behaviour.cow_behaviour_tree import CowIndividualContext
+from src.npc.utils import pf_move_to
 from src.settings import Coordinate
 from src.sprites.setup import EntityAsset
 from src.support import get_sorted_flight_vectors
@@ -61,8 +62,6 @@ class Cow(CowBase):
             for coordinate in flight_vectors:
                 x_coord = tile_coord[0] + coordinate.x - 5
                 y_coord = tile_coord[1] + coordinate.y - 5
-                if self.create_path_to_tile((x_coord, y_coord), pf_grid=pf_grid):
-                    if len(self.pf_path) > 5:
-                        self.pf_path = self.pf_path[:5]
+                if pf_move_to(self, (x_coord, y_coord), 5, pf_grid=pf_grid):
                     return True
         return False

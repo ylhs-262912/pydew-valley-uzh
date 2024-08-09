@@ -17,6 +17,7 @@ from src.npc.behaviour.ai_behaviour_tree_base import (
     Selector,
     Sequence,
 )
+from src.npc.utils import pf_move_to, pf_wander
 from src.settings import SCALED_TILE_SIZE
 from src.sprites.objects.tree import Tree
 from src.support import distance, near_tiles
@@ -43,7 +44,7 @@ def walk_to_pos(
     if target_position in NPCSharedContext.targets:
         return False
 
-    if context.npc.create_path_to_tile(target_position):
+    if pf_move_to(context.npc, target_position):
         if len(context.npc.pf_path) > 1:
             facing = (
                 context.npc.pf_path[-1][0] - context.npc.pf_path[-2][0],
@@ -79,21 +80,7 @@ def walk_to_pos(
 
 
 def wander(context: NPCIndividualContext) -> bool:
-    """
-    Makes the NPC wander to a random location in a 5 tile radius.
-    :return: True if path has successfully been created, otherwise False
-    """
-
-    # current NPC position on the tilemap
-    tile_coord = context.npc.get_tile_pos()
-
-    for pos in near_tiles(tile_coord, 5, shuffle=True):
-        if context.npc.create_path_to_tile(pos):
-            if len(context.npc.pf_path) > 5:
-                context.npc.pf_path = context.npc.pf_path[:5]
-            return True
-
-    return False
+    return pf_wander(context.npc)
 
 
 # region farming-exclusive logic

@@ -9,7 +9,7 @@ from pathfinding.core.grid import Grid
 from pathfinding.finder.a_star import AStarFinder
 
 from src.enums import FarmingTool
-from src.npc.behaviour.ai_behaviour import AIBehaviour
+from src.npc.bases.ai_behaviour import AIBehaviour
 from src.npc.behaviour.ai_behaviour_tree_base import ContextType
 from src.overlay.soil import SoilLayer
 from src.settings import Coordinate

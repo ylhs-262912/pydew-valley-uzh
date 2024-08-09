@@ -52,7 +52,7 @@ def _draw_box(
         border_radius=16,
     )
     # background
-    pygame.draw.rect(surface, SL_ORANGE_BRIGHT, rect, border_radius=8)
+    pygame.draw.rect(surface, SL_ORANGE_BRIGHT, rect, border_radius=12)
 
 
 class LayoutRect(pygame.Rect, ABC):
@@ -182,7 +182,7 @@ class _ReturnButton(AbstractButton):
 
     def move(self, topleft: tuple[float, float]):
         self.rect.topleft = topleft
-        self.initial_rect.topleft = topleft
+        self.initial_rect.center = self.rect.center
         self._content_rect.center = self.rect.center
 
     def draw(self, surface: pygame.Surface):

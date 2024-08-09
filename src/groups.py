@@ -41,8 +41,8 @@ class PersistentSpriteGroup(pygame.sprite.Group):
 
 
 class AllSprites(PersistentSpriteGroup):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *sprites):
+        super().__init__(*sprites)
         self.display_surface = pygame.display.get_surface()
         self.offset = pygame.Vector2()
         self.cam_surf = pygame.Surface(self.display_surface.get_size())

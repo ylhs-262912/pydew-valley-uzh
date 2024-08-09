@@ -20,6 +20,7 @@ from src.npc.chicken import Chicken
 from src.npc.cow import Cow
 from src.npc.npc import NPC
 from src.npc.setup import AIData
+from src.npc.utils import pf_add_matrix_collision
 from src.overlay.soil import SoilLayer
 from src.settings import (
     ENABLE_NPCS,
@@ -35,7 +36,6 @@ from src.sprites.entities.player import Player
 from src.sprites.objects.berry_bush import BerryBush
 from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS
-from src.support import add_pf_matrix_collision
 
 
 def _setup_tile_layer(
@@ -261,7 +261,7 @@ class GameMap:
         self._setup_base_tile(pos, surf, layer, groups)
 
         if SETUP_PATHFINDING:
-            add_pf_matrix_collision(
+            pf_add_matrix_collision(
                 self._pf_matrix,
                 (pos[0] / SCALE_FACTOR, pos[1] / SCALE_FACTOR),
                 surf.size,
@@ -323,7 +323,7 @@ class GameMap:
         Sprite(pos, image, z=layer, name=name).add(groups)
 
         if SETUP_PATHFINDING:
-            add_pf_matrix_collision(
+            pf_add_matrix_collision(
                 self._pf_matrix, (obj.x, obj.y), (obj.width, obj.height)
             )
 
@@ -425,7 +425,7 @@ class GameMap:
                     )
 
             if SETUP_PATHFINDING:
-                add_pf_matrix_collision(
+                pf_add_matrix_collision(
                     self._pf_matrix,
                     (
                         obj.x + object_type.hitbox.x / SCALE_FACTOR,
