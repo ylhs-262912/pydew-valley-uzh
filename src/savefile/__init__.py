@@ -3,7 +3,7 @@ import json
 from jsmin import jsmin
 
 from src.enums import FarmingTool, InventoryResource, StudyGroup
-from src.settings import GogglesStatus
+from src.settings import GogglesStatus, Coordinate
 from src.support import resource_path
 
 CONVERT_TO_FT = "__FarmingTool__"
@@ -78,3 +78,14 @@ def save(
 def load_savefile():
     with open(resource_path("data/save.json"), "r") as file:
         return json.loads(jsmin(file.read()), object_hook=decoder_object_hook)
+
+
+class SaveFile:
+    _has_goggles: GogglesStatus
+    _study_group: StudyGroup
+    _current_tool: FarmingTool
+    _current_seed: FarmingTool
+    _money: int
+    _inventory: dict[InventoryResource, int]
+    _soil_data: dict[Coordinate, ]
+

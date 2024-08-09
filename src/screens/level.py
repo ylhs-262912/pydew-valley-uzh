@@ -341,7 +341,8 @@ class Level:
         self.current_day += 1
 
         # plants + soil
-        self.soil_layer.update()
+        if self.current_map == Map.NEW_FARM:
+            self.soil_layer.update()
 
         self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining

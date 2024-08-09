@@ -239,13 +239,16 @@ class SoilLayer:
                 if tile.planted:
                     self._unwatered_tiles.add(tile.pos)
 
-    def reset(self):
-        self.tiles = {}
-        self.soil_sprites.empty()
-        self.water_sprites.empty()
-        self.plant_sprites.empty()
+    # def reset(self):
+    #     self.tiles = {}
+    #     self.soil_sprites.empty()
+    #     self.water_sprites.empty()
+    #     self.plant_sprites.empty()
 
     def create_soil_tiles(self, layer: TiledTileLayer):
+        if self.tiles:
+            self.all_sprites.add(self.soil_sprites, self.plant_sprites, self.water_sprites)
+            return
         for x, y, _ in layer.tiles():
             tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
 
@@ -365,10 +368,10 @@ class SoilLayer:
         tile_right = self.tiles.get((x + 1, y))
         tile_left = self.tiles.get((x - 1, y))
 
-        hoed_above = tile_above.hoed if tile_above else False
-        hoed_below = tile_below.hoed if tile_below else False
-        hoed_right = tile_right.hoed if tile_right else False
-        hoed_left = tile_left.hoed if tile_left else False
+        hoed_above = getattr(tile_above, "hoed", False)
+        hoed_below = getattr(tile_below, "hoed", False)
+        hoed_right = getattr(tile_right, "hoed", False)
+        hoed_left = getattr(tile_left, "hoed", False)
 
         if all((hoed_above, hoed_right, hoed_below, hoed_left)):
             return "x"

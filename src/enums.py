@@ -193,20 +193,20 @@ class SeedType(IntEnum):
 
     @classmethod
     def from_farming_tool(cls, val: FarmingTool):
-        return cls(cls._AS_FTS.index(val))
+        return cls(cls._AS_FTS.index(val))  # noqa
 
     @classmethod
     def from_inventory_resource(cls, val: InventoryResource):
-        return cls(cls._AS_IRS.index(val))
+        return cls(cls._AS_IRS.index(val))  # noqa
 
     def as_fts(self):
-        return self._AS_FTS[self]
+        return self._AS_FTS[self]  # noqa
 
     def as_ir(self):
-        return self._AS_IRS[self]
+        return self._AS_IRS[self]  # noqa
 
     def as_nonseed_ir(self):
-        return self._AS_NS_IRS[self]
+        return self._AS_NS_IRS[self]  # noqa
 
     def as_plant_name(self):
         return self._AS_FTS[self].as_serialised_string().removesuffix("_seed")
