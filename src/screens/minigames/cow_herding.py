@@ -9,15 +9,15 @@ from pathfinding.core.grid import Grid
 from src.controls import Controls
 from src.enums import Direction
 from src.groups import PersistentSpriteGroup
-from src.npc.behaviour.cow_behaviour_tree import (
-    CowConditionalBehaviourTree,
-    CowContinuousBehaviourTree,
-)
 from src.npc.cow import Cow
 from src.npc.setup import AIData
 from src.overlay.overlay import Overlay
 from src.screens.game_map import GameMap
 from src.screens.minigames.base import Minigame, MinigameState
+from src.screens.minigames.cow_herding_behaviour import (
+    CowHerdingBehaviourTree,
+    CowHerdingContext,
+)
 from src.screens.minigames.cow_herding_overlay import (
     _CowHerdingOverlay,
     _CowHerdingScoreboard,
@@ -85,42 +85,36 @@ class CowHerding(Minigame):
     def _setup(self):
         self.player_collision_sprites = self._state.collision_sprites.copy()
 
-        self.l_barn_collider = None
+        self.barn_entrance_collider = None
 
-        self.l_barn_matrix = [row.copy() for row in AIData.Matrix]
+        barn_matrix = [row.copy() for row in AIData.Matrix]
+        range_matrix = [row.copy() for row in AIData.Matrix]
 
         colliders = {}
         cows = []
         for i in self._state.game_map.minigame_layer:
-            if i.name == "Cow":
-                pass
-            elif i.name == "L_COW":
+            if i.name == "L_COW":
                 cows.append(i)
             else:
                 colliders[i.name] = i
 
         obj = colliders["L_RANGE"]
-        add_pf_matrix_collision(
-            self.l_barn_matrix, (obj.x, obj.y), (obj.width, obj.height)
-        )
+        add_pf_matrix_collision(barn_matrix, (obj.x, obj.y), (obj.width, obj.height))
 
         obj = colliders["L_BARN_ENTRANCE"]
+        add_pf_matrix_collision(range_matrix, (obj.x, obj.y), (obj.width, obj.height))
         pos = (obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR)
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
-        l_barn_entrance_collider = Sprite(pos, image, name=obj.name)
-        add_pf_matrix_collision(
-            self.l_barn_matrix, (obj.x, obj.y), (obj.width, obj.height)
-        )
-        l_barn_entrance_collider.add(self.player_collision_sprites)
+        self.barn_entrance_collider = Sprite(pos, image, name=obj.name)
+        self.barn_entrance_collider.add(self.player_collision_sprites)
 
         obj = colliders["L_BARN_AREA"]
-        pos = (obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR)
-        size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
-        image = pygame.Surface(size)
-        self.l_barn_collider = Sprite(pos, image, name=obj.name)
+        add_pf_matrix_collision(range_matrix, (obj.x, obj.y), (obj.width, obj.height))
 
-        self.l_barn_grid = Grid(matrix=self.l_barn_matrix)
+        CowHerdingContext.default_grid = AIData.Grid
+        CowHerdingContext.barn_grid = Grid(matrix=barn_matrix)
+        CowHerdingContext.range_grid = Grid(matrix=range_matrix)
 
         for obj in cows:
             pos = (obj.x * SCALE_FACTOR, obj.y * SCALE_FACTOR)
@@ -130,7 +124,7 @@ class CowHerding(Minigame):
                 groups=(self._state.all_sprites, self._state.collision_sprites),
                 collision_sprites=self._state.collision_sprites,
             )
-            cow.conditional_behaviour_tree = CowConditionalBehaviourTree.Wander
+            cow.conditional_behaviour_tree = CowHerdingBehaviourTree.WanderRange
             self._cows.append(cow)
             self._cows_original_positions.append(pos)
 
@@ -157,9 +151,9 @@ class CowHerding(Minigame):
     def check_cows(self):
         cows_herded_in = []
         for cow in self._cows:
-            if cow.hitbox_rect.colliderect(self.l_barn_collider.rect):
+            if cow.hitbox_rect.colliderect(self.barn_entrance_collider.rect):
+                cow.conditional_behaviour_tree = CowHerdingBehaviourTree.WanderBarn
                 cow.continuous_behaviour_tree = None
-                cow.pf_grid = self.l_barn_grid
                 cows_herded_in.append(cow)
                 self._state.sounds["success"].play()
 
@@ -212,8 +206,8 @@ class CowHerding(Minigame):
                 self._state.player.blocked = False
                 self._state.sounds["countdown_end"].play()
                 for cow in self._cows:
-                    cow.conditional_behaviour_tree = CowConditionalBehaviourTree.Wander
-                    cow.continuous_behaviour_tree = CowContinuousBehaviourTree.Flee
+                    cow.conditional_behaviour_tree = CowHerdingBehaviourTree.WanderRange
+                    cow.continuous_behaviour_tree = CowHerdingBehaviourTree.Flee
 
     def draw(self):
         if self._ctime <= self._ani_countdown_start:
