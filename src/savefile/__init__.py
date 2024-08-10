@@ -2,15 +2,16 @@ import json
 
 from jsmin import jsmin
 
-from src.enums import FarmingTool, InventoryResource, StudyGroup
-from src.settings import GogglesStatus, Coordinate
+from src.enums import FarmingTool, InventoryResource, SeedType, StudyGroup
+from src.savefile.tile_info import PlantInfo, TileInfo
+from src.settings import GogglesStatus
 from src.support import resource_path
 
 CONVERT_TO_FT = "__FarmingTool__"
 CONVERT_TO_IR = "__InventoryResource__"
 
 
-def as_farmingtool(o: dict):
+def _as_farmingtool(o: dict):
     if CONVERT_TO_FT in o:
         ret = o.copy()
         del ret[CONVERT_TO_FT]
@@ -22,7 +23,7 @@ def as_farmingtool(o: dict):
     return o
 
 
-def as_inventoryresource(o: dict):
+def _as_inventoryresource(o: dict):
     if CONVERT_TO_IR in o:
         ret = o.copy()
         del ret[CONVERT_TO_IR]
@@ -34,7 +35,7 @@ def as_inventoryresource(o: dict):
     return o
 
 
-def extract_group(o: dict):
+def _extract_group(o: dict):
     if "group" in o:
         ret = o.copy()
         ret["group"] = StudyGroup(ret["group"])
@@ -42,10 +43,32 @@ def extract_group(o: dict):
     return o
 
 
-def decoder_object_hook(o):
-    processed = as_farmingtool(o)
-    processed = as_inventoryresource(processed)
-    processed = extract_group(processed)
+def _extract_tile_info(o: dict):
+    if "soil_data" in o:
+        ret = o.copy()
+        orig_soil_data = ret["soil_data"]
+        converted_data = {}
+        for pos, info in orig_soil_data.items():
+            plant_info_orig = info.get("plant_info")
+            if plant_info_orig is not None:
+                new_plant_info = PlantInfo(
+                    SeedType(plant_info_orig["plant_type"], plant_info_orig["age"])
+                )
+            else:
+                new_plant_info = None
+            is_hoed = info.get("hoed", False)
+            is_watered = info.get("watered", False)
+            converted_data[pos] = TileInfo(is_hoed, is_watered, pos, new_plant_info)
+        ret["soil_data"] = converted_data
+        return ret
+    return o
+
+
+def _decoder_object_hook(o):
+    processed = _as_farmingtool(o)
+    processed = _as_inventoryresource(processed)
+    processed = _extract_group(processed)
+    processed = _extract_tile_info(processed)
     return processed
 
 
@@ -77,15 +100,4 @@ def save(
 
 def load_savefile():
     with open(resource_path("data/save.json"), "r") as file:
-        return json.loads(jsmin(file.read()), object_hook=decoder_object_hook)
-
-
-class SaveFile:
-    _has_goggles: GogglesStatus
-    _study_group: StudyGroup
-    _current_tool: FarmingTool
-    _current_seed: FarmingTool
-    _money: int
-    _inventory: dict[InventoryResource, int]
-    _soil_data: dict[Coordinate, ]
-
+        return json.loads(jsmin(file.read()), object_hook=_decoder_object_hook)

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="80" height="40" tilewidth="16" tileheight="16" infinite="0" nextlayerid="24" nextobjectid="372">
+<map version="1.10" tiledversion="1.11.0" orientation="orthogonal" renderorder="right-down" width="80" height="40" tilewidth="16" tileheight="16" infinite="0" nextlayerid="24" nextobjectid="374">
  <tileset firstgid="1" source="../tilesets/grass_tileset.tsx"/>
  <tileset firstgid="78" source="../tilesets/Interaction.tsx"/>
  <tileset firstgid="80" source="../tilesets/fence_tileset.tsx"/>
@@ -880,7 +880,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,246,274,313,340,324,324,324,324,313,317,273,247,247,274,340,324,324,324,339,317,273,247,248,0,0,0,0,0,0,0,246,247,274,340,324,324,324,324,324,324,328,329,324,324,324,339,340,324,324,328,329,324
 </data>
  </layer>
- <objectgroup id="23" name="Collisions" visible="0">
+ <objectgroup id="23" name="Collisions">
   <object id="295" x="164" y="135" width="11" height="89"/>
   <object id="303" x="143" y="206.5" width="21" height="433.5"/>
   <object id="304" x="164" y="252" width="16" height="56"/>
@@ -950,5 +950,7 @@
   <object id="365" x="697.5" y="261" width="81.5" height="6.5"/>
   <object id="366" x="836.5" y="261" width="86.3333" height="6.5"/>
   <object id="367" x="917.5" y="89.5" width="5.5" height="171.833"/>
+  <object id="372" x="381.5" y="475.375" width="13.875" height="12.125"/>
+  <object id="373" x="865.019" y="475.938" width="13.875" height="12.125"/>
  </objectgroup>
 </map>
