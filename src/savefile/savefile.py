@@ -55,7 +55,7 @@ def _extract_tile_info(o: dict):
         ret = o.copy()
         orig_soil_data = ret["soil_data"]
         converted_data = {}
-        for pos, info in orig_soil_data.items():
+        for info in orig_soil_data:
             plant_info_orig = info.get("plant_info")
             if plant_info_orig is not None:
                 new_plant_info = PlantInfo(
@@ -64,7 +64,10 @@ def _extract_tile_info(o: dict):
             else:
                 new_plant_info = None
             is_watered = info.get("watered", False)
-            converted_data[pos] = TileInfo(is_watered, pos, new_plant_info)
+            pos = tuple(info["pos"])
+            converted_data[pos] = TileInfo(
+                is_watered, pos, new_plant_info
+            )
         ret["soil_data"] = converted_data
         return ret
     return o
@@ -89,7 +92,7 @@ class SaveFile:
     _current_tool: FarmingTool
     _current_seed: FarmingTool
     _money: int
-    _inventory: dict[InventoryResource, int]
+    inventory: dict[InventoryResource, int]
     _soil_data: dict[Coordinate, TileInfo]
 
     def __init__(
@@ -105,7 +108,7 @@ class SaveFile:
         self._current_tool = current_tool
         self._current_seed = current_seed
         self._money = money
-        self._inventory = {
+        self.inventory = {
             res: inventory.get(
                 res.as_serialised_string(),
                 _SEED_INVENTORY_DEFAULT_AMOUNT
@@ -121,7 +124,34 @@ class SaveFile:
     @classmethod
     def load(cls):
         data = _load_internal()
+        data.setdefault("group", StudyGroup.INGROUP)
+        data.setdefault("goggles_status", None)
+        data.setdefault("current_tool", FarmingTool.get_first_tool_id())
+        data.setdefault("current_seed", FarmingTool.get_first_seed_id())
         return SaveFile(**data)
+
+    def _jsonify_soil_data(self):
+        return [tile_info.__json__() for tile_info in self.soil_data.values()]
+
+    def save(self):
+        with open(resource_path("data/save.json"), "w") as file:
+            serialised_inventory = {
+                k.as_serialised_string(): self.inventory[k] for k in self.inventory
+            }
+            keys_to_convert = list(serialised_inventory.keys())
+            serialised_inventory[CONVERT_TO_IR] = keys_to_convert
+            obj_to_dump = {
+                CONVERT_TO_FT: ["current_tool", "current_seed"],
+                "money": self.money,
+                "current_tool": self.current_tool.as_serialised_string(),
+                "current_seed": self.current_seed.as_serialised_string(),
+                "group": self.study_group.value,
+                "goggles_status": self.has_goggles,
+                "inventory": serialised_inventory,
+            }
+            if self._soil_data:
+                obj_to_dump["soil_data"] = self._jsonify_soil_data()
+            json.dump(obj_to_dump, file, indent=2)
 
     @property
     def current_tool(self):

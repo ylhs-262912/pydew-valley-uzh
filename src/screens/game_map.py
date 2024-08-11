@@ -22,6 +22,7 @@ from src.npc.cow import Cow
 from src.npc.npc import NPC
 from src.npc.setup import AIData
 from src.overlay.soil import SoilLayer
+from src.savefile import SaveFile
 from src.settings import (
     ENABLE_NPCS,
     SCALE_FACTOR,
@@ -150,6 +151,7 @@ class GameMap:
     def __init__(
         self,
         tilemap: TiledMap,
+        save_file: SaveFile,
         # Sprite groups
         all_sprites: AllSprites,
         collision_sprites: PersistentSpriteGroup,
@@ -217,7 +219,7 @@ class GameMap:
         self.npcs = []
         self.animals = []
 
-        self._setup_layers()
+        self._setup_layers(save_file)
 
         if SETUP_PATHFINDING:
             AIData.update(self._pf_matrix, self.player)
@@ -556,7 +558,7 @@ class GameMap:
 
     # endregion
 
-    def _setup_layers(self):
+    def _setup_layers(self, save_file: SaveFile):
         """
         Iterates over all map layers, updates the GameMap state and creates
         all Sprites for the map.
@@ -565,7 +567,9 @@ class GameMap:
             if isinstance(tilemap_layer, TiledTileLayer):
                 # create soil layer
                 if tilemap_layer.name == "Farmable":
-                    self.soil_layer.create_soil_tiles(tilemap_layer)
+                    self.soil_layer.create_soil_tiles(
+                        tilemap_layer, save_file.soil_data
+                    )
                     continue
                 elif tilemap_layer.name == "Border":
                     _setup_tile_layer(

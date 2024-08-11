@@ -261,12 +261,17 @@ class SoilLayer:
 
             tile.farmable = True
 
-            if previous_soil_data is not None:
+            if previous_soil_data is not None and previous_soil_data:
                 self._prepare_tile_from_saved_data(tile, (x, y), previous_soil_data)
 
             self.tiles[(x, y)] = tile
 
+        for pos, tile in self.tiles.items():
+            self.update_tile_image(tile, pos)
+
     def _prepare_tile_from_saved_data(self, tile, pos, prev_data: dict):
+        if pos not in prev_data:
+            return
         tile_info = prev_data[pos]
         self._hoe(tile)
         if tile_info.watered:

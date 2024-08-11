@@ -15,6 +15,7 @@ from src.overlay.overlay import Overlay
 from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
+from src.savefile import SaveFile
 from src.screens.game_map import GameMap
 from src.settings import (
     GAME_MAP,
@@ -43,6 +44,7 @@ class Level:
     tmx_maps: MapDict
     current_map: Map | None
     game_map: GameMap | None
+    save_file: SaveFile
 
     # sprite groups
     all_sprites: AllSprites
@@ -83,10 +85,12 @@ class Level:
         tmx_maps: MapDict,
         frames: dict[str, dict],
         sounds: SoundDict,
+        save_file: SaveFile,
     ):
         # main setup
         self.display_surface = pygame.display.get_surface()
         self.switch_screen = switch
+        self.save_file = save_file
 
         # cutscene
         target_points = [(100, 100), (200, 200), (300, 100), (800, 900)]
@@ -126,6 +130,7 @@ class Level:
             interact=self.interact,
             emote_manager=self.player_emote_manager,
             sounds=self.sounds,
+            save_file=self.save_file,
         )
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
@@ -187,8 +192,8 @@ class Level:
             apply_tool=self.apply_tool,
             plant_collision=self.plant_collision,
             frames=self.frames,
+            save_file=self.save_file,
         )
-
         player_spawn = None
 
         # search for player entry warp depending on which map they came from
