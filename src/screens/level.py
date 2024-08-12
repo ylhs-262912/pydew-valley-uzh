@@ -177,6 +177,7 @@ class Level:
         # self.soil_layer.reset()
 
         self.game_map = GameMap(
+            selected_map=game_map,
             tilemap=self.tmx_maps[game_map],
             all_sprites=self.all_sprites,
             collision_sprites=self.collision_sprites,

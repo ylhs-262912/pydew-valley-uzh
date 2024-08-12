@@ -6,7 +6,7 @@ from typing import Any
 import pygame
 from pytmx import TiledElement, TiledMap, TiledObject, TiledObjectGroup, TiledTileLayer
 
-from src.enums import FarmingTool, InventoryResource, Layer
+from src.enums import FarmingTool, InventoryResource, Layer, Map
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.map_objects import MapObjects, MapObjectType
@@ -150,6 +150,7 @@ class GameMap:
 
     def __init__(
         self,
+        selected_map: Map,
         tilemap: TiledMap,
         save_file: SaveFile,
         # Sprite groups
@@ -219,7 +220,7 @@ class GameMap:
         self.npcs = []
         self.animals = []
 
-        self._setup_layers(save_file)
+        self._setup_layers(save_file, selected_map)
 
         if SETUP_PATHFINDING:
             AIData.update(self._pf_matrix, self.player)
@@ -505,7 +506,7 @@ class GameMap:
             else:
                 warnings.warn(f'Invalid player warp "{name}"')
 
-    def _setup_npc(self, pos: tuple[int, int], obj: TiledObject):
+    def _setup_npc(self, pos: tuple[int, int], obj: TiledObject, gmap: Map):
         """
         Creates a new NPC sprite at the given position
         """
@@ -521,10 +522,10 @@ class GameMap:
             tree_sprites=self.tree_sprites,
         )
         behaviour = obj.properties.get("behaviour")
-        if behaviour == "Woodcutting":
-            npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
-        else:
+        if behaviour != "Woodcutting" and gmap != Map.NEW_FARM:
             npc.conditional_behaviour_tree = NPCBehaviourTree.Farming
+        else:
+            npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
         return npc
 
     def _setup_animal(self, pos: tuple[int, int], obj: TiledObject):
@@ -558,7 +559,7 @@ class GameMap:
 
     # endregion
 
-    def _setup_layers(self, save_file: SaveFile):
+    def _setup_layers(self, save_file: SaveFile, gmap: Map):
         """
         Iterates over all map layers, updates the GameMap state and creates
         all Sprites for the map.
@@ -646,7 +647,7 @@ class GameMap:
                 elif tilemap_layer.name == "NPCs":
                     if ENABLE_NPCS:
                         self.npcs = _setup_object_layer(
-                            tilemap_layer, lambda pos, obj: self._setup_npc(pos, obj)
+                            tilemap_layer, lambda pos, obj: self._setup_npc(pos, obj, gmap)
                         )
                     else:
                         continue

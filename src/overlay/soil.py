@@ -385,7 +385,7 @@ class SoilLayer:
         """:return: Whether the tile was successfully harvested or not"""
 
         tile = self.tiles.get(pos)
-        if tile and tile.plant.harvestable:
+        if tile and getattr(tile.plant, "harvestable", False):
             # add resource
             resource = SeedType.as_nonseed_ir(tile.plant.seed_type)
             quantity = 3
