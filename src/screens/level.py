@@ -55,6 +55,7 @@ class Level:
     all_sprites: AllSprites
     collision_sprites: PersistentSpriteGroup
     tree_sprites: PersistentSpriteGroup
+    bush_sprites: PersistentSpriteGroup
     interaction_sprites: PersistentSpriteGroup
     drop_sprites: pygame.sprite.Group
     player_exit_warps: pygame.sprite.Group
@@ -113,6 +114,7 @@ class Level:
         self.all_sprites = AllSprites()
         self.collision_sprites = PersistentSpriteGroup()
         self.tree_sprites = PersistentSpriteGroup()
+        self.bush_sprites = PersistentSpriteGroup()
         self.interaction_sprites = PersistentSpriteGroup()
         self.drop_sprites = pygame.sprite.Group()
         self.player_exit_warps = pygame.sprite.Group()
@@ -175,6 +177,7 @@ class Level:
         self.collision_sprites.empty()
         self.interaction_sprites.empty()
         self.tree_sprites.empty()
+        self.bush_sprites.empty()
         self.player_exit_warps.empty()
 
         # clear existing soil_layer
@@ -189,6 +192,7 @@ class Level:
             collision_sprites=self.collision_sprites,
             interaction_sprites=self.interaction_sprites,
             tree_sprites=self.tree_sprites,
+            bush_sprites=self.bush_sprites,
             player_exit_warps=self.player_exit_warps,
             player=self.player,
             player_emote_manager=self.player_emote_manager,
@@ -324,6 +328,11 @@ class Level:
                 self.start_day_transition()
             if collided_interactions[0].name == "Trader":
                 self.switch_screen(GameState.SHOP)
+            if collided_interactions[0] in self.bush_sprites.sprites():
+                if self.player.axe_hitbox.colliderect(
+                    collided_interactions[0].hitbox_rect
+                ):
+                    collided_interactions[0].hit(self.player)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         hitbox_key = self.player.controls.DEBUG_SHOW_HITBOXES.control_value
@@ -384,6 +393,10 @@ class Level:
                 fruit.kill()
             if tree.alive:
                 tree.create_fruit()
+        for bush in self.bush_sprites:
+            for fruit in bush.fruit_sprites:
+                fruit.kill()
+                bush.create_fruit()
 
         # sky
         self.sky.start_color = [255, 255, 255]
