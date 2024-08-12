@@ -647,7 +647,8 @@ class GameMap:
                 elif tilemap_layer.name == "NPCs":
                     if ENABLE_NPCS:
                         self.npcs = _setup_object_layer(
-                            tilemap_layer, lambda pos, obj: self._setup_npc(pos, obj, gmap)
+                            tilemap_layer,
+                            lambda pos, obj: self._setup_npc(pos, obj, gmap),
                         )
                     else:
                         continue

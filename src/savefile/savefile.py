@@ -65,9 +65,7 @@ def _extract_tile_info(o: dict):
                 new_plant_info = None
             is_watered = info.get("watered", False)
             pos = tuple(info["pos"])
-            converted_data[pos] = TileInfo(
-                is_watered, pos, new_plant_info
-            )
+            converted_data[pos] = TileInfo(is_watered, pos, new_plant_info)
         ret["soil_data"] = converted_data
         return ret
     return o
