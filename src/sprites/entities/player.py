@@ -63,7 +63,7 @@ class Player(Character):
 
         self.controls = Controls
         self.load_controls()
-        self.originalSpeed = 250
+        self.original_speed = 250
         self.speed = 250
         self.blocked = False
         self.paused = False
@@ -98,8 +98,8 @@ class Player(Character):
         self.sounds = sounds
 
         self.hp = hp
-        self.createTime = time.time()
-        self.createWait = 0.25
+        self.created_time = time.time()
+        self.delay_time_speed = 0.25
 
     def draw(self, display_surface, offset):
         super().draw(display_surface, offset)
@@ -302,14 +302,16 @@ class Player(Character):
             self.rect.size,
         )
 
-    def speedHealth(self):
-        currentTime = time.time()
-        if currentTime - self.createTime >= self.createWait:
-            self.speed = self.originalSpeed * (self.hp / 100)
+    # sets the player's transparency and speed according to their health 
 
-    def transparencyHealth(self):
-        alphaValue = 255 * (self.hp / 100)
-        self.image.set_alpha(alphaValue)
+    def set_speed_asper_health(self):
+        current_time = time.time()
+        if current_time - self.created_time >= self.delay_time_speed:
+            self.speed = self.original_speed * (self.hp / 100)
+
+    def set_transparency_asper_health(self):
+        alpha_value = 255 * (self.hp / 100)
+        self.image.set_alpha(alpha_value)
 
     def check_bath_bool(self):
         if (round(time.time() - self.bath_time)) == BATH_STATUS_TIMEOUT:
@@ -339,8 +341,8 @@ class Player(Character):
             self.sounds[sound].play()
 
     def update(self, dt):
-        self.speedHealth()
-        self.transparencyHealth()
+        self.set_speed_asper_health()
+        self.set_transparency_asper_health()
         self.check_bath_bool()
         self.handle_controls()
         super().update(dt)
