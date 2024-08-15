@@ -1,21 +1,14 @@
 {
-  "__FarmingTool__": [
-    "current_tool",
-    "current_seed"
-  ],
-  "money": 216,
-  "current_tool": "axe",
-  "current_seed": "tomato_seed",
-  "group": 1,
-  "goggles_status": false,
-  "inventory": {
-    "wood": 26,
-    "apple": 24,
-    "corn": 32,
-    "__InventoryResource__": [
-      "wood",
-      "apple",
-      "corn"
-    ]
-  }
+	"__FarmingTool__": ["current_tool", "current_seed"],
+	"money": 216,
+	"current_tool": "axe",
+	"current_seed": "tomato_seed",
+	"group": 1,
+	"goggles_status": false,
+	"inventory": {
+		"wood": 26,
+		"apple": 24,
+		"corn": 32,
+		"__InventoryResource__": ["wood", "apple", "corn"]
+	}
 }

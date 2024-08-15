@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Callable, Type
 
 import pygame  # noqa
@@ -10,7 +11,7 @@ from src.enums import EntityState, FarmingTool, InventoryResource, ItemToUse, St
 from src.events import OPEN_INVENTORY, post_event
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, GogglesStatus, SoundDict
+from src.settings import BATH_STATUS_TIMEOUT, Coordinate, GogglesStatus, SoundDict
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -43,6 +44,9 @@ class Player(Character):
         interact: Callable[[], None],
         emote_manager: PlayerEmoteManager,
         sounds: SoundDict,
+        hp: int,
+        bathstat: bool,
+        bath_time: float,
     ):
         save_data = savefile.load_savefile()
 
@@ -56,18 +60,20 @@ class Player(Character):
         )
 
         # movement
+
         self.controls = Controls
         self.load_controls()
+        self.original_speed = 250
         self.speed = 250
         self.blocked = False
         self.paused = False
         self.interact = interact
+        self.bathstat = bathstat
+        self.bath_time = bath_time
         self.has_goggles: GogglesStatus = save_data.get("goggles_status")
         self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
-
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
-
         # load saved tools
         self.current_tool = save_data.get(
             "current_tool", FarmingTool.get_first_tool_id()
@@ -91,9 +97,12 @@ class Player(Character):
         # sounds
         self.sounds = sounds
 
+        self.hp = hp
+        self.created_time = time.time()
+        self.delay_time_speed = 0.25
+
     def draw(self, display_surface, offset):
         super().draw(display_surface, offset)
-
         blit_list = []
 
         # TODO: allow for more combos (i.e. stop assuming the player
@@ -293,6 +302,21 @@ class Player(Character):
             self.rect.size,
         )
 
+    # sets the player's transparency and speed according to their health
+
+    def set_speed_asper_health(self):
+        current_time = time.time()
+        if current_time - self.created_time >= self.delay_time_speed:
+            self.speed = self.original_speed * (self.hp / 100)
+
+    def set_transparency_asper_health(self):
+        alpha_value = 255 * (self.hp / 100)
+        self.image.set_alpha(alpha_value)
+
+    def check_bath_bool(self):
+        if (round(time.time() - self.bath_time)) == BATH_STATUS_TIMEOUT:
+            self.bathstat = False
+
     def teleport(self, pos: tuple[float, float]):
         """
         Moves the Player rect directly to the specified point without checking
@@ -317,9 +341,11 @@ class Player(Character):
             self.sounds[sound].play()
 
     def update(self, dt):
+        self.set_speed_asper_health()
+        self.set_transparency_asper_health()
+        self.check_bath_bool()
         self.handle_controls()
         super().update(dt)
-
         self.emote_manager.update_obj(
             self, (self.rect.centerx - 47, self.rect.centery - 128)
         )
