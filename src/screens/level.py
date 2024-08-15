@@ -1,3 +1,4 @@
+import time
 import warnings
 from collections.abc import Callable
 from functools import partial
@@ -16,6 +17,7 @@ from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.gui.scene_animation import SceneAnimation
 from src.npc.setup import AIData
+from src.overlay.game_time import GameTime
 from src.overlay.overlay import Overlay
 from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
@@ -23,6 +25,7 @@ from src.overlay.transition import Transition
 from src.screens.game_map import GameMap
 from src.settings import (
     GAME_MAP,
+    HEALTH_DECAY_VALUE,
     SCALED_TILE_SIZE,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -138,6 +141,9 @@ class Level:
             interact=self.interact,
             emote_manager=self.player_emote_manager,
             sounds=self.sounds,
+            hp=0,
+            bathstat=False,
+            bath_time=0,
         )
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
@@ -149,7 +155,8 @@ class Level:
         self.drops_manager.player = self.player
 
         # weather
-        self.sky = Sky()
+        self.game_time = GameTime()
+        self.sky = Sky(self.game_time)
         self.rain = Rain(self.all_sprites, self.frames["level"])
         self.raining = False
 
@@ -167,7 +174,7 @@ class Level:
         self.current_day = 0
 
         # overlays
-        self.overlay = Overlay(self.player, frames["overlay"])
+        self.overlay = Overlay(self.player, frames["overlay"], self.game_time)
         self.show_hitbox_active = False
 
     def load_map(self, game_map: Map, from_map: str = None):
@@ -280,6 +287,8 @@ class Level:
             if map_name == "bathhouse":
                 self.overlay.health_bar.apply_health(9999999)
                 self.reset()
+                self.player.bathstat = True
+                self.player.bath_time = time.time()
             else:
                 warnings.warn(f'Error loading map: Map "{map_name}" not found')
 
@@ -406,6 +415,18 @@ class Level:
         self.map_transition.activate()
         self.start_transition()
 
+    def decay_health(self):
+        if self.player.hp > 10:
+            if not self.player.bathstat and not self.player.has_goggles:
+                self.overlay.health_bar.apply_damage(HEALTH_DECAY_VALUE)
+            elif (
+                not self.player.bathstat
+                and self.player.has_goggles
+                or self.player.bathstat
+                and not self.player.has_goggles
+            ):
+                self.overlay.health_bar.apply_damage((HEALTH_DECAY_VALUE / 2))
+
     def check_map_exit(self):
         if not self.map_transition:
             for warp_hitbox in self.player_exit_warps:
@@ -469,10 +490,11 @@ class Level:
                 )
 
     def draw_overlay(self):
-        current_time = self.sky.get_time()
-        self.overlay.display(current_time)
+        self.sky.display()
+        self.overlay.display()
 
     def draw(self, dt: float, move_things: bool):
+        self.player.hp = self.overlay.health_bar.hp
         self.display_surface.fill((130, 168, 132))
         self.all_sprites.draw(self.camera)
         self.zoom_manager.apply_zoom()
@@ -493,6 +515,7 @@ class Level:
 
     def update(self, dt: float, move_things: bool = True):
         # update
+        self.game_time.update()
         self.check_map_exit()
         self.update_rain()
         self.day_transition.update()
@@ -516,6 +539,7 @@ class Level:
                 else self.player,
                 dt,
             )
+            self.decay_health()
         # draw
         self.draw(dt, move_things)
         self.draw_hitboxes()
