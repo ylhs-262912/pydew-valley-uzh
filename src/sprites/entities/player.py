@@ -11,7 +11,7 @@ from src.enums import EntityState, FarmingTool, InventoryResource, ItemToUse, St
 from src.events import OPEN_INVENTORY, post_event
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, GogglesStatus, SoundDict
+from src.settings import BATH_STATUS_TIMEOUT, Coordinate, GogglesStatus, SoundDict
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -312,7 +312,7 @@ class Player(Character):
         self.image.set_alpha(alphaValue)
 
     def check_bath_bool(self):
-        if (round(time.time() - self.bath_time)) == 10:
+        if (round(time.time() - self.bath_time)) == BATH_STATUS_TIMEOUT:
             self.bathstat = False
 
     def teleport(self, pos: tuple[float, float]):
