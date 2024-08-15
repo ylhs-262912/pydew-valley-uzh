@@ -302,7 +302,7 @@ class Player(Character):
             self.rect.size,
         )
 
-    # sets the player's transparency and speed according to their health 
+    # sets the player's transparency and speed according to their health
 
     def set_speed_asper_health(self):
         current_time = time.time()
