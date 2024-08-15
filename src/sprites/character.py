@@ -60,6 +60,9 @@ class Character(Entity, ABC):
         self.inventory = {
             InventoryResource.WOOD: 0,
             InventoryResource.APPLE: 0,
+            InventoryResource.BLACKBERRY: 0,
+            InventoryResource.BLUEBERRY: 0,
+            InventoryResource.RASPBERRY: 0,
             InventoryResource.ORANGE: 0,
             InventoryResource.PEACH: 0,
             InventoryResource.PEAR: 0,

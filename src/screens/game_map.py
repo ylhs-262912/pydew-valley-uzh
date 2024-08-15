@@ -34,6 +34,7 @@ from src.sprites.base import AnimatedSprite, CollideableMapObject, Sprite
 from src.sprites.character import Character
 from src.sprites.drops import DropsManager
 from src.sprites.entities.player import Player
+from src.sprites.objects.berry_bush import BerryBush
 from src.sprites.objects.tree import Tree
 from src.sprites.setup import ENTITY_ASSETS
 
@@ -154,6 +155,7 @@ class GameMap:
         collision_sprites: PersistentSpriteGroup,
         interaction_sprites: PersistentSpriteGroup,
         tree_sprites: PersistentSpriteGroup,
+        bush_sprites: PersistentSpriteGroup,
         player_exit_warps: pygame.sprite.Group,
         # Player instance
         player: Player,
@@ -179,6 +181,7 @@ class GameMap:
         self.collision_sprites = collision_sprites
         self.interaction_sprites = interaction_sprites
         self.tree_sprites = tree_sprites
+        self.bush_sprites = bush_sprites
 
         self.player = player
 
@@ -375,6 +378,40 @@ class GameMap:
                 self.collision_sprites,
             )
 
+    def _setup_bush(
+        self, pos: tuple[int, int], obj: TiledObject, object_type: MapObjectType
+    ):
+        props = obj.properties
+        if props.get("size") == "medium":
+            fruit = props.get("fruit_type")
+            if fruit == "no_fruit":
+                fruit_type, fruit_frames = None, None
+            else:
+                fruit_type = InventoryResource.from_serialised_string(fruit)
+                fruit_frames = self.frames["level"]["objects"][fruit]
+
+            bush = BerryBush(
+                pos,
+                object_type,
+                (
+                    self.all_sprites,
+                    self.collision_sprites,
+                    self.bush_sprites,
+                    self.interaction_sprites,
+                ),
+                obj.name,
+                fruit_frames,
+                fruit_type,
+            )
+            # we need a bush surf without fruits
+            bush.image = self.frames["level"]["objects"]["bush_medium"]
+            bush.surf = bush.image
+        else:
+            CollideableMapObject(pos, object_type, z=Layer.MAIN).add(
+                self.all_sprites,
+                self.collision_sprites,
+            )
+
     def _setup_map_object(
         self,
         pos: tuple[int, int],
@@ -396,6 +433,9 @@ class GameMap:
         if object_type.hitbox is not None:
             if props.get("type") == "tree":
                 self._setup_tree(pos, obj, object_type)
+            elif props.get("type") == "bush":
+                self._setup_bush(pos, obj, object_type)
+
             else:
                 if object_type.hitbox is not None:
                     CollideableMapObject(pos, object_type, z=layer).add(
@@ -526,23 +566,6 @@ class GameMap:
                 # create soil layer
                 if tilemap_layer.name == "Farmable":
                     self.soil_layer.create_soil_tiles(tilemap_layer)
-                    continue
-                elif tilemap_layer.name == "Fence":
-                    # TODO: Convert the Fence layer to an object layer, or add
-                    #  tiles of the Fencer layer to MapObjects to allow for
-                    #  smaller hitboxes
-                    _setup_tile_layer(
-                        tilemap_layer,
-                        lambda pos, image: self._setup_collideable_tile(
-                            pos,
-                            image,
-                            Layer.MAIN,
-                            (
-                                self.all_sprites,
-                                self.collision_sprites,
-                            ),
-                        ),
-                    )
                     continue
                 elif tilemap_layer.name == "Border":
                     _setup_tile_layer(
