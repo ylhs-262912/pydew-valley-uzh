@@ -1,3 +1,4 @@
+import time
 import warnings
 from collections.abc import Callable
 from functools import partial
@@ -18,6 +19,7 @@ from src.overlay.transition import Transition
 from src.screens.game_map import GameMap
 from src.settings import (
     GAME_MAP,
+    HEALTH_DECAY_VALUE,
     SCALED_TILE_SIZE,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
@@ -124,7 +126,9 @@ class Level:
             interact=self.interact,
             emote_manager=self.player_emote_manager,
             sounds=self.sounds,
-            hp=0
+            hp=0,
+            bathstat=False,
+            bath_time=0,
         )
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
@@ -156,6 +160,9 @@ class Level:
         # overlays
         self.overlay = Overlay(self.player, frames["overlay"])
         self.show_hitbox_active = False
+
+        # Health
+        self.HEALTH_DECAY_VALUE = 0.02
 
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map
@@ -241,8 +248,10 @@ class Level:
             if map_name == "bathhouse":
                 self.overlay.health_bar.apply_health(9999999)
                 self.reset()
+                self.player.bathstat = True
+                self.player.bath_time = time.time()
             else:
-             warnings.warn(f'Error loading map: Map "{map_name}" not found')
+                warnings.warn(f'Error loading map: Map "{map_name}" not found')
 
             # fallback which reloads the current map and sets the player to the
             # entry warp of the map that should have been switched to
@@ -356,6 +365,18 @@ class Level:
         self.map_transition.activate()
         self.start_transition()
 
+    def decay_health(self):
+        if not self.player.hp <= 10:
+            if not self.player.bathstat and not self.player.has_goggles:
+                self.overlay.health_bar.apply_damage(HEALTH_DECAY_VALUE)
+            elif (
+                not self.player.bathstat
+                and self.player.has_goggles
+                or self.player.bathstat
+                and not self.player.has_goggles
+            ):
+                self.overlay.health_bar.apply_damage((HEALTH_DECAY_VALUE / 2))
+
     def check_map_exit(self):
         if not self.map_transition:
             for warp_hitbox in self.player_exit_warps:
@@ -452,7 +473,7 @@ class Level:
         self.all_sprites.update(dt)
         self.drops_manager.update()
         self.update_cut_scene(dt)
-
+        self.decay_health()
         # draw
         self.draw(dt)
         self.draw_hitboxes()

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import time
 from typing import Callable, Type
 
 import pygame  # noqa
-import time
 
 from src import savefile, support
 from src.controls import Controls
@@ -45,6 +45,8 @@ class Player(Character):
         emote_manager: PlayerEmoteManager,
         sounds: SoundDict,
         hp: int,
+        bathstat: bool,
+        bath_time: float,
     ):
         save_data = savefile.load_savefile()
 
@@ -66,11 +68,12 @@ class Player(Character):
         self.blocked = False
         self.paused = False
         self.interact = interact
+        self.bathstat = bathstat
+        self.bath_time = bath_time
         self.has_goggles: GogglesStatus = save_data.get("goggles_status")
         self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
-
         # load saved tools
         self.current_tool = save_data.get(
             "current_tool", FarmingTool.get_first_tool_id()
@@ -98,10 +101,8 @@ class Player(Character):
         self.createTime = time.time()
         self.createWait = 0.25
 
-
     def draw(self, display_surface, offset):
         super().draw(display_surface, offset)
-
         blit_list = []
 
         # TODO: allow for more combos (i.e. stop assuming the player
@@ -133,7 +134,6 @@ class Player(Character):
             horn_ani = self.assets[horn_state][self.facing_direction]
             horn_frame = horn_ani.get_frame(self.frame_index)
             blit_list.append((horn_frame, self.rect.topleft + offset))
-        
 
         display_surface.fblits(blit_list)
 
@@ -281,7 +281,6 @@ class Player(Character):
                     )
                     self.emote_manager.toggle_emote_wheel()
 
-    
     def move(self, dt: float):
         self.hitbox_rect.update(
             (
@@ -302,15 +301,20 @@ class Player(Character):
             ),
             self.rect.size,
         )
+
     def speedHealth(self):
         currentTime = time.time()
         if currentTime - self.createTime >= self.createWait:
-            self.speed = self.originalSpeed * (self.hp/100)       
+            self.speed = self.originalSpeed * (self.hp / 100)
 
     def transparencyHealth(self):
-        alphaValue = 255 * (self.hp/100)
+        alphaValue = 255 * (self.hp / 100)
         self.image.set_alpha(alphaValue)
-        
+
+    def check_bath_bool(self):
+        if (round(time.time() - self.bath_time)) == 10:
+            self.bathstat = False
+
     def teleport(self, pos: tuple[float, float]):
         """
         Moves the Player rect directly to the specified point without checking
@@ -337,9 +341,9 @@ class Player(Character):
     def update(self, dt):
         self.speedHealth()
         self.transparencyHealth()
+        self.check_bath_bool()
         self.handle_controls()
         super().update(dt)
-
         self.emote_manager.update_obj(
             self, (self.rect.centerx - 47, self.rect.centery - 128)
         )
