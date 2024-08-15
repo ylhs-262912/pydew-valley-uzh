@@ -22,6 +22,7 @@ from src.overlay.overlay import Overlay
 from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
 from src.overlay.transition import Transition
+from src.savefile import SaveFile
 from src.screens.game_map import GameMap
 from src.settings import (
     GAME_MAP,
@@ -53,6 +54,7 @@ class Level:
     tmx_maps: MapDict
     current_map: Map | None
     game_map: GameMap | None
+    save_file: SaveFile
 
     # sprite groups
     all_sprites: AllSprites
@@ -93,10 +95,12 @@ class Level:
         tmx_maps: MapDict,
         frames: dict[str, dict],
         sounds: SoundDict,
+        save_file: SaveFile,
     ):
         # main setup
         self.display_surface = pygame.display.get_surface()
         self.switch_screen = switch
+        self.save_file = save_file
 
         # cutscene
         # target_points = [(100, 100), (200, 200), (300, 100), (800, 900)]
@@ -144,6 +148,7 @@ class Level:
             hp=0,
             bathstat=False,
             bath_time=0,
+            save_file=self.save_file,
         )
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
@@ -187,11 +192,12 @@ class Level:
         self.bush_sprites.empty()
         self.player_exit_warps.empty()
 
-        # clear existing soil_layer
-        self.soil_layer.reset()
+        # clear existing soil_layer (not done due to the fact we need to keep hoed tiles in memory)
+        # self.soil_layer.reset()
         self.quaker.reset()
 
         self.game_map = GameMap(
+            selected_map=game_map,
             tilemap=self.tmx_maps[game_map],
             scene_ani=self.cutscene_animation,
             zoom_man=self.zoom_manager,
@@ -209,6 +215,7 @@ class Level:
             apply_tool=self.apply_tool,
             plant_collision=self.plant_collision,
             frames=self.frames,
+            save_file=self.save_file,
         )
 
         self.camera.change_size(*self.game_map.size)
@@ -388,7 +395,8 @@ class Level:
         self.current_day += 1
 
         # plants + soil
-        self.soil_layer.update()
+        if self.current_map == Map.NEW_FARM:
+            self.soil_layer.update()
 
         self.raining = randint(0, 10) > 7
         self.soil_layer.raining = self.raining
@@ -499,7 +507,7 @@ class Level:
         self.all_sprites.draw(self.camera)
         self.zoom_manager.apply_zoom()
         if move_things:
-            self.sky.display(dt)
+            self.sky.display()
         self.draw_overlay()
         self.day_transition.draw()
         self.map_transition.draw()

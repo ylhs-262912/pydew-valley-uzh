@@ -5,12 +5,13 @@ from typing import Callable, Type
 
 import pygame  # noqa
 
-from src import savefile, support
+from src import support
 from src.controls import Controls
 from src.enums import EntityState, FarmingTool, InventoryResource, ItemToUse, StudyGroup
 from src.events import OPEN_INVENTORY, START_QUAKE, post_event
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
+from src.savefile import SaveFile
 from src.settings import BATH_STATUS_TIMEOUT, Coordinate, GogglesStatus, SoundDict
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
@@ -47,9 +48,8 @@ class Player(Character):
         hp: int,
         bathstat: bool,
         bath_time: float,
+        save_file: SaveFile,
     ):
-        save_data = savefile.load_savefile()
-
         super().__init__(
             pos=pos,
             assets=assets,
@@ -60,7 +60,7 @@ class Player(Character):
         )
 
         # movement
-
+        self.save_file = save_file
         self.controls = Controls
         self.load_controls()
         self.original_speed = 250
@@ -70,29 +70,17 @@ class Player(Character):
         self.interact = interact
         self.bathstat = bathstat
         self.bath_time = bath_time
-        self.has_goggles: GogglesStatus = save_data.get("goggles_status")
-        self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
+        self.has_goggles: GogglesStatus = save_file.has_goggles
+        self.study_group: StudyGroup = save_file.study_group
+
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
         # load saved tools
-        self.current_tool = save_data.get(
-            "current_tool", FarmingTool.get_first_tool_id()
-        )
-        self.current_seed = save_data.get(
-            "current_seed", FarmingTool.get_first_seed_id()
-        )
-
+        self.current_tool = save_file.current_tool
+        self.current_seed = save_file.current_seed
         # inventory
-        self.inventory = {
-            res: save_data["inventory"].get(
-                res.as_serialised_string(),
-                _SEED_INVENTORY_DEFAULT_AMOUNT
-                if res >= InventoryResource.CORN_SEED
-                else _NONSEED_INVENTORY_DEFAULT_AMOUNT,
-            )
-            for res in InventoryResource.__members__.values()
-        }
-        self.money = save_data.get("money", 200)
+        self.inventory = save_file.inventory.copy()
+        self.money = save_file.money
 
         # sounds
         self.sounds = sounds
@@ -106,8 +94,6 @@ class Player(Character):
         super().draw(display_surface, rect)
         blit_list = []
 
-        # TODO: allow for more combos (i.e. stop assuming the player
-        # has all the items of one group)
         # Render the necklace if the player has it and is in the ingroup
         is_in_ingroup = self.study_group == StudyGroup.INGROUP
         if is_in_ingroup:
@@ -161,14 +147,8 @@ class Player(Character):
             # (5 units for seeds, 20 units for everything else).
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
-        savefile.save(
-            self.current_tool,
-            self.current_seed,
-            self.money,
-            compacted_inv,
-            self.study_group,
-            self.has_goggles,
-        )
+        self.save_file.inventory = compacted_inv
+        self.save_file.save()
 
     def load_controls(self):
         self.controls.load_default_keybinds()

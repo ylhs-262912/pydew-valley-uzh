@@ -239,26 +239,54 @@ class SoilLayer:
                 if tile.planted:
                     self._unwatered_tiles.add(tile.pos)
 
-    def reset(self):
-        self.tiles = {}
-        self.soil_sprites.empty()
-        self.water_sprites.empty()
-        self.plant_sprites.empty()
+    # def reset(self):
+    #     self.tiles = {}
+    #     self.soil_sprites.empty()
+    #     self.water_sprites.empty()
+    #     self.plant_sprites.empty()
 
-    def create_soil_tiles(self, layer: TiledTileLayer):
+    def create_soil_tiles(
+        self, layer: TiledTileLayer, previous_soil_data: dict | None = None
+    ):
+        if self.tiles:
+            self.all_sprites.add(
+                self.soil_sprites, self.plant_sprites, self.water_sprites
+            )
+            return
         for x, y, _ in layer.tiles():
-            tile = Tile((x, y), (self.all_sprites, self.soil_sprites))
+            tile = Tile((x, y), ())
+            tile.add(self.all_sprites, self.soil_sprites)
 
             self._setup_tile(tile)
 
             tile.farmable = True
 
+            if previous_soil_data is not None and previous_soil_data:
+                self._prepare_tile_from_saved_data(tile, (x, y), previous_soil_data)
+
             self.tiles[(x, y)] = tile
+
+        for pos, tile in self.tiles.items():
+            self.update_tile_image(tile, pos)
+
+    def _prepare_tile_from_saved_data(self, tile, pos, prev_data: dict):
+        if pos not in prev_data:
+            return
+        tile_info = prev_data[pos]
+        self._hoe(tile)
+        if tile_info.watered:
+            self._water(tile)
+        if tile_info.plant_info is not None:
+            plant_info = tile_info.plant_info
+            seed_name = plant_info.plant_type.as_plant_name()
+            frames = self.level_frames[seed_name]
+            plant = Plant(plant_info.plant_type, (), tile, frames)
+            plant.add(self.all_sprites, self.plant_sprites)
 
     def update_tile_image(self, tile, pos):
         for dx, dy in self.neighbor_directions:
             neighbor = self.tiles.get((pos[0] + dx, pos[1] + dy))
-            if neighbor:
+            if neighbor is not None:
                 neighbor_pos = (pos[0] + dx, pos[1] + dy)
                 neighbor_type = self.determine_tile_type(neighbor_pos)
                 if neighbor.hoed:
@@ -274,32 +302,47 @@ class SoilLayer:
         else:
             tile.pf_weight = int(tile_type != "o")
 
+    def _hoe(self, tile):
+        """Hoe a tile.
+
+        WARNING: this method is for internal usage.
+        Use SoilLayer.hoe instead."""
+        if tile is not None and tile.farmable and not tile.hoed:
+            tile.hoed = True
+            self.update_tile_image(tile, tile.pos)
+            return True
+        return False
+
     def hoe(self, pos) -> bool:
         """:return: Whether the tile was successfully hoed or not"""
         tile = self.tiles.get(pos)
-        if tile and tile.farmable and not tile.hoed:
-            tile.hoed = True
-            self.update_tile_image(tile, pos)
+        return self._hoe(tile)
+
+    def _water(self, tile):
+        """Water a tile.
+
+        WARNING: this method is for internal usage.
+        Use SoilLayer.water instead."""
+        if tile is not None and tile.hoed and not tile.watered:
+            tile.watered = True
+
+            water_frames = list(self.level_frames["soil water"].values())
+            water_frame = choice(water_frames)
+            water = Sprite(
+                tile_to_screen(tile.pos),
+                water_frame,
+                (),
+                Layer.SOIL_WATER,
+            )
+            water.add(self.all_sprites, self.water_sprites)
             return True
+
         return False
 
     def water(self, pos):
         """:return: Whether the tile was successfully watered or not"""
         tile = self.tiles.get(pos)
-        if tile and tile.hoed and not tile.watered:
-            tile.watered = True
-
-            water_frames = list(self.level_frames["soil water"].values())
-            water_frame = choice(water_frames)
-            Sprite(
-                tile_to_screen(pos),
-                water_frame,
-                (self.all_sprites, self.water_sprites),
-                Layer.SOIL_WATER,
-            )
-            return True
-
-        return False
+        return self._water(tile)
 
     def water_all(self):
         for pos, tile in self.tiles.items():
@@ -307,16 +350,16 @@ class SoilLayer:
                 self.water(pos)
                 self.update_tile_image(tile, pos)
 
-    def plant(
-        self, pos, seed, remove_resource: Callable[[InventoryResource, int], bool]
-    ):
-        """:return: Whether the tile was successfully planted or not"""
+    def _plant(self, pos, seed, check=lambda s, t: True):
+        """Plant a seed.
+
+        WARNING: this method is for internal usage. Consider using
+        SoilLayer.plant instead."""
         tile = self.tiles.get(pos)
         seed_resource = FarmingTool.as_inventory_resource(seed)
         seed_type = SeedType.from_farming_tool(seed)
-
         if tile and tile.hoed and not tile.planted:
-            if not remove_resource(seed_resource, 1):
+            if not check(seed_resource, 1):
                 return False
 
             seed_name = seed_type.as_plant_name()
@@ -327,6 +370,12 @@ class SoilLayer:
 
         return False
 
+    def plant(
+        self, pos, seed, remove_resource: Callable[[InventoryResource, int], bool]
+    ):
+        """:return: Whether the tile was successfully planted or not"""
+        return self._plant(pos, seed, remove_resource)
+
     def harvest(
         self,
         pos,
@@ -336,7 +385,7 @@ class SoilLayer:
         """:return: Whether the tile was successfully harvested or not"""
 
         tile = self.tiles.get(pos)
-        if tile and tile.plant.harvestable:
+        if tile and getattr(tile.plant, "harvestable", False):
             # add resource
             resource = SeedType.as_nonseed_ir(tile.plant.seed_type)
             quantity = 3
@@ -365,10 +414,10 @@ class SoilLayer:
         tile_right = self.tiles.get((x + 1, y))
         tile_left = self.tiles.get((x - 1, y))
 
-        hoed_above = tile_above.hoed if tile_above else False
-        hoed_below = tile_below.hoed if tile_below else False
-        hoed_right = tile_right.hoed if tile_right else False
-        hoed_left = tile_left.hoed if tile_left else False
+        hoed_above = getattr(tile_above, "hoed", False)
+        hoed_below = getattr(tile_below, "hoed", False)
+        hoed_right = getattr(tile_right, "hoed", False)
+        hoed_left = getattr(tile_left, "hoed", False)
 
         if all((hoed_above, hoed_right, hoed_below, hoed_left)):
             return "x"
