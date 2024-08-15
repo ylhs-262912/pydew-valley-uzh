@@ -161,9 +161,6 @@ class Level:
         self.overlay = Overlay(self.player, frames["overlay"])
         self.show_hitbox_active = False
 
-        # Health
-        self.HEALTH_DECAY_VALUE = 0.02
-
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map
         # clear all sprite groups
