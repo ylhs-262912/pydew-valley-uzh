@@ -246,11 +246,14 @@ class Level:
         if self.tmx_maps.get(map_name):
             self.load_map(map_name, from_map=self.current_map)
         else:
-            if map_name == "bathhouse":
+            if map_name == "bathhouse" and self.player.hp < 80:
                 self.overlay.health_bar.apply_health(9999999)
-                self.reset()
                 self.player.bathstat = True
                 self.player.bath_time = time.time()
+                self.load_map(self.current_map, from_map=map_name)
+            elif map_name == "bathhouse":
+                # this is to prevent warning in the console
+                self.load_map(self.current_map, from_map=map_name)
             else:
                 warnings.warn(f'Error loading map: Map "{map_name}" not found')
 
