@@ -12,6 +12,7 @@ from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
 from src.gui.scene_animation import SceneAnimation
 from src.npc.setup import AIData
+from src.overlay.game_time import GameTime
 from src.overlay.overlay import Overlay
 from src.overlay.sky import Rain, Sky
 from src.overlay.soil import SoilLayer
@@ -142,7 +143,8 @@ class Level:
         self.drops_manager.player = self.player
 
         # weather
-        self.sky = Sky()
+        self.game_time = GameTime()
+        self.sky = Sky(self.game_time)
         self.rain = Rain(self.all_sprites, self.frames["level"])
         self.raining = False
 
@@ -160,7 +162,7 @@ class Level:
         self.current_day = 0
 
         # overlays
-        self.overlay = Overlay(self.player, frames["overlay"])
+        self.overlay = Overlay(self.player, frames["overlay"], self.game_time)
         self.show_hitbox_active = False
 
     def load_map(self, game_map: Map, from_map: str = None):
@@ -450,15 +452,15 @@ class Level:
                 )
 
     def draw_overlay(self):
-        current_time = self.sky.get_time()
-        self.overlay.display(current_time)
+        self.sky.display()
+        self.overlay.display()
 
     def draw(self, dt):
         self.player.hp = self.overlay.health_bar.hp
         self.display_surface.fill((130, 168, 132))
         camera_center = self.get_camera_center()
         self.all_sprites.draw(camera_center)
-        self.sky.display(dt)
+        self.sky.display()
         self.draw_overlay()
         self.day_transition.draw()
         self.map_transition.draw()
@@ -476,6 +478,7 @@ class Level:
 
     def update(self, dt: float):
         # update
+        self.game_time.update()
         self.check_map_exit()
         self.update_rain()
         self.day_transition.update()
