@@ -57,4 +57,3 @@ class AllSprites(PersistentSpriteGroup):
             for sprite in sorted_sprites:
                 if sprite.z == layer:
                     sprite.draw(self.display_surface, self.offset)
-
