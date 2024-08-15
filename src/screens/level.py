@@ -507,7 +507,7 @@ class Level:
         self.all_sprites.draw(self.camera)
         self.zoom_manager.apply_zoom()
         if move_things:
-            self.sky.display(dt)
+            self.sky.display()
         self.draw_overlay()
         self.day_transition.draw()
         self.map_transition.draw()

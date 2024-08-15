@@ -9,12 +9,12 @@ from pytmx import TiledElement, TiledMap, TiledObject, TiledObjectGroup, TiledTi
 from src.camera.camera_target import CameraTarget
 from src.camera.zoom_area import ZoomArea
 from src.camera.zoom_manager import ZoomManager
-from src.enums import FarmingTool, InventoryResource, Layer, Map
+from src.enums import FarmingTool, InventoryResource, Layer, Map, SpecialObjectLayer
 from src.exceptions import GameMapWarning, InvalidMapError, PathfindingWarning
 from src.groups import AllSprites, PersistentSpriteGroup
 from src.gui.interface.emotes import NPCEmoteManager, PlayerEmoteManager
-from src.map_objects import MapObjects, MapObjectType
 from src.gui.scene_animation import SceneAnimation
+from src.map_objects import MapObjects, MapObjectType
 from src.npc.bases.animal import Animal
 from src.npc.behaviour.chicken_behaviour_tree import ChickenBehaviourTree
 from src.npc.behaviour.cow_behaviour_tree import (
@@ -634,7 +634,13 @@ class GameMap:
 
     # endregion
 
-    def _setup_layers(self, save_file: SaveFile, gmap: Map, scene_ani: SceneAnimation, zoom_man: ZoomManager):
+    def _setup_layers(
+        self,
+        save_file: SaveFile,
+        gmap: Map,
+        scene_ani: SceneAnimation,
+        zoom_man: ZoomManager,
+    ):
         """
         Iterates over all map layers, updates the GameMap state and creates
         all Sprites for the map.
