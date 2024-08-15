@@ -363,7 +363,7 @@ class Level:
         self.start_transition()
 
     def decay_health(self):
-        if not self.player.hp <= 10:
+        if self.player.hp > 10:
             if not self.player.bathstat and not self.player.has_goggles:
                 self.overlay.health_bar.apply_damage(HEALTH_DECAY_VALUE)
             elif (
