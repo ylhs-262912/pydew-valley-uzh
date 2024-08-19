@@ -595,7 +595,7 @@ class GameMap:
             tree_sprites=self.tree_sprites,
         )
         behaviour = obj.properties.get("behaviour")
-        if behaviour != "Woodcutting" and gmap != Map.NEW_FARM:
+        if behaviour != "Woodcutting" and gmap == Map.NEW_FARM:
             npc.conditional_behaviour_tree = NPCBehaviourTree.Farming
         else:
             npc.conditional_behaviour_tree = NPCBehaviourTree.Woodcutting
