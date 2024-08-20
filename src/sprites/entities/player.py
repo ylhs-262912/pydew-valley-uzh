@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import time
 from typing import Callable, Type
 
 import pygame  # noqa
 
-from src import savefile, support
+from src import support
 from src.controls import Controls
 from src.enums import EntityState, FarmingTool, InventoryResource, ItemToUse, StudyGroup
-from src.events import OPEN_INVENTORY, post_event
+from src.events import OPEN_INVENTORY, START_QUAKE, post_event
 from src.gui.interface.emotes import PlayerEmoteManager
 from src.npc.bases.npc_base import NPCBase
-from src.settings import Coordinate, GogglesStatus, SoundDict
+from src.savefile import SaveFile
+from src.settings import BATH_STATUS_TIMEOUT, Coordinate, GogglesStatus, SoundDict
 from src.sprites.character import Character
 from src.sprites.entities.entity import Entity
 from src.sprites.setup import EntityAsset
@@ -43,9 +45,11 @@ class Player(Character):
         interact: Callable[[], None],
         emote_manager: PlayerEmoteManager,
         sounds: SoundDict,
+        hp: int,
+        bathstat: bool,
+        bath_time: float,
+        save_file: SaveFile,
     ):
-        save_data = savefile.load_savefile()
-
         super().__init__(
             pos=pos,
             assets=assets,
@@ -56,48 +60,40 @@ class Player(Character):
         )
 
         # movement
+        self.save_file = save_file
         self.controls = Controls
         self.load_controls()
+        self.original_speed = 250
         self.speed = 250
         self.blocked = False
         self.paused = False
         self.interact = interact
-        self.has_goggles: GogglesStatus = save_data.get("goggles_status")
-        self.study_group: StudyGroup = save_data.get("group", StudyGroup.INGROUP)
+        self.bathstat = bathstat
+        self.bath_time = bath_time
+        self.has_goggles: GogglesStatus = save_file.has_goggles
+        self.study_group: StudyGroup = save_file.study_group
 
         self.emote_manager = emote_manager
         self.focused_entity: NPCBase | None = None
-
         # load saved tools
-        self.current_tool = save_data.get(
-            "current_tool", FarmingTool.get_first_tool_id()
-        )
-        self.current_seed = save_data.get(
-            "current_seed", FarmingTool.get_first_seed_id()
-        )
-
+        self.current_tool = save_file.current_tool
+        self.current_seed = save_file.current_seed
         # inventory
-        self.inventory = {
-            res: save_data["inventory"].get(
-                res.as_serialised_string(),
-                _SEED_INVENTORY_DEFAULT_AMOUNT
-                if res >= InventoryResource.CORN_SEED
-                else _NONSEED_INVENTORY_DEFAULT_AMOUNT,
-            )
-            for res in InventoryResource.__members__.values()
-        }
-        self.money = save_data.get("money", 200)
+        self.inventory = save_file.inventory.copy()
+        self.money = save_file.money
 
         # sounds
         self.sounds = sounds
 
-    def draw(self, display_surface, offset):
-        super().draw(display_surface, offset)
+        self.hp = hp
+        self.created_time = time.time()
+        self.delay_time_speed = 0.25
 
+    def draw(self, *args):
+        display_surface, rect = args[:2]
+        super().draw(display_surface, rect)
         blit_list = []
 
-        # TODO: allow for more combos (i.e. stop assuming the player
-        # has all the items of one group)
         # Render the necklace if the player has it and is in the ingroup
         is_in_ingroup = self.study_group == StudyGroup.INGROUP
         if is_in_ingroup:
@@ -105,26 +101,26 @@ class Player(Character):
             necklace_ani = self.assets[necklace_state][self.facing_direction]
             necklace_frame = necklace_ani.get_frame(self.frame_index)
 
-            blit_list.append((necklace_frame, self.rect.topleft + offset))
+            blit_list.append((necklace_frame, rect))
 
         # Render the goggles
         if self.has_goggles:
             goggles_state = EntityState(f"goggles_{self.state.value}")
             goggles_ani = self.assets[goggles_state][self.facing_direction]
             goggles_frame = goggles_ani.get_frame(self.frame_index)
-            blit_list.append((goggles_frame, self.rect.topleft + offset))
+            blit_list.append((goggles_frame, rect))
 
         # Render the hat/horn (depending on the group)
         if is_in_ingroup:
             hat_state = EntityState(f"hat_{self.state.value}")
             hat_ani = self.assets[hat_state][self.facing_direction]
             hat_frame = hat_ani.get_frame(self.frame_index)
-            blit_list.append((hat_frame, self.rect.topleft + offset))
+            blit_list.append((hat_frame, rect))
         elif self.study_group == StudyGroup.OUTGROUP:
             horn_state = EntityState(f"horn_{self.state.value}")
             horn_ani = self.assets[horn_state][self.facing_direction]
             horn_frame = horn_ani.get_frame(self.frame_index)
-            blit_list.append((horn_frame, self.rect.topleft + offset))
+            blit_list.append((horn_frame, rect))
 
         display_surface.fblits(blit_list)
 
@@ -151,14 +147,8 @@ class Player(Character):
             # (5 units for seeds, 20 units for everything else).
             if self.inventory[k] == _INV_DEFAULT_AMOUNTS[k.is_seed()]:
                 del compacted_inv[k]
-        savefile.save(
-            self.current_tool,
-            self.current_seed,
-            self.money,
-            compacted_inv,
-            self.study_group,
-            self.has_goggles,
-        )
+        self.save_file.inventory = compacted_inv
+        self.save_file.save()
 
     def load_controls(self):
         self.controls.load_default_keybinds()
@@ -255,6 +245,9 @@ class Player(Character):
             if self.controls.INVENTORY.click:
                 post_event(OPEN_INVENTORY)
 
+            if self.controls.DEBUG_QUAKE.click:
+                post_event(START_QUAKE, duration=2.0)
+
         # emotes
         if not self.blocked:
             if self.controls.EMOTE_WHEEL.click:
@@ -296,6 +289,31 @@ class Player(Character):
             self.rect.size,
         )
 
+    # sets the player's transparency and speed according to their health
+
+    def set_speed_asper_health(self):
+        current_time = time.time()
+        if current_time - self.created_time >= self.delay_time_speed:
+            self.speed = self.original_speed * (self.hp / 100)
+
+    def set_transparency_asper_health(self):
+        alpha_value = 255 * (self.hp / 100)
+        self.image.set_alpha(alpha_value)
+
+    def check_bath_bool(self):
+        if (round(time.time() - self.bath_time)) == BATH_STATUS_TIMEOUT:
+            self.bathstat = False
+
+    def teleport(self, pos: tuple[float, float]):
+        """
+        Moves the Player rect directly to the specified point without checking
+        for collision
+        """
+        self.rect.update(
+            (pos[0] - self.rect.width / 2, pos[1] - self.rect.height / 2),
+            self.rect.size,
+        )
+
     def get_current_tool_string(self):
         return self.current_tool.as_serialised_string()
 
@@ -310,9 +328,11 @@ class Player(Character):
             self.sounds[sound].play()
 
     def update(self, dt):
+        self.set_speed_asper_health()
+        self.set_transparency_asper_health()
+        self.check_bath_bool()
         self.handle_controls()
         super().update(dt)
-
         self.emote_manager.update_obj(
             self, (self.rect.centerx - 47, self.rect.centery - 128)
         )

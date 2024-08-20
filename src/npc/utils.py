@@ -5,6 +5,7 @@ from typing import Generator
 
 from pathfinding.core.grid import Grid
 
+from src.exceptions import PathfindingWarning
 from src.npc.bases.ai_behaviour_base import AIBehaviourBase
 from src.npc.setup import AIData
 from src.settings import SCALED_TILE_SIZE, TILE_SIZE
@@ -101,7 +102,8 @@ def pf_add_matrix_collision(
                 matrix[tile_y + h][tile_x + w] = 0
             except IndexError as e:
                 warnings.warn(
-                    f"Failed adding non-walkable Tile to pathfinding matrix: {e}"
+                    f"Failed adding non-walkable Tile to pathfinding matrix: {e}",
+                    PathfindingWarning,
                 )
 
 

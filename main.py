@@ -8,6 +8,7 @@ from src.events import DIALOG_ADVANCE, DIALOG_SHOW, OPEN_INVENTORY
 from src.groups import AllSprites
 from src.gui.interface.dialog import DialogueManager
 from src.gui.setup import setup_gui
+from src.savefile import SaveFile
 from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
@@ -57,13 +58,17 @@ class Game:
         self.font: pygame.font.Font | None = None
         self.sounds: SoundDict | None = None
 
+        self.save_file = SaveFile.load()
+
         # main setup
         self.running = True
         self.clock = pygame.time.Clock()
         self.load_assets()
 
         # screens
-        self.level = Level(self.switch_state, self.tmx_maps, self.frames, self.sounds)
+        self.level = Level(
+            self.switch_state, self.tmx_maps, self.frames, self.sounds, self.save_file
+        )
         self.player = self.level.player
 
         self.main_menu = MainMenu(self.switch_state)
@@ -97,6 +102,7 @@ class Game:
     def switch_state(self, state: GameState):
         self.current_state = state
         if self.current_state == GameState.SAVE_AND_RESUME:
+            self.save_file.set_soil_data(self.level.soil_layer.soil_sprites)
             self.level.player.save()
             self.current_state = GameState.PLAY
         if self.current_state == GameState.INVENTORY:
@@ -203,15 +209,16 @@ class Game:
 
             self.event_loop()
 
-            self.level.update(dt)
+            self.level.update(dt, self.current_state == GameState.PLAY)
 
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
 
-            self.all_sprites.update(dt)
-            self.all_sprites.draw(
-                (self.display_surface.width / 2, self.display_surface.height / 2)
-            )
+            if self.level.cutscene_animation.active:
+                self.all_sprites.update_blocked(dt)
+            else:
+                self.all_sprites.update(dt)
+            self.all_sprites.draw(self.level.camera)
 
             pygame.display.update()
 
