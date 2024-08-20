@@ -8,7 +8,6 @@ from pathfinding.core.grid import Grid
 
 from src.npc.bases.ai_behaviour_base import AIBehaviourBase, AIState
 from src.npc.behaviour.ai_behaviour_tree_base import ContextType, NodeWrapper
-from src.profiling import Tracker
 from src.settings import SCALED_TILE_SIZE
 
 
@@ -115,8 +114,6 @@ class AIBehaviour(AIBehaviourBase, ABC):
 
         if not pf_grid.walkable(coord[0], coord[1]):
             return False
-
-        Tracker.pf_pathfinding_calls += 1
 
         # current NPC position on the tilemap
         tile_coord = (

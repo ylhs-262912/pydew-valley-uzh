@@ -15,7 +15,7 @@ from src.npc.setup import AIData
 from src.npc.utils import pf_add_matrix_collision
 from src.overlay.overlay import Overlay
 from src.screens.game_map import GameMap
-from src.screens.minigames.base import Minigame, MinigameState
+from src.screens.minigames.base import Minigame, MinigameState, MinigameSetupError
 from src.screens.minigames.cow_herding_behaviour import (
     CowHerdingBehaviourTree,
     CowHerdingContext,
@@ -129,6 +129,9 @@ class CowHerding(Minigame):
 
     def _setup(self):
         self.player_collision_sprites = self._state.collision_sprites.copy()
+
+        if AIData.Matrix is None:
+            raise MinigameSetupError("AI Pathfinding Matrix is not defined")
 
         barn_matrix = [row.copy() for row in AIData.Matrix]
         range_matrix = [row.copy() for row in AIData.Matrix]

@@ -6,6 +6,10 @@ from typing import TypeVar
 import pygame
 
 
+class MinigameSetupError(Exception):
+    pass
+
+
 @dataclass
 class MinigameState:
     pass
