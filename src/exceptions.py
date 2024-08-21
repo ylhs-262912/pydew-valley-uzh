@@ -5,6 +5,10 @@ class InvalidMapError(Exception):
     """Something is not valid in the given game map."""
 
 
+class MinigameSetupError(Exception):
+    """Something unexpected happened during minigame setup."""
+
+
 class DevWarning(Warning):
     """Base warning class for development-related warnings.
 

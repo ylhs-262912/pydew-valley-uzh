@@ -7,14 +7,14 @@ from src.enums import Layer
 class PersistentSpriteGroup(pygame.sprite.Group):
     _persistent_sprites: list[pygame.sprite.Sprite]
 
-    def __init__(self):
+    def __init__(self, *sprites):
         """
         This Group subclass allows certain Sprites to be added as persistent
         Sprites, which will not be removed when calling Group.empty.
         When needing to remove all Sprites, including persistent Sprites, you
         should call PersistentSpriteGroup.empty_persistent.
         """
-        super().__init__()
+        super().__init__(*sprites)
         self._persistent_sprites = []
 
     def add_persistent(self, *sprites: pygame.sprite.Sprite):
@@ -41,8 +41,8 @@ class PersistentSpriteGroup(pygame.sprite.Group):
 
 
 class AllSprites(PersistentSpriteGroup):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *sprites):
+        super().__init__(*sprites)
         self.display_surface = pygame.display.get_surface()
         self.offset = pygame.Vector2()
         self.cam_surf = pygame.Surface(self.display_surface.get_size())

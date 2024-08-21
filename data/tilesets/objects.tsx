@@ -267,6 +267,9 @@
  </tile>
  <tile id="67">
   <image source="../../images/objects/sign.png" width="14" height="16"/>
+  <objectgroup draworder="index" id="2">
+   <object id="1" x="5" y="10" width="4" height="5"/>
+  </objectgroup>
  </tile>
  <tile id="76">
   <image source="../../images/objects/desk.png" width="48" height="30"/>

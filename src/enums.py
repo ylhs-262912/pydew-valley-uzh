@@ -311,6 +311,7 @@ class SpecialObjectLayer(StrEnum):
     ANIMALS = "Animals"
     CAMERA_TARGETS = "Camera Targets"
     ZOOM_AREAS = "Zoom Areas"
+    MINIGAME = "Minigame"
 
 
 class Map(StrEnum):
@@ -318,6 +319,7 @@ class Map(StrEnum):
     NEW_FARM = "farm_new"
     FOREST = "forest"
     TOWN = "town"
+    MINIGAME = "minigame"
 
 
 class StudyGroup(IntEnum):

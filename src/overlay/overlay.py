@@ -16,12 +16,17 @@ class Overlay:
         # imports
         self.overlay_frames = overlay_frames
 
+        self.visible = True
+
         # ui objects
         self.health_bar = HealthProgressBar(100)
 
         self.clock = Clock(game_time, ClockVersion.DIGITAL)
 
     def display(self):
+        if not self.visible:
+            return
+
         # seeds
         seed_surf = self.overlay_frames[self.player.get_current_seed_string()]
         seed_rect = seed_surf.get_frect(midbottom=OVERLAY_POSITIONS["seed"])
