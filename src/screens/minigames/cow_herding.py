@@ -15,7 +15,8 @@ from src.npc.setup import AIData
 from src.npc.utils import pf_add_matrix_collision
 from src.overlay.overlay import Overlay
 from src.screens.game_map import GameMap
-from src.screens.minigames.base import Minigame, MinigameState, MinigameSetupError
+from src.screens.minigames.base import Minigame, MinigameState
+from src.exceptions import MinigameSetupError
 from src.screens.minigames.cow_herding_behaviour import (
     CowHerdingBehaviourTree,
     CowHerdingContext,
