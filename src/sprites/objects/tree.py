@@ -99,4 +99,4 @@ class Tree(CollideableMapObject):
     def draw(self, display_surface: pygame.Surface, rect: pygame.Rect, camera):
         super().draw(display_surface, rect, camera)
         for fruit in self.fruit_sprites:
-            fruit.draw(display_surface, camera.apply(fruit))
+            fruit.draw(display_surface, camera.apply(fruit), camera)
