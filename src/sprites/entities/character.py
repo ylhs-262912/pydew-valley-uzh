@@ -24,6 +24,7 @@ class Character(Entity, ABC):
     just_used_tool: bool
     apply_tool: Callable[[FarmingTool, tuple[float, float], Self], None]
     study_group: StudyGroup
+    has_goggles: settings.GogglesStatus
 
     current_seed: FarmingTool
 
@@ -33,6 +34,7 @@ class Character(Entity, ABC):
         assets: EntityAsset,
         groups: tuple[pygame.sprite.Group, ...],
         collision_sprites: pygame.sprite.Group,
+        study_group: StudyGroup,
         apply_tool: Callable[[FarmingTool, tuple[float, float], Self], None],
         plant_collision: Callable[[Self], None],
         z=Layer.MAIN,
@@ -45,6 +47,11 @@ class Character(Entity, ABC):
             collision_sprites=collision_sprites,
             z=z,
         )
+
+        # TODO: implement compatibility with this, e.g. NPCs reacting differently to
+        #  emotes depending on the group they belong to and the player's
+        self.study_group = study_group
+        self.has_goggles = None
 
         self.facing_direction = Direction.DOWN
 
@@ -78,10 +85,6 @@ class Character(Entity, ABC):
         # Not all Characters can go to the market,
         # so those that can't should not have money either
         self.money = 0
-
-        # TODO: implement compatibility with this, e.g. NPCs reacting differently to emotes
-        # depending on the group they belong to and the player's
-        self.study_group = StudyGroup.NO_GROUP
 
     def get_state(self):
         if self.tool_active:
@@ -120,6 +123,40 @@ class Character(Entity, ABC):
             self.inventory[resource] -= amount
             return True
         return False
+
+    def draw(self, display_surface: pygame.Surface, rect: pygame.Rect, camera):
+        super().draw(display_surface, rect, camera)
+        blit_list = []
+
+        # Render the necklace if the character has it and is in the ingroup
+        is_in_ingroup = self.study_group == StudyGroup.INGROUP
+        if is_in_ingroup:
+            necklace_state = EntityState(f"necklace_{self.state.value}")
+            necklace_ani = self.assets[necklace_state][self.facing_direction]
+            necklace_frame = necklace_ani.get_frame(self.frame_index)
+
+            blit_list.append((necklace_frame, rect))
+
+        # Render the goggles
+        if self.has_goggles:
+            goggles_state = EntityState(f"goggles_{self.state.value}")
+            goggles_ani = self.assets[goggles_state][self.facing_direction]
+            goggles_frame = goggles_ani.get_frame(self.frame_index)
+            blit_list.append((goggles_frame, rect))
+
+        # Render the hat/horn (depending on the group)
+        if is_in_ingroup:
+            hat_state = EntityState(f"hat_{self.state.value}")
+            hat_ani = self.assets[hat_state][self.facing_direction]
+            hat_frame = hat_ani.get_frame(self.frame_index)
+            blit_list.append((hat_frame, rect))
+        elif self.study_group == StudyGroup.OUTGROUP:
+            horn_state = EntityState(f"horn_{self.state.value}")
+            horn_ani = self.assets[horn_state][self.facing_direction]
+            horn_frame = horn_ani.get_frame(self.frame_index)
+            blit_list.append((horn_frame, rect))
+
+        display_surface.fblits(blit_list)
 
     def update(self, dt: float):
         super().update(dt)

@@ -102,7 +102,7 @@ class Game:
     def switch_state(self, state: GameState):
         self.current_state = state
         if self.current_state == GameState.SAVE_AND_RESUME:
-            self.save_file.set_soil_data(self.level.soil_layer.soil_sprites)
+            self.save_file.set_soil_data(*self.level.soil_manager.all_soil_sprites())
             self.level.player.save()
             self.current_state = GameState.PLAY
         if self.current_state == GameState.INVENTORY:
