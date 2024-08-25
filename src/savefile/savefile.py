@@ -1,4 +1,5 @@
 import json
+from itertools import chain
 
 import pygame
 from jsmin import jsmin
@@ -187,13 +188,12 @@ class SaveFile:
 
     def set_soil_data(self, *tile_groups: pygame.sprite.Group):
         new_data = {}
-        for tiles in tile_groups:
-            for tile in tiles:
-                if not tile.hoed:
-                    continue
-                if tile.plant is not None:
-                    plant_info = PlantInfo(tile.plant.seed_type, tile.plant.age)
-                else:
-                    plant_info = None
-                new_data[tile.pos] = TileInfo(tile.watered, tile.pos, plant_info)
+        for tile in chain(*tile_groups):
+            if not tile.hoed:
+                continue
+            if tile.plant is not None:
+                plant_info = PlantInfo(tile.plant.seed_type, tile.plant.age)
+            else:
+                plant_info = None
+            new_data[tile.pos] = TileInfo(tile.watered, tile.pos, plant_info)
         self._soil_data = new_data

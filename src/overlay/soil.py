@@ -473,10 +473,8 @@ class SoilManager:
         )
 
     def all_soil_sprites(self):
-        groups = []
         for area in self._areas.values():
-            groups.append(area.soil_sprites)
-        return groups
+            yield area.soil_sprites
 
     def hoe(self, character: Character, pos):
         return self.get_area(character.study_group).hoe(pos)
