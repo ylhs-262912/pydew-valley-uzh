@@ -345,7 +345,7 @@ class GameMap:
             pf_add_matrix_collision(
                 self._pf_matrix,
                 (pos[0] / SCALE_FACTOR, pos[1] / SCALE_FACTOR),
-                surf.size,
+                surf.get_size(),
             )
 
     def _setup_water_tile(
