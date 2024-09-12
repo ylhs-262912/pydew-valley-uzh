@@ -1,15 +1,14 @@
-import json
 import textwrap
 from operator import attrgetter
 
 import pygame
-from jsmin import jsmin  # JSON minifier function (removes comments, notably)
 
 from src.enums import Layer
 from src.settings import CHARS_PER_LINE, SCREEN_HEIGHT, SCREEN_WIDTH, TB_SIZE
 from src.sprites.base import Sprite
 from src.support import resource_path
 from src.timer import Timer
+from src import utils
 
 
 class TextBox(Sprite):
@@ -148,8 +147,8 @@ class DialogueManager:
         # Open the dialogues file and dump all of its content in here,
         # while purging the raw file content from its comments.
         with open(resource_path("data/dialogues.json"), "r") as dialogue_file:
-            self.dialogues: dict[str, list[list[str, str]]] = json.loads(
-                jsmin(dialogue_file.read())
+            self.dialogues: dict[str, list[list[str, str]]] = utils.json_loads(
+                dialogue_file.read()
             )
         self._tb_list: list[TextBox] = []
         self._msg_index: int = 0

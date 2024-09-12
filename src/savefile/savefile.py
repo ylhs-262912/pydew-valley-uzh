@@ -2,12 +2,12 @@ import json
 from itertools import chain
 
 import pygame
-from jsmin import jsmin
 
 from src.enums import FarmingTool, InventoryResource, SeedType, StudyGroup
 from src.savefile.tile_info import PlantInfo, TileInfo
 from src.settings import Coordinate, GogglesStatus
 from src.support import resource_path
+from src import utils
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
@@ -82,7 +82,7 @@ def _decoder_object_hook(o):
 
 def _load_internal():
     with open(resource_path("data/save.json"), "r") as file:
-        return json.loads(jsmin(file.read()), object_hook=_decoder_object_hook)
+        return utils.json_loads(file.read(), object_hook=_decoder_object_hook)
 
 
 class SaveFile:
