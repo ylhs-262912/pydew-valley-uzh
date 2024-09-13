@@ -1,3 +1,12 @@
+# /// script
+# dependencies = [
+#  "pygame-ce",
+#  "pytmx",
+#  "pathfinding",
+# ]
+# ///
+
+import asyncio
 import sys
 
 import pygame
@@ -203,7 +212,7 @@ class Game:
             return True
         return False
 
-    def run(self):
+    async def run(self):
         while self.running:
             dt = self.clock.tick() / 1000
 
@@ -221,8 +230,9 @@ class Game:
             self.all_sprites.draw(self.level.camera)
 
             pygame.display.update()
+            await asyncio.sleep(0)
 
 
 if __name__ == "__main__":
     game = Game()
-    game.run()
+    asyncio.run(game.run())
