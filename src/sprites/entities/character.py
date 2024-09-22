@@ -154,7 +154,12 @@ class Character(Entity, ABC):
             horn_state = EntityState(f"horn_{self.state.value}")
             horn_ani = self.assets[horn_state][self.facing_direction]
             horn_frame = horn_ani.get_frame(self.frame_index)
-            blit_list.append((horn_frame, rect))
+            
+            skin_state = EntityState(f"out_{self.state.value}")
+            skin_ani = self.assets[skin_state][self.facing_direction]
+            skin_frame = skin_ani.get_frame(self.frame_index)
+            
+            blit_list.append((horn_frame, skin_frame, rect))
 
         display_surface.fblits(blit_list)
 
