@@ -470,12 +470,7 @@ class Level:
         if self.player.hp > 10:
             if not self.player.bathstat and not self.player.has_goggles:
                 self.overlay.health_bar.apply_damage(HEALTH_DECAY_VALUE)
-            elif (
-                not self.player.bathstat
-                and self.player.has_goggles
-                or self.player.bathstat
-                and not self.player.has_goggles
-            ):
+            elif not self.player.has_goggles and self.player.bathstat:
                 self.overlay.health_bar.apply_damage((HEALTH_DECAY_VALUE / 2))
 
     def check_map_exit(self):
