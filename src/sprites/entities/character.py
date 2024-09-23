@@ -159,7 +159,8 @@ class Character(Entity, ABC):
             skin_ani = self.assets[skin_state][self.facing_direction]
             skin_frame = skin_ani.get_frame(self.frame_index)
             
-            blit_list.append((horn_frame, skin_frame, rect))
+            blit_list.append((skin_frame, rect))
+            blit_list.append((horn_frame, rect))
 
         display_surface.fblits(blit_list)
 
