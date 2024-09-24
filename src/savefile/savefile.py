@@ -104,7 +104,7 @@ class SaveFile:
         group: StudyGroup,
         goggles_status: GogglesStatus,
         necklace_status: NecklaceStatus,
-        hat_status:HatStatus,
+        hat_status: HatStatus,
         money: int = 200,
         soil_data: dict[Coordinate, TileInfo] | None = None,
     ):

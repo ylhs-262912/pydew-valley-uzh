@@ -3,7 +3,7 @@ import pygame.freetype
 import pytmx
 
 from src.enums import Map
-from src.import_checks import *  # noqa: F403pyth
+from src.import_checks import *  # noqa: F403
 
 type Coordinate = tuple[int | float, int | float]
 type SoundDict = dict[str, pygame.mixer.Sound]
