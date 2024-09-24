@@ -12,7 +12,7 @@ from src.overlay.soil import SoilManager
 from src.settings import Coordinate
 from src.sprites.entities.character import Character
 from src.sprites.setup import EntityAsset
-
+import random
 
 class NPC(NPCBase):
     def __init__(
@@ -45,6 +45,8 @@ class NPC(NPCBase):
         )
 
         self.soil_area = soil_manager.get_area(self.study_group)
+        self.has_necklace = False
+        self.has_hat = False
 
         # TODO: Ensure that the NPC always has all needed seeds it needs
         #  in its inventory
@@ -60,9 +62,28 @@ class NPC(NPCBase):
             InventoryResource.TOMATO_SEED: 999,
         }
 
+        self.assign_outfit_ingroup()
+
+    def assign_outfit_ingroup(self):
+        # 40% of the ingroup NPCs should wear a hat and a necklace, and 60% of the ingroup NPCs should only wear the hat
+        if self.study_group == StudyGroup.INGROUP:
+
+            if random.random() <= 0.4:
+                self.has_necklace = True
+                self.has_hat =True
+            else:
+                self.has_necklace = False
+                self.has_hat =True
+        else:
+            self.has_necklace = False
+            self.has_hat =False
+
+ 
     def update(self, dt):
         super().update(dt)
 
         self.emote_manager.update_obj(
             self, (self.rect.centerx - 47, self.rect.centery - 128)
         )
+
+        
