@@ -230,9 +230,9 @@ class Game:
             self.all_sprites.draw(self.level.camera)
 
             # Apply blur effect only if the player has goggles equipped
-            if self.player.has_goggles:
+            if self.player.has_goggles and self.current_state == GameState.PLAY:
                 # Modify blurscale to increase or decrease blur
-                blurscale = 2
+                blurscale = 4
                 surface = self.display_surface
                 width, height = surface.get_size()
 
