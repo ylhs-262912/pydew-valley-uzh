@@ -72,6 +72,8 @@ class Player(Character):
         self.bathstat = bathstat
         self.bath_time = bath_time
         self.has_goggles = save_file.has_goggles
+        self.has_necklace = save_file.has_necklace
+        self.has_hat = save_file.has_hat
         self.study_group: StudyGroup = save_file.study_group
 
         self.emote_manager = emote_manager

@@ -130,12 +130,6 @@ class Character(Entity, ABC):
 
         # Render the necklace if the character has it and is in the ingroup
         is_in_ingroup = self.study_group == StudyGroup.INGROUP
-        if is_in_ingroup:
-            necklace_state = EntityState(f"necklace_{self.state.value}")
-            necklace_ani = self.assets[necklace_state][self.facing_direction]
-            necklace_frame = necklace_ani.get_frame(self.frame_index)
-
-            blit_list.append((necklace_frame, rect))
 
         # Render the goggles
         if self.has_goggles:
@@ -146,19 +140,27 @@ class Character(Entity, ABC):
 
         # Render the hat/horn (depending on the group)
         if is_in_ingroup:
-            hat_state = EntityState(f"hat_{self.state.value}")
-            hat_ani = self.assets[hat_state][self.facing_direction]
-            hat_frame = hat_ani.get_frame(self.frame_index)
-            blit_list.append((hat_frame, rect))
+            if self.has_necklace:
+                necklace_state = EntityState(f"necklace_{self.state.value}")
+                necklace_ani = self.assets[necklace_state][self.facing_direction]
+                necklace_frame = necklace_ani.get_frame(self.frame_index)
+                blit_list.append((necklace_frame, rect))
+
+            if self.has_hat:
+                hat_state = EntityState(f"hat_{self.state.value}")
+                hat_ani = self.assets[hat_state][self.facing_direction]
+                hat_frame = hat_ani.get_frame(self.frame_index)
+                blit_list.append((hat_frame, rect))
+
         elif self.study_group == StudyGroup.OUTGROUP:
             horn_state = EntityState(f"horn_{self.state.value}")
             horn_ani = self.assets[horn_state][self.facing_direction]
             horn_frame = horn_ani.get_frame(self.frame_index)
-            
+
             skin_state = EntityState(f"outgroup_{self.state.value}")
             skin_ani = self.assets[skin_state][self.facing_direction]
             skin_frame = skin_ani.get_frame(self.frame_index)
-            
+
             blit_list.append((skin_frame, rect))
             blit_list.append((horn_frame, rect))
 

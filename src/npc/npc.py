@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 from typing import Callable
 
 import pygame
@@ -45,6 +46,8 @@ class NPC(NPCBase):
         )
 
         self.soil_area = soil_manager.get_area(self.study_group)
+        self.has_necklace = False
+        self.has_hat = False
 
         # TODO: Ensure that the NPC always has all needed seeds it needs
         #  in its inventory
@@ -59,6 +62,21 @@ class NPC(NPCBase):
             InventoryResource.CORN_SEED: 999,
             InventoryResource.TOMATO_SEED: 999,
         }
+
+        self.assign_outfit_ingroup()
+
+    def assign_outfit_ingroup(self):
+        # 40% of the ingroup NPCs should wear a hat and a necklace, and 60% of the ingroup NPCs should only wear the hat
+        if self.study_group == StudyGroup.INGROUP:
+            if random.random() <= 0.4:
+                self.has_necklace = True
+                self.has_hat = True
+            else:
+                self.has_necklace = False
+                self.has_hat = True
+        else:
+            self.has_necklace = False
+            self.has_hat = False
 
     def update(self, dt):
         super().update(dt)
