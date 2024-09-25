@@ -1050,7 +1050,7 @@
   <object id="526" name="signpost_trader" gid="391" x="343.5" y="625.5" width="14" height="16"/>
   <object id="571" gid="405" x="575.875" y="127.375" width="15" height="18"/>
   <object id="572" gid="414" x="431.636" y="267.273" width="15" height="12"/>
-  <object id="573" gid="411" x="945.455" y="368.636" width="15" height="18"/>
+  <object id="573" gid="411" x="1040.55" y="352.454" width="15" height="18"/>
   <object id="574" gid="402" x="815.875" y="704.5" width="22" height="25"/>
  </objectgroup>
  <objectgroup id="22" name="Interactions">
@@ -1070,7 +1070,7 @@
     <property name="label" value="to_bath_right"/>
    </properties>
   </object>
-  <object id="576" name="sign" x="950.688" y="356.813" width="4" height="4">
+  <object id="576" name="sign" x="1045.78" y="341.177" width="4" height="4">
    <properties>
     <property name="label" value="to_forest_right"/>
    </properties>
