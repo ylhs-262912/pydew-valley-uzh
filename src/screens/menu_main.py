@@ -39,9 +39,6 @@ class MainMenu(GeneralMenu):
                     self.play_button_enabled = True  # Enable the Play button
                     self.set_token_status(True)  # Notify Game about valid token
                     self.input_active = False  # Deactivate token input mode
-                    print("Token is valid, Play button enabled.")
-                else:
-                    print("Invalid Token, try again!")
                 return True
 
         return False

@@ -42,12 +42,6 @@ class GeneralMenu(AbstractMenu):
         self.token_entered = False
         self.play_button_enabled = False
 
-        # Load the token from previous session if available
-        saved_token = self.load_token()
-        if saved_token and self.validate_token(saved_token):
-            self.token_entered = True
-            self.play_button_enabled = True
-
         # Callback to update token status in Game
         self.set_token_status = set_token_status
 
@@ -100,24 +94,15 @@ class GeneralMenu(AbstractMenu):
             self.draw_input_box()
 
     def UZH_logo(self):
-        logo_rect = self.logo_image.get_rect(
-            center=(SCREEN_WIDTH // 2, 135))
+        # Semi-transparent background
+        background_surface = pygame.Surface((300, 80), pygame.SRCALPHA)
+        background_surface.fill((255, 255, 255, 128))
+        background_rect = background_surface.get_rect(
+            center=(SCREEN_WIDTH // 2, 129)
+        )
+        self.display_surface.blit(background_surface, background_rect)
+        logo_rect = self.logo_image.get_rect(center=(SCREEN_WIDTH // 2, 129))
         self.display_surface.blit(self.logo_image, logo_rect)
-
-        # Define the text properties
-        text_color = (0, 0, 0)
-        font_size = 16
-        font_file_path = "font/LycheeSoda.ttf"
-        label_text = "brought to you by:"  # Text to display
-        label_font = pygame.font.Font(font_file_path, font_size)
-
-        # Render the text
-        text_surface = label_font.render(label_text, True, text_color)
-
-        # Position the text next to the logo
-        text_x = logo_rect.left + 50
-        text_y = logo_rect.centery - 50
-        self.display_surface.blit(text_surface, (text_x, text_y))
 
     def button_setup(self):
         # button setup
@@ -153,7 +138,6 @@ class GeneralMenu(AbstractMenu):
         if event.type == pygame.MOUSEBUTTONUP:
             if self.pressed_button:
                 self.pressed_button.start_release_animation()
-
                 if self.pressed_button.mouse_hover():
                     self.button_action(self.pressed_button.text)
                     pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -191,15 +175,6 @@ class GeneralMenu(AbstractMenu):
         """Save the token to a JSON file."""
         with open("token_data.json", "w") as file:
             json.dump({"token": token}, file)
-
-    def load_token(self) -> str:
-        """Load the token from the JSON file, if it exists."""
-        try:
-            with open("token_data.json", "r") as file:
-                data = json.load(file)
-                return data.get("token", "")
-        except (FileNotFoundError, json.JSONDecodeError):
-            return ""
 
     def button_action(self, text: str):
         if text == "Play":
