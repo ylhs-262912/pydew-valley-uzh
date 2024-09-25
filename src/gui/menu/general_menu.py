@@ -150,7 +150,6 @@ class GeneralMenu(AbstractMenu):
                 if self.input_text:
                     if self.validate_token(self.input_text):  # Check if the token is valid
                         self.play_button_enabled = True
-                        self.save_token(self.input_text)
                         self.token_entered = self.input_text
                         self.set_token_status(True)
                         self.input_active = False
@@ -170,11 +169,6 @@ class GeneralMenu(AbstractMenu):
         """Validate the entered token. Only '000' and '999' is valid."""
         valid_tokens = ["000","999"]
         return token in valid_tokens
-
-    def save_token(self, token: str):
-        """Save the token to a JSON file."""
-        with open("token_data.json", "w") as file:
-            json.dump({"token": token}, file)
 
     def button_action(self, text: str):
         if text == "Play":
