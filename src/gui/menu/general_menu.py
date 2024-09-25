@@ -58,8 +58,6 @@ class GeneralMenu(AbstractMenu):
     def draw_input_box(self):
         button_width = 400
         button_height = 50
-        size = (button_width, button_height)
-
         box_color = (255, 255, 255)
         border_color = (141, 133, 201)
         text_color = (0, 0, 0)
@@ -69,12 +67,10 @@ class GeneralMenu(AbstractMenu):
         self.input_box.height = button_height
         self.input_box.centerx = _SCREEN_CENTER[0]
 
-        # Draw the purple background rectangle slightly larger than the input box
         background_rect = self.input_box.copy()
         background_rect.inflate_ip(0, 50)
         background_rect.move_ip(0, -8)
         pygame.draw.rect(self.display_surface, background_color, background_rect, border_radius=10)
-
 
         if self.input_active:
             label_font = self.font
@@ -85,29 +81,20 @@ class GeneralMenu(AbstractMenu):
             label_rect = label_surface.get_rect(midbottom=(self.input_box.centerx, self.input_box.top + 5))
             self.display_surface.blit(label_surface, label_rect)
 
-        # Draw the input box (button style)
-        pygame.draw.rect(self.display_surface, box_color, self.input_box, border_radius=10)  # Filled background
-        pygame.draw.rect(self.display_surface, border_color, self.input_box, 3, border_radius=10)  # Border
-
+        # Draw the input box
+        pygame.draw.rect(self.display_surface, box_color, self.input_box, border_radius=10)
+        pygame.draw.rect(self.display_surface, border_color, self.input_box, 3, border_radius=10)
 
         # Render the current text inside the input box
         font = self.font
         text_surface = font.render(self.input_text, True, text_color)
-
-        # Center the text vertically and add padding horizontally
         text_rect = text_surface.get_rect(midleft=(self.input_box.x + 10, self.input_box.centery))
-
         self.display_surface.blit(text_surface, text_rect)
-
-        width_limit = self.input_box.width - 20
-        if text_surface.get_width() > width_limit:
-            self.input_text = self.input_text[-int(width_limit / 15):]  \
 
     def draw(self):
         self.draw_title()
         self.draw_buttons()
         self.UZH_logo()
-
         # Draw the input box if it's active
         if self.input_active:
             self.draw_input_box()
@@ -176,19 +163,14 @@ class GeneralMenu(AbstractMenu):
 
         if event.type == pygame.KEYDOWN and self.input_active:
             if event.key == pygame.K_RETURN:
-                if self.input_text:  # Only proceed if input_text is not empty
+                if self.input_text:
                     if self.validate_token(self.input_text):  # Check if the token is valid
                         self.play_button_enabled = True
-                        print(f"Token Entered Successfully: {self.input_text}")  # Perform the action with the entered token
-                        self.save_token(self.input_text)  # Save the token to a file
-                        self.token_entered = self.input_text  # Mark that the token is entered
-                        self.set_token_status(True)  # Call the callback to update the status in Game
-                        self.input_active = False  # Deactivate the textbox after token is entered
-                        self.input_text = ''  # Clear the input text after submission
-                        # Call save_player_state from the Game instance
-                        #self.switch_screen(GameState.SAVE_AND_RESUME)  # Ensure it saves when switching to PLAY
-                    else:
-                        print("Invalid Token!")  # Token is invalid, don't proceed
+                        self.save_token(self.input_text)
+                        self.token_entered = self.input_text
+                        self.set_token_status(True)
+                        self.input_active = False
+                        self.input_text = ''
             elif event.key == pygame.K_BACKSPACE:
                 self.input_text = self.input_text[:-1]
             else:
@@ -198,12 +180,10 @@ class GeneralMenu(AbstractMenu):
                 self.input_active = True
             else:
                 self.input_active = False
-
         return False
 
-
     def validate_token(self, token: str) -> bool:
-        """Validate the entered token. Only '000' is valid."""
+        """Validate the entered token. Only '000' and '999' is valid."""
         valid_tokens = ["000","999"]
         return token in valid_tokens
 
@@ -220,7 +200,6 @@ class GeneralMenu(AbstractMenu):
                 return data.get("token", "")
         except (FileNotFoundError, json.JSONDecodeError):
             return ""
-
 
     def button_action(self, text: str):
         if text == "Play":
