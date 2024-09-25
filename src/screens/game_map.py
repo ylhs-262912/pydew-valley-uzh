@@ -385,7 +385,9 @@ class GameMap:
         """
         size = (obj.width * SCALE_FACTOR, obj.height * SCALE_FACTOR)
         image = pygame.Surface(size)
-        Sprite(pos, image, z=layer, name=name).add(groups)
+        Sprite(pos, image, z=layer, name=name, custom_properties=obj.properties).add(
+            groups
+        )
 
     def _setup_collision_rect(
         self,

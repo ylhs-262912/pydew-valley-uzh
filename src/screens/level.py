@@ -35,6 +35,7 @@ from src.settings import (
     MapDict,
     SoundDict,
 )
+from src.sprites.base import Sprite
 from src.sprites.drops import DropsManager
 from src.sprites.entities.character import Character
 from src.sprites.entities.player import Player
@@ -381,6 +382,8 @@ class Level:
         if collided_interactions:
             if collided_interactions[0].name == "Bed":
                 self.start_day_transition()
+            if collided_interactions[0].name == "sign":
+                self.show_sign(collided_interactions[0])
             if collided_interactions[0].name == "Trader":
                 self.switch_screen(GameState.SHOP)
             if collided_interactions[0] in self.bush_sprites.sprites():
@@ -388,6 +391,10 @@ class Level:
                     collided_interactions[0].hitbox_rect
                 ):
                     collided_interactions[0].hit(self.player)
+
+    def show_sign(self, sign: Sprite) -> None:
+        label_key = sign.custom_properties.get("label", "label_not_available")
+        post_event(DIALOG_SHOW, dial=label_key)
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         hitbox_key = self.player.controls.DEBUG_SHOW_HITBOXES.control_value
