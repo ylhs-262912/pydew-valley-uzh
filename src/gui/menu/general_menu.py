@@ -9,7 +9,6 @@ from src.gui.menu.abstract_menu import AbstractMenu
 from src.gui.menu.components import Button
 from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH
 from src.support import import_image
-import json
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
@@ -37,7 +36,7 @@ class GeneralMenu(AbstractMenu):
 
         # textbox input
         self.input_active = False
-        self.input_box = pygame.Rect(100, 390, 200, 50)  # Position and size of the textbox
+        self.input_box = pygame.Rect(100, 390, 200, 50)
         self.input_text = ''
         self.token_entered = False
         self.play_button_enabled = False
@@ -64,7 +63,8 @@ class GeneralMenu(AbstractMenu):
         background_rect = self.input_box.copy()
         background_rect.inflate_ip(0, 50)
         background_rect.move_ip(0, -8)
-        pygame.draw.rect(self.display_surface, background_color, background_rect, border_radius=10)
+        pygame.draw.rect(self.display_surface, background_color,
+                         background_rect, border_radius=10)
 
         if self.input_active:
             label_font = self.font
@@ -72,17 +72,21 @@ class GeneralMenu(AbstractMenu):
             label_surface = label_font.render(label_text, True, text_color)
 
             # Position the label slightly above the input box
-            label_rect = label_surface.get_rect(midbottom=(self.input_box.centerx, self.input_box.top + 5))
+            label_rect = label_surface.get_rect(
+                midbottom=(self.input_box.centerx, self.input_box.top + 5))
             self.display_surface.blit(label_surface, label_rect)
 
         # Draw the input box
-        pygame.draw.rect(self.display_surface, box_color, self.input_box, border_radius=10)
-        pygame.draw.rect(self.display_surface, border_color, self.input_box, 3, border_radius=10)
+        pygame.draw.rect(self.display_surface, box_color,
+                         self.input_box, border_radius=10)
+        pygame.draw.rect(self.display_surface, border_color,
+                         self.input_box, 3, border_radius=10)
 
         # Render the current text inside the input box
         font = self.font
         text_surface = font.render(self.input_text, True, text_color)
-        text_rect = text_surface.get_rect(midleft=(self.input_box.x + 10, self.input_box.centery))
+        text_rect = text_surface.get_rect(midleft=(self.input_box.x + 10,
+                                                   self.input_box.centery))
         self.display_surface.blit(text_surface, text_rect)
 
     def draw(self):
@@ -128,9 +132,9 @@ class GeneralMenu(AbstractMenu):
         if event.type == pygame.MOUSEBUTTONDOWN and mouse_buttons()[0]:
             self.pressed_button = self.get_hovered_button()
             if self.input_box.collidepoint(event.pos):
-                self.input_active = True  # Activate the input box
+                self.input_active = True
             else:
-                self.input_active = False  # Deactivate the input box if clicked outside
+                self.input_active = False
             if self.pressed_button:
                 self.pressed_button.start_press_animation()
                 return True
@@ -148,7 +152,8 @@ class GeneralMenu(AbstractMenu):
         if event.type == pygame.KEYDOWN and self.input_active:
             if event.key == pygame.K_RETURN:
                 if self.input_text:
-                    if self.validate_token(self.input_text):  # Check if the token is valid
+                    if self.validate_token(self.input_text):
+                        # Check if the token is valid
                         self.play_button_enabled = True
                         self.token_entered = self.input_text
                         self.set_token_status(True)
@@ -167,7 +172,7 @@ class GeneralMenu(AbstractMenu):
 
     def validate_token(self, token: str) -> bool:
         """Validate the entered token. Only '000' and '999' is valid."""
-        valid_tokens = ["000","999"]
+        valid_tokens = ["000", "999"]
         return token in valid_tokens
 
     def button_action(self, text: str):
