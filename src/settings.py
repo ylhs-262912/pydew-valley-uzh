@@ -12,6 +12,8 @@ type AniFrames = dict[str, list[pygame.Surface]]
 type GogglesStatus = bool | None
 type NecklaceStatus = bool | None
 type HatStatus = bool | None
+type HornStatus = bool | None
+type OutgroupSkinStatus = bool | None
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 720
 TILE_SIZE = 16
