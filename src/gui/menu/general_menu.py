@@ -8,7 +8,6 @@ from src.enums import GameState
 from src.gui.menu.abstract_menu import AbstractMenu
 from src.gui.menu.components import Button
 from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH
-from src.support import import_image
 
 _SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
@@ -38,15 +37,15 @@ class GeneralMenu(AbstractMenu):
         self.input_active = False
         self.input_box = pygame.Rect(100, 390, 200, 50)
         self.input_text = ''
-        self.token_entered = False
         self.play_button_enabled = False
+
+        # Cursor blinking
+        self.cursor_visible = True
+        self.cursor_timer = pygame.time.get_ticks()
+        self.cursor_interval = 500
 
         # Callback to update token status in Game
         self.set_token_status = set_token_status
-
-        # Load the UZH logo image
-        self.logo_image = import_image("images/UZH logo/UZH logo.png")
-        self.logo_image = pygame.transform.scale(self.logo_image, (216.5, 75))
 
     def draw_input_box(self):
         button_width = 400
@@ -54,7 +53,7 @@ class GeneralMenu(AbstractMenu):
         box_color = (255, 255, 255)
         border_color = (141, 133, 201)
         text_color = (0, 0, 0)
-        background_color = (210, 204, 255)  # Purple background
+        background_color = (210, 204, 255)
 
         self.input_box.width = button_width
         self.input_box.height = button_height
@@ -89,24 +88,22 @@ class GeneralMenu(AbstractMenu):
                                                    self.input_box.centery))
         self.display_surface.blit(text_surface, text_rect)
 
+        # Blinking cursor
+        if self.input_active:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.cursor_timer >= self.cursor_interval:
+                self.cursor_visible = not self.cursor_visible
+                self.cursor_timer = current_time
+            if self.cursor_visible:
+                cursor_rect = pygame.Rect(text_rect.topright,
+                                          (2, text_rect.height))
+                pygame.draw.rect(self.display_surface, text_color, cursor_rect)
+
     def draw(self):
         self.draw_title()
         self.draw_buttons()
-        self.UZH_logo()
-        # Draw the input box if it's active
         if self.input_active:
             self.draw_input_box()
-
-    def UZH_logo(self):
-        # Semi-transparent background
-        background_surface = pygame.Surface((300, 80), pygame.SRCALPHA)
-        background_surface.fill((255, 255, 255, 128))
-        background_rect = background_surface.get_rect(
-            center=(SCREEN_WIDTH // 2, 129)
-        )
-        self.display_surface.blit(background_surface, background_rect)
-        logo_rect = self.logo_image.get_rect(center=(SCREEN_WIDTH // 2, 129))
-        self.display_surface.blit(self.logo_image, logo_rect)
 
     def button_setup(self):
         # button setup
@@ -155,9 +152,10 @@ class GeneralMenu(AbstractMenu):
                     if self.validate_token(self.input_text):
                         # Check if the token is valid
                         self.play_button_enabled = True
-                        self.token_entered = self.input_text
                         self.set_token_status(True)
                         self.input_active = False
+                        self.remove_button("Enter a Token to Play")
+                        self.draw()
                         self.input_text = ''
             elif event.key == pygame.K_BACKSPACE:
                 self.input_text = self.input_text[:-1]
@@ -171,7 +169,6 @@ class GeneralMenu(AbstractMenu):
         return False
 
     def validate_token(self, token: str) -> bool:
-        """Validate the entered token. Only '000' and '999' is valid."""
         valid_tokens = ["000", "999"]
         return token in valid_tokens
 
@@ -181,7 +178,10 @@ class GeneralMenu(AbstractMenu):
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                 self.switch_screen(GameState.PLAY)
         elif text == "Enter a Token to Play":
-            self.input_active = True  # Activate the textbox for input
-            self.token_entered = False  # Reset token entered flag
+            self.input_active = True
         if text == "Quit":
             self.quit_game()
+
+    def remove_button(self, button_text: str):
+        self.buttons = [button for button in self.buttons
+                        if button.text != button_text]
