@@ -10,7 +10,7 @@ from src.camera import Camera
 from src.camera.camera_target import CameraTarget
 from src.camera.quaker import Quaker
 from src.camera.zoom_manager import ZoomManager
-from src.enums import FarmingTool, GameState, Map
+from src.enums import FarmingTool, GameState, Map, StudyGroup
 from src.events import DIALOG_ADVANCE, DIALOG_SHOW, START_QUAKE, post_event
 from src.exceptions import GameMapWarning
 from src.groups import AllSprites, PersistentSpriteGroup
@@ -184,6 +184,13 @@ class Level:
 
         # minigame
         self.current_minigame = None
+
+        #switch to outgroup farm
+        self.outgroup_farm_entered = False
+        self.outgroup_farm_time_entered = None
+        self.outgroup_message_received = False
+
+
 
         # map
         self.load_map(GAME_MAP)
@@ -395,6 +402,29 @@ class Level:
     def show_sign(self, sign: Sprite) -> None:
         label_key = sign.custom_properties.get("label", "label_not_available")
         post_event(DIALOG_SHOW, dial=label_key)
+
+    def check_outgroup_farm_entered(self):
+        collided_with_outgroup_farm = pygame.sprite.spritecollide(
+            self.player, [i for i in self.interaction_sprites if i.name == "Outgroup Farm"], False
+        )
+        if collided_with_outgroup_farm:
+            if not self.outgroup_farm_entered:
+                self.outgroup_farm_time_entered = pygame.time.get_ticks()
+                self.outgroup_farm_entered = True
+        else:
+            self.outgroup_farm_entered = False
+            self.outgroup_farm_time_entered = None
+            self.outgroup_message_received = False
+
+        if self.outgroup_farm_entered and pygame.time.get_ticks() - self.outgroup_farm_time_entered >= 6000:
+            if not self.outgroup_message_received and self.player.study_group != StudyGroup.OUTGROUP:
+                self.outgroup_message_received = True
+                self.switch_screen(GameState.OUTGROUP_MENU)
+
+        if not self.outgroup_farm_entered:
+            self.outgroup_message_receieved = False
+
+
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         hitbox_key = self.player.controls.DEBUG_SHOW_HITBOXES.control_value
@@ -616,6 +646,7 @@ class Level:
         # update
         self.game_time.update()
         self.check_map_exit()
+        self.check_outgroup_farm_entered()
 
         if self.current_minigame and self.current_minigame.running:
             self.current_minigame.update(dt)
