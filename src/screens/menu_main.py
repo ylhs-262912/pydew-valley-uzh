@@ -15,7 +15,6 @@ class MainMenu(GeneralMenu):
         super().__init__(title, options, switch_screen, size, set_token_status)
         self.input_active = False
         self.token_input = ""
-        self.token_entered = False
         self.play_button_enabled = False  # Initialize as False
 
     def button_action(self, text):
