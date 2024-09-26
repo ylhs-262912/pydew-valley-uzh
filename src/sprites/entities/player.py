@@ -272,8 +272,6 @@ class Player(Character):
         if (round(time.time() - self.bath_time)) == BATH_STATUS_TIMEOUT:
             self.bathstat = False
 
-
-
     def teleport(self, pos: tuple[float, float]):
         """
         Moves the Player rect directly to the specified point without checking

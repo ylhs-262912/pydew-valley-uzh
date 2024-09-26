@@ -94,7 +94,7 @@ class Game:
             self.player.assign_tool,
             self.player.assign_seed,
         )
-        self.outgroup_menu = OutgroupMenu(self.player,self.switch_state)
+        self.outgroup_menu = OutgroupMenu(self.player, self.switch_state)
 
         # dialog
         self.all_sprites = AllSprites()
@@ -107,7 +107,7 @@ class Game:
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
             GameState.INVENTORY: self.inventory_menu,
-            GameState.OUTGROUP_MENU: self.outgroup_menu
+            GameState.OUTGROUP_MENU: self.outgroup_menu,
         }
         self.current_state = GameState.MAIN_MENU
 

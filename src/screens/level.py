@@ -185,12 +185,10 @@ class Level:
         # minigame
         self.current_minigame = None
 
-        #switch to outgroup farm
+        # switch to outgroup farm
         self.outgroup_farm_entered = False
         self.outgroup_farm_time_entered = None
         self.outgroup_message_received = False
-
-
 
         # map
         self.load_map(GAME_MAP)
@@ -405,7 +403,9 @@ class Level:
 
     def check_outgroup_farm_entered(self):
         collided_with_outgroup_farm = pygame.sprite.spritecollide(
-            self.player, [i for i in self.interaction_sprites if i.name == "Outgroup Farm"], False
+            self.player,
+            [i for i in self.interaction_sprites if i.name == "Outgroup Farm"],
+            False,
         )
         if collided_with_outgroup_farm:
             if not self.outgroup_farm_entered:
@@ -416,15 +416,19 @@ class Level:
             self.outgroup_farm_time_entered = None
             self.outgroup_message_received = False
 
-        if self.outgroup_farm_entered and pygame.time.get_ticks() - self.outgroup_farm_time_entered >= 6000:
-            if not self.outgroup_message_received and self.player.study_group != StudyGroup.OUTGROUP:
+        if (
+            self.outgroup_farm_entered
+            and pygame.time.get_ticks() - self.outgroup_farm_time_entered >= 6000
+        ):
+            if (
+                not self.outgroup_message_received
+                and self.player.study_group != StudyGroup.OUTGROUP
+            ):
                 self.outgroup_message_received = True
                 self.switch_screen(GameState.OUTGROUP_MENU)
 
         if not self.outgroup_farm_entered:
             self.outgroup_message_receieved = False
-
-
 
     def handle_event(self, event: pygame.event.Event) -> bool:
         hitbox_key = self.player.controls.DEBUG_SHOW_HITBOXES.control_value
