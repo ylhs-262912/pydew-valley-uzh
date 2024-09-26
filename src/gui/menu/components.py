@@ -111,7 +111,8 @@ class AbstractButton(Component, ABC):
         self._content_rect = None
         self.color = "White"
         self.hover_active = False
-        self.disabled_color = (200, 200, 200)  # Light gray for disabled buttons
+        # Light gray for disabled buttons
+        self.disabled_color = (200, 200, 200)
 
         self.display_surface = None
 
@@ -138,6 +139,7 @@ class AbstractButton(Component, ABC):
         pygame.draw.rect(surface, self.disabled_color, self.rect)
         text_surf = self.font.render(self._content, True, "Gray")
         surface.blit(text_surf, text_surf.get_rect(center=self.rect.center))
+
 
 class Button(AbstractButton):
     """A button that can contain text."""
@@ -280,7 +282,8 @@ class Slider:
                 origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
                 size = self.rect.width - 10
                 self.value = self.min_value + diff * origin_x / size
-                self.value = max(self.min_value, min(self.max_value, self.value))
+                self.value = max(self.min_value,
+                                 min(self.max_value, self.value))
                 return True
 
         return False
