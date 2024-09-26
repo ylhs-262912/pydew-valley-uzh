@@ -22,6 +22,7 @@ from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
 from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
+from src.screens.menu_round_end import RoundMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
 from src.settings import (
@@ -93,10 +94,15 @@ class Game:
             self.player.assign_tool,
             self.player.assign_seed,
         )
+        self.round_menu = RoundMenu(self.switch_state, self.player)
 
         # dialog
         self.all_sprites = AllSprites()
         self.dialogue_manager = DialogueManager(self.all_sprites)
+
+        # timer(s)
+        self.round_end_timer = 0.0
+        self.ROUND_END_TIME_IN_MINUTES = 15
 
         # screens
         self.menus = {
@@ -105,6 +111,7 @@ class Game:
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
             GameState.INVENTORY: self.inventory_menu,
+            GameState.ROUND_END: self.round_menu,
         }
         self.current_state = GameState.MAIN_MENU
 
@@ -222,30 +229,17 @@ class Game:
 
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
+            else:
+                self.round_end_timer += dt
+                if self.round_end_timer > self.ROUND_END_TIME_IN_MINUTES * 60:
+                    self.round_end_timer = 0
+                    self.switch_state(GameState.ROUND_END)
 
             if self.level.cutscene_animation.active:
                 self.all_sprites.update_blocked(dt)
             else:
                 self.all_sprites.update(dt)
             self.all_sprites.draw(self.level.camera)
-
-            # Apply blur effect only if the player has goggles equipped
-            if self.player.has_goggles and self.current_state == GameState.PLAY:
-                # Modify blurscale to increase or decrease blur
-                blurscale = 4
-                surface = self.display_surface
-                width, height = surface.get_size()
-
-                # Reduce the surface size and rescale back up for blurring
-                blurred = pygame.transform.scale(
-                    surface, (width // blurscale, height // blurscale)
-                )
-                blurred = pygame.transform.smoothscale(
-                    blurred, (width // blurscale, height // blurscale)
-                )
-                blurred_surface = pygame.transform.smoothscale(blurred, (width, height))
-
-                self.display_surface.blit(blurred_surface, (0, 0))
 
             pygame.display.update()
             await asyncio.sleep(0)
