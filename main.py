@@ -216,13 +216,14 @@ class Game:
         return False
 
     async def run(self):
+        is_first_frame = True
         while self.running:
             dt = self.clock.tick() / 1000
 
             self.event_loop()
-
-            self.level.update(dt, self.current_state == GameState.PLAY)
-
+            if not self.game_paused() or is_first_frame:
+                self.level.update(dt, self.current_state == GameState.PLAY)
+                is_first_frame = False
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
 
