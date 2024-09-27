@@ -221,7 +221,7 @@ class Game:
             dt = self.clock.tick() / 1000
 
             self.event_loop()
-            if self.game_paused() == False or is_first_frame:
+            if not self.game_paused() or is_first_frame:
                 self.level.update(dt, self.current_state == GameState.PLAY)
                 is_first_frame = False
             if self.game_paused():
