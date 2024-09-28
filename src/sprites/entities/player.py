@@ -236,7 +236,6 @@ class Player(Character):
                     )
                     self.emote_manager.toggle_emote_wheel()
 
-
     def move(self, dt: float):
         self.hitbox_rect.update(
             (
