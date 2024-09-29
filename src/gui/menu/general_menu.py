@@ -147,7 +147,7 @@ class GeneralMenu(AbstractMenu):
                 return True
 
         if event.type == pygame.KEYDOWN and self.input_active:
-            if event.key == pygame.K_RETURN:
+            if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
                 if self.input_text:
                     if self.validate_token(self.input_text):
                         # Check if the token is valid
