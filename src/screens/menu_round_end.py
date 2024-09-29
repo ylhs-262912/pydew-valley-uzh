@@ -35,8 +35,15 @@ class RoundMenu(GeneralMenu):
         super().__init__(title, options, switch_screen, size)
         self.stats_options = [""]
 
-        # i'm sorry for my sins of lack of automation. For those who come after, please do better. --Kyle N.
+        self.textUIs = []
+        self.generate_items()
 
+
+
+
+
+    def generate_items(self):
+        # i'm sorry for my sins of lack of automation. For those who come after, please do better. --Kyle N.
         basicRect = pygame.Rect((0, 0), (400, 50))
         basicRect.top = self.rect.top - 74  # im sorry, this is so scuffed
         basicRect.centerx = self.rect.centerx

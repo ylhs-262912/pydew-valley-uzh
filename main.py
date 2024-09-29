@@ -123,6 +123,8 @@ class Game:
             self.current_state = GameState.PLAY
         if self.current_state == GameState.INVENTORY:
             self.inventory_menu.refresh_buttons_content()
+        if self.current_state == GameState.ROUND_END:
+            self.round_menu.generate_items()
         if self.game_paused():
             self.player.blocked = True
             self.player.direction.update((0, 0))
