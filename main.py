@@ -52,7 +52,7 @@ class Game:
         pygame.init()
         screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
         self.display_surface = pygame.display.set_mode(screen_size)
-        pygame.display.set_caption("PyDew")
+        pygame.display.set_caption("Clear Skies")
 
         # frames
         self.level_frames: dict | None = None
