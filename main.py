@@ -81,8 +81,9 @@ class Game:
         )
         self.player = self.level.player
 
-        self.main_menu = MainMenu(self.switch_state)
-        self.pause_menu = PauseMenu(self.switch_state)
+        self.token_status = False
+        self.main_menu = MainMenu(self.switch_state, self.set_token_status)
+        self.pause_menu = PauseMenu(self.switch_state, self.set_token_status)
         self.settings_menu = SettingsMenu(
             self.switch_state, self.sounds, self.player.controls
         )
@@ -110,6 +111,10 @@ class Game:
             GameState.OUTGROUP_MENU: self.outgroup_menu,
         }
         self.current_state = GameState.MAIN_MENU
+
+    def set_token_status(self, status: bool):
+        """Update the token status."""
+        self.token_status = status
 
     def switch_state(self, state: GameState):
         self.current_state = state
