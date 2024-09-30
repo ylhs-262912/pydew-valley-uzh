@@ -62,6 +62,9 @@ We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip
 > ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule is ignored
 > ```
 
+## Use of AI
+We do not to use AI for visual and design tasks.
+
 ## Contributing
 
 Please check [CONTRIBUTING.md](./CONTRIBUTING.md) for more information.
