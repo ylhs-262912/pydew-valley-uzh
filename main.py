@@ -17,7 +17,6 @@ from src.events import DIALOG_ADVANCE, DIALOG_SHOW, OPEN_INVENTORY
 from src.groups import AllSprites
 from src.gui.interface.dialog import DialogueManager
 from src.gui.setup import setup_gui
-from src.camera.camera_target import CameraTarget
 from src.savefile import SaveFile
 from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
