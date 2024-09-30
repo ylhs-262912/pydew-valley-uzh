@@ -52,7 +52,7 @@ class Game:
         pygame.init()
         screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
         self.display_surface = pygame.display.set_mode(screen_size)
-        pygame.display.set_caption("PyDew")
+        pygame.display.set_caption("Clear Skies")
 
         # frames
         self.level_frames: dict | None = None
@@ -81,8 +81,9 @@ class Game:
         )
         self.player = self.level.player
 
-        self.main_menu = MainMenu(self.switch_state)
-        self.pause_menu = PauseMenu(self.switch_state)
+        self.token_status = False
+        self.main_menu = MainMenu(self.switch_state, self.set_token_status)
+        self.pause_menu = PauseMenu(self.switch_state, self.set_token_status)
         self.settings_menu = SettingsMenu(
             self.switch_state, self.sounds, self.player.controls
         )
@@ -113,6 +114,10 @@ class Game:
 
         # intro to in-group msg.
         self.intro_txt_shown = False
+
+    def set_token_status(self, status: bool):
+        """Update the token status."""
+        self.token_status = status
 
     def switch_state(self, state: GameState):
         self.current_state = state
