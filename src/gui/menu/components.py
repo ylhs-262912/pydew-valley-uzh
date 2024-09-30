@@ -282,8 +282,7 @@ class Slider:
                 origin_x = mouse_pos()[0] - self.offset.x - self.rect.left
                 size = self.rect.width - 10
                 self.value = self.min_value + diff * origin_x / size
-                self.value = max(self.min_value,
-                                 min(self.max_value, self.value))
+                self.value = max(self.min_value, min(self.max_value, self.value))
                 return True
 
         return False

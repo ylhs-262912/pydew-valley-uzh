@@ -7,8 +7,11 @@ from src.gui.menu.general_menu import GeneralMenu
 
 
 class MainMenu(GeneralMenu):
-    def __init__(self, switch_screen: Callable[[GameState], None],
-                 set_token_status: Callable[[bool], None]):
+    def __init__(
+        self,
+        switch_screen: Callable[[GameState], None],
+        set_token_status: Callable[[bool], None],
+    ):
         options = ["Play", "Quit", "Enter a Token to Play"]
         title = "Main Menu"
         size = (400, 400)
