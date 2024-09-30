@@ -15,7 +15,7 @@ class OutgroupMenu(GeneralMenu):
         title = "Would you like to join the outgroup?\n(Warning: You cannot go back after switching.)"
         size = (400, 400)
         self.player = player
-        super().__init__(title, options, switch_screen, size, None)
+        super().__init__(title, options, switch_screen, size)
 
     def button_action(self, text):
         if "Yes" in text:
