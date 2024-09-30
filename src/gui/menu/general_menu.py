@@ -36,7 +36,7 @@ class GeneralMenu(AbstractMenu):
         # textbox input
         self.input_active = False
         self.input_box = pygame.Rect(100, 390, 200, 50)
-        self.input_text = ''
+        self.input_text = ""
         self.play_button_enabled = False
 
         # Cursor blinking
@@ -62,8 +62,9 @@ class GeneralMenu(AbstractMenu):
         background_rect = self.input_box.copy()
         background_rect.inflate_ip(0, 50)
         background_rect.move_ip(0, -8)
-        pygame.draw.rect(self.display_surface, background_color,
-                         background_rect, border_radius=10)
+        pygame.draw.rect(
+            self.display_surface, background_color, background_rect, border_radius=10
+        )
 
         if self.input_active:
             label_font = self.font
@@ -72,20 +73,24 @@ class GeneralMenu(AbstractMenu):
 
             # Position the label slightly above the input box
             label_rect = label_surface.get_rect(
-                midbottom=(self.input_box.centerx, self.input_box.top + 5))
+                midbottom=(self.input_box.centerx, self.input_box.top + 5)
+            )
             self.display_surface.blit(label_surface, label_rect)
 
         # Draw the input box
-        pygame.draw.rect(self.display_surface, box_color,
-                         self.input_box, border_radius=10)
-        pygame.draw.rect(self.display_surface, border_color,
-                         self.input_box, 3, border_radius=10)
+        pygame.draw.rect(
+            self.display_surface, box_color, self.input_box, border_radius=10
+        )
+        pygame.draw.rect(
+            self.display_surface, border_color, self.input_box, 3, border_radius=10
+        )
 
         # Render the current text inside the input box
         font = self.font
         text_surface = font.render(self.input_text, True, text_color)
-        text_rect = text_surface.get_rect(midleft=(self.input_box.x + 10,
-                                                   self.input_box.centery))
+        text_rect = text_surface.get_rect(
+            midleft=(self.input_box.x + 10, self.input_box.centery)
+        )
         self.display_surface.blit(text_surface, text_rect)
 
         # Blinking cursor
@@ -95,8 +100,7 @@ class GeneralMenu(AbstractMenu):
                 self.cursor_visible = not self.cursor_visible
                 self.cursor_timer = current_time
             if self.cursor_visible:
-                cursor_rect = pygame.Rect(text_rect.topright,
-                                          (2, text_rect.height))
+                cursor_rect = pygame.Rect(text_rect.topright, (2, text_rect.height))
                 pygame.draw.rect(self.display_surface, text_color, cursor_rect)
 
     def draw(self):
@@ -156,7 +160,7 @@ class GeneralMenu(AbstractMenu):
                         self.input_active = False
                         self.remove_button("Enter a Token to Play")
                         self.draw()
-                        self.input_text = ''
+                        self.input_text = ""
             elif event.key == pygame.K_BACKSPACE:
                 self.input_text = self.input_text[:-1]
             else:
@@ -183,5 +187,4 @@ class GeneralMenu(AbstractMenu):
             self.quit_game()
 
     def remove_button(self, button_text: str):
-        self.buttons = [button for button in self.buttons
-                        if button.text != button_text]
+        self.buttons = [button for button in self.buttons if button.text != button_text]
