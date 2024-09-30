@@ -48,6 +48,8 @@ class NPC(NPCBase):
         self.soil_area = soil_manager.get_area(self.study_group)
         self.has_necklace = False
         self.has_hat = False
+        self.has_horn = False
+        self.has_outgroup_skin = False
 
         # TODO: Ensure that the NPC always has all needed seeds it needs
         #  in its inventory
@@ -77,6 +79,8 @@ class NPC(NPCBase):
         else:
             self.has_necklace = False
             self.has_hat = False
+            self.has_horn = True
+            self.has_outgroup_skin = True
 
     def update(self, dt):
         super().update(dt)

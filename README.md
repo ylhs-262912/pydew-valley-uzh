@@ -2,7 +2,7 @@
 
 PyDew Valley is a project originally created by ClearCode in Python using pygame-ce.
 
-This expanded version will be used by the [University of Zurich's Department of Psychology](https://www.psychologie.uzh.ch/en.html) in an experimental study in psychology. For more details on the game levels, please [click here](https://docs.google.com/spreadsheets/d/1NAssjrPN4mv3kBC3e5YmJcYkJZLU7450cFR9EhCbfgE/edit?gid=374591304#gid=374591304). This project is due for completion on September 1st, 2024.
+This expanded version will be used by the [University of Zurich's Department of Psychology](https://www.psychologie.uzh.ch/en.html) in an experimental study in psychology. For more details on the game levels, please [click here](https://docs.google.com/spreadsheets/d/1NAssjrPN4mv3kBC3e5YmJcYkJZLU7450cFR9EhCbfgE/edit?gid=374591304#gid=374591304). This project is due for completion on November 3rd 2024 (Formerly September 1st, 2024).
 
 For more information, please contact s.kittelberger[at]psychologie.uzh.ch.
 
@@ -61,6 +61,9 @@ We use [Ruff](https://docs.astral.sh/ruff/) for linting and formatting. Run `pip
 > ruff format . && ruff check --include I --fix . #  format code and sort imports
 > ruff check . # Run linting and perform fixes accordingly, or use '# noqa: <RULE>' followed by a comment justifying why the rule is ignored
 > ```
+
+## Use of AI
+We do not to use AI for visual and design tasks.
 
 ## Contributing
 

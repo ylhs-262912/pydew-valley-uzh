@@ -151,16 +151,17 @@ class Character(Entity, ABC):
             hat_frame = hat_ani.get_frame(self.frame_index)
             blit_list.append((hat_frame, rect))
         elif self.study_group == StudyGroup.OUTGROUP:
-            horn_state = EntityState(f"horn_{self.state.value}")
-            horn_ani = self.assets[horn_state][self.facing_direction]
-            horn_frame = horn_ani.get_frame(self.frame_index)
+            if self.has_outgroup_skin:
+                skin_state = EntityState(f"outgroup_{self.state.value}")
+                skin_ani = self.assets[skin_state][self.facing_direction]
+                skin_frame = skin_ani.get_frame(self.frame_index)
+                blit_list.append((skin_frame, rect))
 
-            skin_state = EntityState(f"outgroup_{self.state.value}")
-            skin_ani = self.assets[skin_state][self.facing_direction]
-            skin_frame = skin_ani.get_frame(self.frame_index)
-
-            blit_list.append((skin_frame, rect))
-            blit_list.append((horn_frame, rect))
+            if self.has_horn:
+                horn_state = EntityState(f"horn_{self.state.value}")
+                horn_ani = self.assets[horn_state][self.facing_direction]
+                horn_frame = horn_ani.get_frame(self.frame_index)
+                blit_list.append((horn_frame, rect))
 
         display_surface.fblits(blit_list)
 

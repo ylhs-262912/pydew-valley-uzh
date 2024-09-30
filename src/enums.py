@@ -39,6 +39,7 @@ class GameState(IntEnum):
     SAVE_AND_RESUME = 9
     INVENTORY = 10
     ROUND_END = 11
+    OUTGROUP_MENU = 12
 
 
 # NOTE : DO NOT pay attention to anything the IDE might complain about in this class, as the enum generation mechanisms

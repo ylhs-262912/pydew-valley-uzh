@@ -25,6 +25,7 @@ from src.screens.menu_pause import PauseMenu
 from src.screens.menu_round_end import RoundMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
+from src.screens.switch_to_outgroup_menu import OutgroupMenu
 from src.settings import (
     EMOTE_SIZE,
     SCREEN_HEIGHT,
@@ -52,7 +53,7 @@ class Game:
         pygame.init()
         screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
         self.display_surface = pygame.display.set_mode(screen_size)
-        pygame.display.set_caption("PyDew")
+        pygame.display.set_caption("Clear Skies")
 
         # frames
         self.level_frames: dict | None = None
@@ -81,8 +82,9 @@ class Game:
         )
         self.player = self.level.player
 
-        self.main_menu = MainMenu(self.switch_state)
-        self.pause_menu = PauseMenu(self.switch_state)
+        self.token_status = False
+        self.main_menu = MainMenu(self.switch_state, self.set_token_status)
+        self.pause_menu = PauseMenu(self.switch_state, self.set_token_status)
         self.settings_menu = SettingsMenu(
             self.switch_state, self.sounds, self.player.controls
         )
@@ -95,6 +97,7 @@ class Game:
             self.player.assign_seed,
         )
         self.round_menu = RoundMenu(self.switch_state, self.player)
+        self.outgroup_menu = OutgroupMenu(self.player, self.switch_state)
 
         # dialog
         self.all_sprites = AllSprites()
@@ -112,8 +115,13 @@ class Game:
             GameState.SHOP: self.shop_menu,
             GameState.INVENTORY: self.inventory_menu,
             GameState.ROUND_END: self.round_menu,
+            GameState.OUTGROUP_MENU: self.outgroup_menu,
         }
         self.current_state = GameState.MAIN_MENU
+
+    def set_token_status(self, status: bool):
+        """Update the token status."""
+        self.token_status = status
 
     def switch_state(self, state: GameState):
         self.current_state = state
@@ -222,13 +230,14 @@ class Game:
         return False
 
     async def run(self):
+        is_first_frame = True
         while self.running:
             dt = self.clock.tick() / 1000
 
             self.event_loop()
-
-            self.level.update(dt, self.current_state == GameState.PLAY)
-
+            if not self.game_paused() or is_first_frame:
+                self.level.update(dt, self.current_state == GameState.PLAY)
+                is_first_frame = False
             if self.game_paused():
                 self.menus[self.current_state].update(dt)
             else:
@@ -242,6 +251,12 @@ class Game:
             else:
                 self.all_sprites.update(dt)
             self.all_sprites.draw(self.level.camera)
+
+
+            # Apply blur effect only if the player has goggles equipped
+            if self.player.has_goggles and self.current_state == GameState.PLAY:
+                surface = pygame.transform.box_blur(self.display_surface, 2)
+                self.display_surface.blit(surface, (0, 0))
 
             pygame.display.update()
             await asyncio.sleep(0)
