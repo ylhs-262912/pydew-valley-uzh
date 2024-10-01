@@ -63,6 +63,7 @@ class Game:
         self.overlay_frames: dict[str, pygame.Surface] | None = None
         self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
+        self.previous_frame = ""
 
         # assets
         self.tmx_maps: MapDict | None = None
@@ -228,14 +229,17 @@ class Game:
 
     async def run(self):
         is_first_frame = True
+        pygame.mouse.set_visible(False)
+        mouse = pygame.image.load("images\\overlay\\Cursor.png")
         while self.running:
             dt = self.clock.tick() / 1000
 
             self.event_loop()
             if not self.game_paused() or is_first_frame:
                 self.level.update(dt, self.current_state == GameState.PLAY)
-                is_first_frame = False
-            if self.game_paused():
+
+            if self.game_paused() and not is_first_frame:
+                self.display_surface.blit(self.previous_frame,(0,0))
                 self.menus[self.current_state].update(dt)
 
             if self.level.cutscene_animation.active:
@@ -248,7 +252,10 @@ class Game:
             if self.player.has_goggles and self.current_state == GameState.PLAY:
                 surface = pygame.transform.box_blur(self.display_surface, 2)
                 self.display_surface.blit(surface, (0, 0))
-
+            mouse_pos = pygame.mouse.get_pos()
+            self.previous_frame  = self.display_surface.copy()
+            self.display_surface.blit(mouse,mouse_pos)
+            is_first_frame = False
             pygame.display.update()
             await asyncio.sleep(0)
 
