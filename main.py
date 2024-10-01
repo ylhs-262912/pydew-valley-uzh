@@ -7,6 +7,7 @@
 # ///
 
 import asyncio
+import random
 import sys
 
 import pygame
@@ -27,6 +28,7 @@ from src.screens.shop import ShopMenu
 from src.screens.switch_to_outgroup_menu import OutgroupMenu
 from src.settings import (
     EMOTE_SIZE,
+    RANDOM_SEED,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     AniFrames,
@@ -35,6 +37,8 @@ from src.settings import (
 )
 from src.sprites.setup import setup_entity_assets
 
+# set random seed. It has to be set first before any other random function is called.
+random.seed(RANDOM_SEED)
 _COSMETICS = frozenset({"goggles", "horn", "necklace", "hat"})
 # Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed
 _COSMETIC_SCALE_FACTORS = {"goggles": 2, "horn": 4, "necklace": 2, "hat": 3}
