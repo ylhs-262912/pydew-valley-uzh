@@ -74,6 +74,8 @@ class Player(Character):
         self.has_goggles = save_file.has_goggles
         self.has_necklace = save_file.has_necklace
         self.has_hat = save_file.has_hat
+        self.has_horn = save_file.has_horn
+        self.has_outgroup_skin = save_file.has_outgroup_skin
         self.study_group: StudyGroup = save_file.study_group
 
         self.emote_manager = emote_manager
