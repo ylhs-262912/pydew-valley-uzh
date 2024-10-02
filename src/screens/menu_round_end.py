@@ -38,10 +38,15 @@ class RoundMenu(GeneralMenu):
         options = ["continue to next round"]
         size = (400, 400)
         super().__init__(title, options, switch_screen, size, set_token_status)
+        self.background = pygame.Surface(self.display_surface.size)
         self.stats_options = [""]
 
         self.textUIs = []
+        self.set_background()
         self.generate_items()
+
+    def set_background(self):
+        self.background.blit(self.display_surface, (0, 0))
 
     def generate_items(self):
         # i'm sorry for my sins of lack of automation. For those who come after, please do better. --Kyle N.
@@ -135,6 +140,7 @@ class RoundMenu(GeneralMenu):
             self.display_surface.blit(item.img, item.imgRect.midleft)
 
     def draw(self):
+        self.display_surface.blit(self.background, (0, 0))
         self.draw_stats()
         self.draw_title()
         self.draw_buttons()
