@@ -86,8 +86,8 @@ class Game:
         self.player = self.level.player
 
         self.token_status = False
-        self.main_menu = MainMenu(self.switch_state, self.set_token_status)
-        self.pause_menu = PauseMenu(self.switch_state, self.set_token_status)
+        self.main_menu = MainMenu(self.switch_state)
+        self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(
             self.switch_state, self.sounds, self.player.controls
         )
@@ -100,7 +100,7 @@ class Game:
             self.player.assign_seed,
         )
         self.outgroup_menu = OutgroupMenu(
-            self.player, self.switch_state, self.set_token_status
+            self.player, self.switch_state
         )
 
         # dialog
@@ -120,10 +120,6 @@ class Game:
 
         # intro to in-group msg.
         self.intro_txt_shown = False
-
-    def set_token_status(self, status: bool):
-        """Update the token status."""
-        self.token_status = status
 
     def switch_state(self, state: GameState):
         self.current_state = state
