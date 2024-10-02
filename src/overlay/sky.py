@@ -31,7 +31,8 @@ class Sky:
         self.colors_hours = list(map(int, self.colors.keys()))
         self.colors_rgb = list(self.colors.values())
         self.color = self.get_color()
-
+        
+        # volcanic settings
         self.volcanic_color = (165, 124, 82, 100)
 
     def get_color(self):
@@ -76,7 +77,7 @@ class Sky:
             self.full_surf, (0, 0), special_flags=pygame.BLEND_RGBA_MULT
         )
 
-        if level > 7:
+        if level >= 7:
             self.volcanic_surf.fill(self.volcanic_color)
             self.display_surface.blit(self.volcanic_surf, (0, 0))
 
