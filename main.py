@@ -239,7 +239,7 @@ class Game:
                 self.level.update(dt, self.current_state == GameState.PLAY)
 
             if self.game_paused() and not is_first_frame:
-                self.display_surface.blit(self.previous_frame,(0,0))
+                self.display_surface.blit(self.previous_frame, (0, 0))
                 self.menus[self.current_state].update(dt)
 
             if self.level.cutscene_animation.active:
@@ -253,8 +253,8 @@ class Game:
                 surface = pygame.transform.box_blur(self.display_surface, 2)
                 self.display_surface.blit(surface, (0, 0))
             mouse_pos = pygame.mouse.get_pos()
-            self.previous_frame  = self.display_surface.copy()
-            self.display_surface.blit(mouse,mouse_pos)
+            self.previous_frame = self.display_surface.copy()
+            self.display_surface.blit(mouse, mouse_pos)
             is_first_frame = False
             pygame.display.update()
             await asyncio.sleep(0)
