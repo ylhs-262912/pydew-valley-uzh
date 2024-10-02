@@ -21,7 +21,7 @@ class OutgroupMenu(GeneralMenu):
         size = (400, 400)
 
         self.player = player
-        super().__init__(title, options, switch_screen, size, set_token_status)
+        super().__init__(title, options, switch_screen, size)
 
     def button_action(self, text):
         if "Yes" in text:
