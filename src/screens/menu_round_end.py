@@ -25,14 +25,17 @@ class RoundMenu(GeneralMenu):
             self.imgRect = self.img.get_rect(midleft=rect.topleft)
             self.imgRect.y += 10
 
-    def __init__(self, switch_screen: Callable[[GameState], None], player: Player):
+    def __init__(self,
+            switch_screen: Callable[[GameState], None],
+            set_token_status: Callable[[bool], None],
+            player: Player):
         self.player = player
         self.scroll = 0
         self.min_scroll = self.get_min_scroll()
         title = "Round has ended. You currently have:"
         options = ["continue to next round"]
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size)
+        super().__init__(title, options, switch_screen, size, set_token_status)
         self.stats_options = [""]
 
         self.textUIs = []

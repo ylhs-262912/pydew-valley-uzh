@@ -96,8 +96,8 @@ class Game:
             self.player.assign_tool,
             self.player.assign_seed,
         )
-        self.round_menu = RoundMenu(self.switch_state, self.player)
-        self.outgroup_menu = OutgroupMenu(self.player, self.switch_state)
+        self.round_menu = RoundMenu(self.switch_state, self.set_token_status, self.player)
+        self.outgroup_menu = OutgroupMenu(self.player, self.switch_state, self.set_token_status)
 
         # dialog
         self.all_sprites = AllSprites()

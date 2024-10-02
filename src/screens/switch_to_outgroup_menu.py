@@ -10,12 +10,18 @@ from src.settings import SCREEN_HEIGHT, SCREEN_WIDTH
 
 
 class OutgroupMenu(GeneralMenu):
-    def __init__(self, player, switch_screen: Callable[[GameState], None]):
+    def __init__(
+            self,
+            player,
+            switch_screen: Callable[[GameState], None],
+            set_token_status: Callable[[bool], None],
+    ):
         options = ["Yes", "No"]
         title = "Would you like to join the outgroup?\n(Warning: You cannot go back after switching.)"
         size = (400, 400)
+
         self.player = player
-        super().__init__(title, options, switch_screen, size)
+        super().__init__(title, options, switch_screen, size, set_token_status)
 
     def button_action(self, text):
         if "Yes" in text:
