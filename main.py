@@ -7,7 +7,6 @@
 # ///
 
 import asyncio
-import random
 import sys
 
 import pygame
@@ -25,10 +24,8 @@ from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_settings import SettingsMenu
 from src.screens.shop import ShopMenu
-from src.screens.switch_to_outgroup_menu import OutgroupMenu
 from src.settings import (
     EMOTE_SIZE,
-    RANDOM_SEED,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     AniFrames,
@@ -37,8 +34,6 @@ from src.settings import (
 )
 from src.sprites.setup import setup_entity_assets
 
-# set random seed. It has to be set first before any other random function is called.
-random.seed(RANDOM_SEED)
 _COSMETICS = frozenset({"goggles", "horn", "necklace", "hat"})
 # Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed
 _COSMETIC_SCALE_FACTORS = {"goggles": 2, "horn": 4, "necklace": 2, "hat": 3}
@@ -56,7 +51,7 @@ class Game:
         pygame.init()
         screen_size = (SCREEN_WIDTH, SCREEN_HEIGHT)
         self.display_surface = pygame.display.set_mode(screen_size)
-        pygame.display.set_caption("Clear Skies")
+        pygame.display.set_caption("PyDew")
 
         # frames
         self.level_frames: dict | None = None
@@ -64,7 +59,6 @@ class Game:
         self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
         self.previous_frame = ""
-
         # assets
         self.tmx_maps: MapDict | None = None
 
@@ -86,9 +80,8 @@ class Game:
         )
         self.player = self.level.player
 
-        self.token_status = False
-        self.main_menu = MainMenu(self.switch_state, self.set_token_status)
-        self.pause_menu = PauseMenu(self.switch_state, self.set_token_status)
+        self.main_menu = MainMenu(self.switch_state)
+        self.pause_menu = PauseMenu(self.switch_state)
         self.settings_menu = SettingsMenu(
             self.switch_state, self.sounds, self.player.controls
         )
@@ -99,9 +92,6 @@ class Game:
             self.switch_state,
             self.player.assign_tool,
             self.player.assign_seed,
-        )
-        self.outgroup_menu = OutgroupMenu(
-            self.player, self.switch_state, self.set_token_status
         )
 
         # dialog
@@ -115,16 +105,8 @@ class Game:
             GameState.SETTINGS: self.settings_menu,
             GameState.SHOP: self.shop_menu,
             GameState.INVENTORY: self.inventory_menu,
-            GameState.OUTGROUP_MENU: self.outgroup_menu,
         }
         self.current_state = GameState.MAIN_MENU
-
-        # intro to in-group msg.
-        self.intro_txt_shown = False
-
-    def set_token_status(self, status: bool):
-        """Update the token status."""
-        self.token_status = status
 
     def switch_state(self, state: GameState):
         self.current_state = state
@@ -194,13 +176,6 @@ class Game:
     def game_paused(self):
         return self.current_state != GameState.PLAY
 
-    def show_intro_msg(self):
-        # A Message At The Starting Of The Game Giving Introduction To InGroup.
-        if not self.intro_txt_shown:
-            if not self.game_paused():
-                self.dialogue_manager.open_dialogue(dial="intro_to_ingroup")
-                self.intro_txt_shown = True
-
     # events
     def event_loop(self):
         for event in pygame.event.get():
@@ -259,16 +234,27 @@ class Game:
             self.all_sprites.draw(self.level.camera)
 
             # Apply blur effect only if the player has goggles equipped
-            if self.player.has_goggles and self.current_state == GameState.PLAY:
-                surface = pygame.transform.box_blur(self.display_surface, 2)
-                self.display_surface.blit(surface, (0, 0))
+            if self.player.has_goggles:
+                # Modify blurscale to increase or decrease blur
+                blurscale = 2
+                surface = self.display_surface
+                width, height = surface.get_size()
 
+                # Reduce the surface size and rescale back up for blurring
+                blurred = pygame.transform.scale(
+                    surface, (width // blurscale, height // blurscale)
+                )
+                blurred = pygame.transform.smoothscale(
+                    blurred, (width // blurscale, height // blurscale)
+                )
+                blurred_surface = pygame.transform.smoothscale(blurred, (width, height))
+
+                self.display_surface.blit(blurred_surface, (0, 0))
             mouse_pos = pygame.mouse.get_pos()
             if not self.game_paused() or is_first_frame:
                 self.previous_frame = self.display_surface.copy()
             self.display_surface.blit(mouse, mouse_pos)
             is_first_frame = False
-            
             pygame.display.update()
             await asyncio.sleep(0)
 
