@@ -253,7 +253,8 @@ class Game:
                 surface = pygame.transform.box_blur(self.display_surface, 2)
                 self.display_surface.blit(surface, (0, 0))
             mouse_pos = pygame.mouse.get_pos()
-            self.previous_frame = self.display_surface.copy()
+            if not self.game_paused() or is_first_frame:
+                self.previous_frame = self.display_surface.copy()
             self.display_surface.blit(mouse, mouse_pos)
             is_first_frame = False
             pygame.display.update()
