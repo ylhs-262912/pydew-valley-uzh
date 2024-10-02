@@ -118,6 +118,9 @@ class Game:
         }
         self.current_state = GameState.MAIN_MENU
 
+        # intro to in-group msg.
+        self.intro_txt_shown = False
+
     def set_token_status(self, status: bool):
         """Update the token status."""
         self.token_status = status
@@ -190,6 +193,13 @@ class Game:
     def game_paused(self):
         return self.current_state != GameState.PLAY
 
+    def show_intro_msg(self):
+        # A Message At The Starting Of The Game Giving Introduction To InGroup.
+        if not self.intro_txt_shown:
+            if not self.game_paused():
+                self.dialogue_manager.open_dialogue(dial="intro_to_ingroup")
+                self.intro_txt_shown = True
+
     # events
     def event_loop(self):
         for event in pygame.event.get():
@@ -248,6 +258,8 @@ class Game:
             if self.player.has_goggles and self.current_state == GameState.PLAY:
                 surface = pygame.transform.box_blur(self.display_surface, 2)
                 self.display_surface.blit(surface, (0, 0))
+
+            self.show_intro_msg()
 
             pygame.display.update()
             await asyncio.sleep(0)
