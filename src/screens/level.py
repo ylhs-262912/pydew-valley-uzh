@@ -192,6 +192,9 @@ class Level:
             dur=2400,
         )
 
+        # level
+        self.current_level = 1
+
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map
         # clear all sprite groups
@@ -574,7 +577,7 @@ class Level:
     # endregion
 
     def draw_overlay(self):
-        self.sky.display()
+        self.sky.display(self.current_level)
         self.overlay.display()
 
     def draw(self, dt: float, move_things: bool):
@@ -583,7 +586,7 @@ class Level:
         self.all_sprites.draw(self.camera)
         self.zoom_manager.apply_zoom()
         if move_things:
-            self.sky.display()
+            self.sky.display(self.current_level)
 
         self.draw_pf_overlay()
         self.draw_hitboxes()
