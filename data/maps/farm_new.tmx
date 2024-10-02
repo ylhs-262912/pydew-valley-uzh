@@ -730,7 +730,7 @@
   </object>
   <object id="364" name="to forest" x="848" y="624" width="48" height="16"/>
   <object id="365" name="to town" x="368" y="624" width="48" height="16"/>
-  <object id="367" name="spawnpoint" x="466" y="286">
+  <object id="367" name="spawnpoint" x="624" y="512">
    <point/>
   </object>
  </objectgroup>
