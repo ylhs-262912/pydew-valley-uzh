@@ -7,6 +7,7 @@
 # ///
 
 import asyncio
+import random
 import sys
 
 import pygame
@@ -28,6 +29,7 @@ from src.screens.shop import ShopMenu
 from src.screens.switch_to_outgroup_menu import OutgroupMenu
 from src.settings import (
     EMOTE_SIZE,
+    RANDOM_SEED,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
     AniFrames,
@@ -36,6 +38,8 @@ from src.settings import (
 )
 from src.sprites.setup import setup_entity_assets
 
+# set random seed. It has to be set first before any other random function is called.
+random.seed(RANDOM_SEED)
 _COSMETICS = frozenset({"goggles", "horn", "necklace", "hat"})
 # Due to the unconventional sizes of the cosmetics' icons, different scale factors are needed
 _COSMETIC_SCALE_FACTORS = {"goggles": 2, "horn": 4, "necklace": 2, "hat": 3}
@@ -123,6 +127,9 @@ class Game:
         }
         self.current_state = GameState.MAIN_MENU
 
+        # intro to in-group msg.
+        self.intro_txt_shown = False
+
     def set_token_status(self, status: bool):
         """Update the token status."""
         self.token_status = status
@@ -198,6 +205,13 @@ class Game:
     def game_paused(self):
         return self.current_state != GameState.PLAY
 
+    def show_intro_msg(self):
+        # A Message At The Starting Of The Game Giving Introduction To InGroup.
+        if not self.intro_txt_shown:
+            if not self.game_paused():
+                self.dialogue_manager.open_dialogue(dial="intro_to_ingroup")
+                self.intro_txt_shown = True
+
     # events
     def event_loop(self):
         for event in pygame.event.get():
@@ -261,6 +275,8 @@ class Game:
             if self.player.has_goggles and self.current_state == GameState.PLAY:
                 surface = pygame.transform.box_blur(self.display_surface, 2)
                 self.display_surface.blit(surface, (0, 0))
+
+            self.show_intro_msg()
 
             pygame.display.update()
             await asyncio.sleep(0)
