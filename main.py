@@ -99,9 +99,7 @@ class Game:
             self.player.assign_tool,
             self.player.assign_seed,
         )
-        self.outgroup_menu = OutgroupMenu(
-            self.player, self.switch_state
-        )
+        self.outgroup_menu = OutgroupMenu(self.player, self.switch_state)
 
         # dialog
         self.all_sprites = AllSprites()
