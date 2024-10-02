@@ -25,10 +25,12 @@ class RoundMenu(GeneralMenu):
             self.imgRect = self.img.get_rect(midleft=rect.topleft)
             self.imgRect.y += 10
 
-    def __init__(self,
-            switch_screen: Callable[[GameState], None],
-            set_token_status: Callable[[bool], None],
-            player: Player):
+    def __init__(
+        self,
+        switch_screen: Callable[[GameState], None],
+        set_token_status: Callable[[bool], None],
+        player: Player,
+    ):
         self.player = player
         self.scroll = 0
         self.min_scroll = self.get_min_scroll()
