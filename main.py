@@ -143,7 +143,7 @@ class Game:
         if self.current_state == GameState.INVENTORY:
             self.inventory_menu.refresh_buttons_content()
         if self.current_state == GameState.ROUND_END:
-            self.round_menu.set_background()
+            self.round_menu.reset_menu()
             self.round_menu.generate_items()
         if self.game_paused():
             self.player.blocked = True

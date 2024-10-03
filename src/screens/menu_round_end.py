@@ -42,11 +42,13 @@ class RoundMenu(GeneralMenu):
         self.stats_options = [""]
 
         self.textUIs = []
-        self.set_background()
-        self.generate_items()
+        self.reset_menu()
 
-    def set_background(self):
+
+    def reset_menu(self):
         self.background.blit(self.display_surface, (0, 0))
+        self.scroll = 0
+        self.generate_items()
 
     def generate_items(self):
         # i'm sorry for my sins of lack of automation. For those who come after, please do better. --Kyle N.
