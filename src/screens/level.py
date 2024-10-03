@@ -486,9 +486,8 @@ class Level:
                 return True
         if event.type == START_QUAKE:
             self.quaker.start(event.duration)
-            #debug volcanic atmosphere trigger
+            # debug volcanic atmosphere trigger
             self.current_level = 7
-
 
         return False
 

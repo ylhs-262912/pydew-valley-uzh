@@ -31,7 +31,7 @@ class Sky:
         self.colors_hours = list(map(int, self.colors.keys()))
         self.colors_rgb = list(self.colors.values())
         self.color = self.get_color()
-        
+
         # volcanic settings
         self.volcanic_color = (165, 124, 82, 100)
 
