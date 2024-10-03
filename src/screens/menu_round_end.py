@@ -28,7 +28,6 @@ class RoundMenu(GeneralMenu):
     def __init__(
         self,
         switch_screen: Callable[[GameState], None],
-        set_token_status: Callable[[bool], None],
         player: Player,
     ):
         self.player = player
@@ -37,13 +36,12 @@ class RoundMenu(GeneralMenu):
         title = "Round has ended. You currently have:"
         options = ["continue to next round"]
         size = (400, 400)
-        super().__init__(title, options, switch_screen, size, set_token_status)
+        super().__init__(title, options, switch_screen, size)
         self.background = pygame.Surface(self.display_surface.size)
         self.stats_options = [""]
 
         self.textUIs = []
         self.reset_menu()
-
 
     def reset_menu(self):
         self.background.blit(self.display_surface, (0, 0))

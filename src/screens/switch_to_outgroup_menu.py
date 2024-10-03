@@ -14,7 +14,6 @@ class OutgroupMenu(GeneralMenu):
         self,
         player,
         switch_screen: Callable[[GameState], None],
-        set_token_status: Callable[[bool], None],
     ):
         options = ["Yes", "No"]
         title = "Would you like to join the outgroup?\n(Warning: You cannot go back after switching.)"
