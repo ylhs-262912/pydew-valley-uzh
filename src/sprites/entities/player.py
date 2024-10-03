@@ -94,6 +94,9 @@ class Player(Character):
         self.created_time = time.time()
         self.delay_time_speed = 0.25
 
+        # check if the zoom is allowed
+        self.zoom_allowed = False
+
     def focus_entity(self, entity: Entity):
         if self.focused_entity:
             self.focused_entity.unfocus()
