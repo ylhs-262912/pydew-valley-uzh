@@ -81,9 +81,16 @@ class Game:
         self.clock = pygame.time.Clock()
         self.load_assets()
 
+        # level info
+        self.ROUND_END_TIME_IN_MINUTES = 15
+        self.round_end_timer = 0.0
+        self.round = 1
+        self.get_round = lambda : self.round
+
+
         # screens
         self.level = Level(
-            self.switch_state, self.tmx_maps, self.frames, self.sounds, self.save_file
+            self.switch_state, (self.get_round, self.set_round), self.tmx_maps, self.frames, self.sounds, self.save_file
         )
         self.player = self.level.player
 
@@ -111,10 +118,6 @@ class Game:
         self.all_sprites = AllSprites()
         self.dialogue_manager = DialogueManager(self.all_sprites)
 
-        # timer(s)
-        self.round_end_timer = 0.0
-        self.ROUND_END_TIME_IN_MINUTES = 15
-
         # screens
         self.menus = {
             GameState.MAIN_MENU: self.main_menu,
@@ -129,6 +132,13 @@ class Game:
 
         # intro to in-group msg.
         self.intro_txt_shown = False
+
+    def set_round(self, round):
+        self.round = round
+
+    def increment_round(self):
+        if self.round < 12:
+            self.round += 1
 
     def switch_state(self, state: GameState):
         self.current_state = state
