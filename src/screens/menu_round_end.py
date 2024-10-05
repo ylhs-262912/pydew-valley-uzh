@@ -43,7 +43,6 @@ class RoundMenu(GeneralMenu):
 
         self.textUIs = []
         self.increment_round = increment_round
-        self.reset_menu()
 
     def reset_menu(self):
         self.increment_round()
