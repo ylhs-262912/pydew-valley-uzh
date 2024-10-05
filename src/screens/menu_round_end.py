@@ -29,6 +29,7 @@ class RoundMenu(GeneralMenu):
         self,
         switch_screen: Callable[[GameState], None],
         player: Player,
+        increment_round: Callable[[], None]
     ):
         self.player = player
         self.scroll = 0
@@ -41,9 +42,11 @@ class RoundMenu(GeneralMenu):
         self.stats_options = [""]
 
         self.textUIs = []
+        self.increment_round = increment_round
         self.reset_menu()
 
     def reset_menu(self):
+        self.increment_round()
         self.background.blit(self.display_surface, (0, 0))
         self.scroll = 0
         self.generate_items()
