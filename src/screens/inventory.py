@@ -86,6 +86,13 @@ _get_resource_count = itemgetter(1)
 class InventoryMenu(AbstractMenu):
     _IR_TO_OVERLAY_IMG = {
         InventoryResource.WOOD: "wood",
+        InventoryResource.APPLE: "apple",
+        InventoryResource.BLACKBERRY: "blackberry",
+        InventoryResource.BLUEBERRY: "blueberry",
+        InventoryResource.ORANGE: "orange",
+        InventoryResource.PEACH: "peach",
+        InventoryResource.PEAR: "pear",
+        InventoryResource.RASPBERRY: "raspberry",
         InventoryResource.CORN: "corn",
         InventoryResource.TOMATO: "tomato",
         InventoryResource.CORN_SEED: "corn_seed",
@@ -112,8 +119,7 @@ class InventoryMenu(AbstractMenu):
         self.switch_screen = switch_screen
         self.assign_tool = assign_tool
         self.assign_seed = assign_seed
-        self.overlay_frames = frames["overlay"]
-        self.obj_frames = frames["level"]["objects"]
+        self.item_frames = frames["items"]
         self.cosmetic_frames = frames["cosmetics"]
         # Splitting this into three lists, because
         # the inventory's content can get updated with new resources,
@@ -127,12 +133,9 @@ class InventoryMenu(AbstractMenu):
 
     def _prepare_img_for_ir_button(self, ir: InventoryResource, count: int):
         # , _ ,
-        if ir.is_fruit():
-            btn_name = ir.as_serialised_string()
-            img = self.obj_frames[btn_name]
-        else:
-            btn_name = self._IR_TO_OVERLAY_IMG[ir]
-            img = self.overlay_frames[btn_name]
+        btn_name = ir.as_serialised_string()
+        img = self.item_frames[btn_name]
+
         calc_rect = img.get_frect(center=(32, 32))
         calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
         amount = self.font.render(str(count), False, "black")
@@ -176,7 +179,7 @@ class InventoryMenu(AbstractMenu):
         rect = pygame.Rect((0, 0), button_size)
         rect.centerx = self.rect.width / 2
         for index, tool in enumerate(self._av_tools):
-            img = self.overlay_frames[tool]
+            img = self.item_frames[tool]
             calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
             calc_img.blit(img, img.get_frect(center=(32, 32)))
             btn_rect = rect.copy()

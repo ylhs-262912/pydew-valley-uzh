@@ -61,7 +61,7 @@ class Game:
 
         # frames
         self.level_frames: dict | None = None
-        self.overlay_frames: dict[str, pygame.Surface] | None = None
+        self.item_frames: dict[str, pygame.Surface] | None = None
         self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
         self.previous_frame = ""
@@ -166,19 +166,19 @@ class Game:
         )
 
         self.level_frames = {
-            "animations": support.animation_importer("images", "animations"),
-            "soil": support.import_folder_dict("images/soil"),
-            "soil water": support.import_folder_dict("images/soil water"),
-            "tomato": support.import_folder("images/plants/tomato"),
-            "corn": support.import_folder("images/plants/corn"),
+            "animations": support.animation_importer("images", "support"),
+            "soil": support.import_folder_dict("images/tilesets/soil"),
+            "soil water": support.import_folder_dict("images/tilesets/soil/soil water"),
+            "tomato": support.import_folder("images/tilesets/plants/tomato"),
+            "corn": support.import_folder("images/tilesets/plants/corn"),
             "rain drops": support.import_folder("images/rain/drops"),
             "rain floor": support.import_folder("images/rain/floor"),
             "objects": support.import_folder_dict("images/objects"),
             "drops": support.import_folder_dict("images/drops"),
         }
-        self.overlay_frames = support.import_folder_dict("images/overlay")
+        self.item_frames = support.import_folder_dict("images/objects/items")
         cosmetic_surf = pygame.image.load(
-            support.resource_path("images/cosmetics.png")
+            support.resource_path("images/ui/cosmetics.png")
         ).convert_alpha()
         for cosmetic in _COSMETICS:
             self.cosmetic_frames[cosmetic] = pygame.transform.scale_by(
@@ -188,11 +188,11 @@ class Game:
         self.frames = {
             "emotes": self.emotes,
             "level": self.level_frames,
-            "overlay": self.overlay_frames,
+            "items": self.item_frames,
             "cosmetics": self.cosmetic_frames,
             "checkmark": pygame.transform.scale_by(
                 pygame.image.load(
-                    support.resource_path("images/checkmark.png")
+                    support.resource_path("images/ui/checkmark.png")
                 ).convert_alpha(),
                 4,
             ),
@@ -256,7 +256,7 @@ class Game:
 
     async def run(self):
         pygame.mouse.set_visible(False)
-        mouse = pygame.image.load("images\\overlay\\Cursor.png")
+        mouse = pygame.image.load("images/ui/Cursor.png")
         is_first_frame = True
         while self.running:
             dt = self.clock.tick() / 1000
