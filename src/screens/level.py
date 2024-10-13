@@ -36,7 +36,7 @@ from src.settings import (
     SoundDict,
 )
 from src.sprites.base import Sprite
-from src.sprites.drops import DropsManager
+
 from src.sprites.entities.character import Character
 from src.sprites.entities.player import Player
 from src.sprites.particle import ParticleSprite
@@ -159,12 +159,6 @@ class Level:
         self.all_sprites.add_persistent(self.player)
         self.collision_sprites.add_persistent(self.player)
 
-        # drops manager
-        self.drops_manager = DropsManager(
-            self.all_sprites, self.drop_sprites, self.frames["level"]["drops"]
-        )
-        self.drops_manager.player = self.player
-
         # weather
         self.game_time = GameTime()
         self.sky = Sky(self.game_time)
@@ -235,7 +229,6 @@ class Level:
             player=self.player,
             player_emote_manager=self.player_emote_manager,
             npc_emote_manager=self.npc_emote_manager,
-            drops_manager=self.drops_manager,
             soil_manager=self.soil_manager,
             apply_tool=self.apply_tool,
             plant_collision=self.plant_collision,
@@ -699,7 +692,6 @@ class Level:
                 self.all_sprites.update_blocked(dt)
             else:
                 self.all_sprites.update(dt)
-            self.drops_manager.update()
             self.update_cutscene(dt)
             self.quaker.update_quake(dt)
             self.camera.update(

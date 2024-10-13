@@ -84,20 +84,6 @@ _get_resource_count = itemgetter(1)
 
 
 class InventoryMenu(AbstractMenu):
-    _IR_TO_OVERLAY_IMG = {
-        InventoryResource.WOOD: "wood",
-        InventoryResource.APPLE: "apple",
-        InventoryResource.BLACKBERRY: "blackberry",
-        InventoryResource.BLUEBERRY: "blueberry",
-        InventoryResource.ORANGE: "orange",
-        InventoryResource.PEACH: "peach",
-        InventoryResource.PEAR: "pear",
-        InventoryResource.RASPBERRY: "raspberry",
-        InventoryResource.CORN: "corn",
-        InventoryResource.TOMATO: "tomato",
-        InventoryResource.CORN_SEED: "corn_seed",
-        InventoryResource.TOMATO_SEED: "tomato_seed",
-    }
     _FT_TO_OVERLAY_IMG = {
         FarmingTool.AXE: "axe",
         FarmingTool.HOE: "hoe",
