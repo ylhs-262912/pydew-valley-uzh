@@ -29,7 +29,7 @@ class RoundMenu(GeneralMenu):
         self,
         switch_screen: Callable[[GameState], None],
         player: Player,
-        increment_round: Callable[[], None]
+        increment_round: Callable[[], None],
     ):
         self.player = player
         self.scroll = 0

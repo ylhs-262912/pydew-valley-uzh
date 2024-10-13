@@ -36,7 +36,6 @@ from src.settings import (
     SoundDict,
 )
 from src.sprites.base import Sprite
-
 from src.sprites.entities.character import Character
 from src.sprites.entities.player import Player
 from src.sprites.particle import ParticleSprite
@@ -196,10 +195,9 @@ class Level:
             dur=2400,
         )
 
-        #level interactions
+        # level interactions
         self.get_round = get_set_round[0]
         self.set_round = get_set_round[1]
-
 
     def load_map(self, game_map: Map, from_map: str = None):
         # prepare level state for new map

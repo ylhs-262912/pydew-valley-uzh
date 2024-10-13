@@ -85,12 +85,16 @@ class Game:
         self.ROUND_END_TIME_IN_MINUTES = 15
         self.round_end_timer = 0.0
         self.round = 1
-        self.get_round = lambda : self.round
-
+        self.get_round = lambda: self.round
 
         # screens
         self.level = Level(
-            self.switch_state, (self.get_round, self.set_round), self.tmx_maps, self.frames, self.sounds, self.save_file
+            self.switch_state,
+            (self.get_round, self.set_round),
+            self.tmx_maps,
+            self.frames,
+            self.sounds,
+            self.save_file,
         )
         self.player = self.level.player
 
@@ -108,7 +112,9 @@ class Game:
             self.player.assign_tool,
             self.player.assign_seed,
         )
-        self.round_menu = RoundMenu(self.switch_state, self.player, self.increment_round)
+        self.round_menu = RoundMenu(
+            self.switch_state, self.player, self.increment_round
+        )
         self.outgroup_menu = OutgroupMenu(
             self.player,
             self.switch_state,
@@ -166,7 +172,7 @@ class Game:
         )
 
         self.level_frames = {
-            "animations": support.animation_importer("images", "support"),
+            "animations": support.animation_importer("images", "misc"),
             "soil": support.import_folder_dict("images/tilesets/soil"),
             "soil water": support.import_folder_dict("images/tilesets/soil/soil water"),
             "tomato": support.import_folder("images/tilesets/plants/tomato"),

@@ -303,7 +303,6 @@ class GameMap:
         self.player_emote_manager = player_emote_manager
         self.npc_emote_manager = npc_emote_manager
 
-
         self.soil_manager = soil_manager
         self.apply_tool = apply_tool
         self.plant_collision = plant_collision
