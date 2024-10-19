@@ -6,6 +6,7 @@ from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT
 from itertools import chain
 from operator import itemgetter
 from typing import Callable, Any
+from src.controls import Controls
 
 
 class _IMButton(ImageButton):
@@ -106,6 +107,7 @@ class InventoryMenu(AbstractMenu):
         self.assign_tool = assign_tool
         self.assign_seed = assign_seed
         self.item_frames = frames["items"]
+        self.object_frames = frames["level"]["objects"]
         self.cosmetic_frames = frames["cosmetics"]
         # Splitting this into three lists, because
         # the inventory's content can get updated with new resources,
@@ -119,9 +121,15 @@ class InventoryMenu(AbstractMenu):
 
     def _prepare_img_for_ir_button(self, ir: InventoryResource, count: int):
         # , _ ,
-        btn_name = ir.as_serialised_string()
-        img = self.item_frames[btn_name]
-
+        if ir.is_allocation_item():
+            btn_name = ir.as_serialised_string()
+            if btn_name in self.item_frames.keys():
+                img = pygame.transform.scale(self.item_frames[btn_name], (64, 64))
+            else:
+                img = pygame.transform.scale(self.object_frames[btn_name], (64, 64))
+        else:
+            btn_name = ir.as_serialised_string()
+            img = self.item_frames[btn_name]
         calc_rect = img.get_frect(center=(32, 32))
         calc_img = pygame.Surface((64, 64), pygame.SRCALPHA)
         amount = self.font.render(str(count), False, "black")
@@ -277,7 +285,7 @@ class InventoryMenu(AbstractMenu):
 
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_i:
+            if event.key == Controls.INVENTORY.control_value:
                 pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
                 self.switch_screen(GameState.PLAY)
         if event.type == pygame.KEYDOWN:

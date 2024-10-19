@@ -18,6 +18,7 @@ from src.events import DIALOG_ADVANCE, DIALOG_SHOW, OPEN_INVENTORY
 from src.groups import AllSprites
 from src.gui.interface.dialog import DialogueManager
 from src.gui.setup import setup_gui
+from src.overlay.fast_forward import FastForward
 from src.savefile import SaveFile
 from src.screens.inventory import InventoryMenu, prepare_checkmark_for_buttons
 from src.screens.level import Level
@@ -25,6 +26,7 @@ from src.screens.menu_main import MainMenu
 from src.screens.menu_pause import PauseMenu
 from src.screens.menu_round_end import RoundMenu
 from src.screens.menu_settings import SettingsMenu
+from src.screens.player_task import PlayerTask
 from src.screens.shop import ShopMenu
 from src.screens.switch_to_outgroup_menu import OutgroupMenu
 from src.settings import (
@@ -65,7 +67,7 @@ class Game:
         self.cosmetic_frames: dict[str, pygame.Surface] = {}
         self.frames: dict[str, dict] | None = None
         self.previous_frame = ""
-
+        self.fast_forward = FastForward()
         # assets
         self.tmx_maps: MapDict | None = None
 
@@ -95,12 +97,14 @@ class Game:
             self.frames,
             self.sounds,
             self.save_file,
+            self.clock,
         )
         self.player = self.level.player
 
         self.token_status = False
         self.main_menu = MainMenu(self.switch_state)
         self.pause_menu = PauseMenu(self.switch_state)
+        self.task_menu = PlayerTask(self.switch_state, self.level)
         self.settings_menu = SettingsMenu(
             self.switch_state, self.sounds, self.player.controls
         )
@@ -262,14 +266,21 @@ class Game:
 
     async def run(self):
         pygame.mouse.set_visible(False)
-        mouse = pygame.image.load("images/ui/Cursor.png")
+        mouse = pygame.image.load(support.resource_path("images/ui/Cursor.png"))
         is_first_frame = True
         while self.running:
             dt = self.clock.tick() / 1000
 
             self.event_loop()
             if not self.game_paused() or is_first_frame:
-                self.level.update(dt, self.current_state == GameState.PLAY)
+                if self.level.cutscene_animation.active:
+                    event = pygame.key.get_pressed()
+                    if event[pygame.K_RSHIFT]:
+                        self.level.update(dt * 5, self.current_state == GameState.PLAY)
+                    else:
+                        self.level.update(dt, self.current_state == GameState.PLAY)
+                else:
+                    self.level.update(dt, self.current_state == GameState.PLAY)
 
             if self.game_paused() and not is_first_frame:
                 self.display_surface.blit(self.previous_frame, (0, 0))
@@ -282,6 +293,11 @@ class Game:
 
             if self.level.cutscene_animation.active:
                 self.all_sprites.update_blocked(dt)
+                if self.current_state == GameState.PLAY:
+                    event = pygame.key.get_pressed()
+                    self.fast_forward.draw_option(self.display_surface)
+                    if event[pygame.K_RSHIFT]:
+                        self.fast_forward.draw_overlay(self.display_surface)
             else:
                 self.all_sprites.update(dt)
             self.all_sprites.draw(self.level.camera)
