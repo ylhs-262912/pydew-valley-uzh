@@ -19,9 +19,11 @@ from src.sprites.setup import EntityAsset
 
 _NONSEED_INVENTORY_DEFAULT_AMOUNT = 20
 _SEED_INVENTORY_DEFAULT_AMOUNT = 5
+_ALLOCATION_ITEM_DEFAULT_AMOUNT = 0
 _INV_DEFAULT_AMOUNTS = (
     _NONSEED_INVENTORY_DEFAULT_AMOUNT,
     _SEED_INVENTORY_DEFAULT_AMOUNT,
+    _ALLOCATION_ITEM_DEFAULT_AMOUNT,
 )
 
 
@@ -270,7 +272,7 @@ class Player(Character):
             self.speed = self.original_speed * (self.hp / 100)
 
     def set_transparency_asper_health(self):
-        alpha_value = 255 * (self.hp / 100)
+        alpha_value = int(255 * (self.hp / 100))
         self.image.set_alpha(alpha_value)
 
     def check_bath_bool(self):
